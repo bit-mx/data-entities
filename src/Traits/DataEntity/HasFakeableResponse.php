@@ -31,4 +31,9 @@ trait HasFakeableResponse
     {
         return static::$fake;
     }
+
+    public static function executeQueryNormally(): void
+    {
+        static::$fake = false;
+    }
 }
