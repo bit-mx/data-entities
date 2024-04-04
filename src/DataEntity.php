@@ -7,6 +7,7 @@ use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Traits\DataEntity\Bootable;
 use BitMx\DataEntities\Traits\DataEntity\ExecutesQuery;
 use BitMx\DataEntities\Traits\DataEntity\HasConnection;
+use BitMx\DataEntities\Traits\DataEntity\HasFakeableResponse;
 use BitMx\DataEntities\Traits\HasParameters;
 
 abstract class DataEntity
@@ -14,6 +15,7 @@ abstract class DataEntity
     use Bootable;
     use ExecutesQuery;
     use HasConnection;
+    use HasFakeableResponse;
     use HasParameters;
 
     protected Method $method = Method::SELECT;
