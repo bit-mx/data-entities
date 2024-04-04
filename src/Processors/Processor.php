@@ -2,6 +2,7 @@
 
 namespace BitMx\DataEntities\Processors;
 
+use BitMx\DataEntities\Contracts\ProcessorContract;
 use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
@@ -10,7 +11,7 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
-class Processor
+class Processor implements ProcessorContract
 {
     use HasQuery;
 
@@ -40,8 +41,11 @@ class Processor
         $data = [];
         $isSuccess = false;
         $exception = null;
+
         try {
             $data = call_user_func([$this->getClient(), $this->getExecuter()], $this->prepareQuery(), $this->pendingQuery->parameters()->all());
+
+            $data = json_decode((string) json_encode($data), true);
 
             $isSuccess = true;
         } catch (QueryException $ex) {

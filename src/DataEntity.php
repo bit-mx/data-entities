@@ -7,6 +7,7 @@ use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Traits\DataEntity\Bootable;
 use BitMx\DataEntities\Traits\DataEntity\ExecutesQuery;
 use BitMx\DataEntities\Traits\DataEntity\HasConnection;
+use BitMx\DataEntities\Traits\DataEntity\HasDumpableQuery;
 use BitMx\DataEntities\Traits\DataEntity\HasFakeableResponse;
 use BitMx\DataEntities\Traits\HasParameters;
 use BitMx\DataEntities\Traits\HasQueryStatements;
@@ -16,6 +17,7 @@ abstract class DataEntity
     use Bootable;
     use ExecutesQuery;
     use HasConnection;
+    use HasDumpableQuery;
     use HasFakeableResponse;
     use HasParameters;
     use HasQueryStatements;

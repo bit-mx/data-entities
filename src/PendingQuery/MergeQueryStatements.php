@@ -12,17 +12,18 @@ readonly class MergeQueryStatements
 
         $dataEntity = $pendingQuery->getDataEntity();
 
-        $storeProcedure = $dataEntity->resolveStoreProcedure();
+        $storeProcedure = sprintf('EXEC %s ', $dataEntity->resolveStoreProcedure());
 
         $statements = [];
 
         if ($pendingQuery->getMethod() === Method::STATEMENT) {
-            $statements[] = 'SET NOCOUNT ON;';
+            $statements[] = 'SET NOCOUNT ON';
         }
 
         $currentStatements = $dataEntity->statements()->all();
 
-        $pendingQuery->statements()->merge($statements, $currentStatements, [$storeProcedure]);
+        $pendingQuery->statements()
+            ->merge($statements, $currentStatements, [$storeProcedure]);
 
         return $pendingQuery;
     }
