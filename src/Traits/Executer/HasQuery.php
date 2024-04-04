@@ -9,11 +9,11 @@ trait HasQuery
 {
     protected function prepareQuery(): string
     {
-        $storeProcedure = $this->pendingQuery->statements()->toCollection()->join(';');
+        $storeProcedure = $this->pendingQuery->statements()->toCollection()->join('; ');
 
         $keys = $this->pendingQuery->parameters()->keys();
 
-        $exec = sprintf('EXEC %s ', $storeProcedure);
+        $exec = $storeProcedure;
 
         $exec .= $keys->map(fn (string $key) => sprintf('@%s = :%s', $key, $key))->implode(', ');
 

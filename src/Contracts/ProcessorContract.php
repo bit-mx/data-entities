@@ -4,7 +4,7 @@ namespace BitMx\DataEntities\Contracts;
 
 use BitMx\DataEntities\Responses\Response;
 
-interface ExecuterContract
+interface ProcessorContract
 {
-    public function execute(): Response;
+    public function handle(): Response;
 }
