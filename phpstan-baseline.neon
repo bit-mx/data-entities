@@ -1,0 +1,7 @@
+parameters:
+    ignoreErrors:
+        -
+            message: "$Parameter #1 \\$callback of function call_user_func expects callable$"
+            count: 1
+            path: src/Processors/Processor.php
+

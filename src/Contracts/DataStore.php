@@ -2,7 +2,7 @@
 
 namespace BitMx\DataEntities\Contracts;
 
-interface DataRepository
+interface DataStore
 {
     /**
      * @param  array<array-key, mixed>  $value
@@ -26,4 +26,6 @@ interface DataRepository
      * @param  array<array-key, mixed>  ...$arrays
      */
     public function merge(array ...$arrays): self;
+
+    public function prepend(mixed $value, string|int|null $key = null): self;
 }

@@ -6,6 +6,7 @@ use BitMx\DataEntities\Contracts\ExecuterContract;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
+use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
@@ -37,11 +38,16 @@ class SelectExecuter implements ExecuterContract
         return $this->createResponse();
     }
 
+    protected function getClient(): Connection
+    {
+        return DB::connection($this->pendingQuery->getDataEntity()->resolveDatabaseConnection());
+    }
+
     protected function create(): void
     {
         try {
             $this->data = DB::connection($this->pendingQuery->getDataEntity()->resolveDatabaseConnection())
-                ->select($this->prepareQuery(), $this->getParametersCollection()->all());
+                ->select($this->prepareQuery(), $this->pendingQuery->parameters()->all());
             $this->isSuccess = true;
         } catch (QueryException $exception) {
             $this->exception = $exception;

@@ -3,8 +3,9 @@
 namespace BitMx\DataEntities\Traits\DataEntity;
 
 use BitMx\DataEntities\DataEntity;
-use BitMx\DataEntities\Executers\Executer;
+use BitMx\DataEntities\Exceptions\MockResponseNotFoundException;
 use BitMx\DataEntities\PendingQuery;
+use BitMx\DataEntities\Processors\Processor;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Responses\Response;
 use Illuminate\Support\Arr;
@@ -38,7 +39,7 @@ trait ExecutesQuery
     protected function executeMockResponse(): Response
     {
         if (! Arr::has(static::$mockResponses, get_class($this))) {
-            return $this->createFakeResponse(MockResponse::make([]));
+            throw new MockResponseNotFoundException('No mock response found for '.get_class($this));
         }
 
         $mockResponse = Arr::get(static::$mockResponses, get_class($this));
@@ -53,9 +54,9 @@ trait ExecutesQuery
 
     protected function executeQuery(): Response
     {
-        $executer = new Executer($this->createPendingQuery());
+        $executer = new Processor($this->createPendingQuery());
 
-        $reponse = $executer->exec();
+        $reponse = $executer->handle();
 
         return $reponse;
     }
