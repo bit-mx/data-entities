@@ -27,8 +27,7 @@ class Processor
 
     public function __construct(
         protected readonly PendingQuery $pendingQuery,
-    )
-    {
+    ) {
     }
 
     public function handle(): Response

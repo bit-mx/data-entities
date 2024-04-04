@@ -14,7 +14,7 @@ class ArrayStore implements DataStore
     protected array $data = [];
 
     /**
-     * @param array<array-key, mixed> $value
+     * @param  array<array-key, mixed>  $value
      */
     public function __construct(array $value = [])
     {
@@ -22,7 +22,7 @@ class ArrayStore implements DataStore
     }
 
     /**
-     * @param array<array-key, mixed> $value
+     * @param  array<array-key, mixed>  $value
      */
     #[\Override]
     public function set(array $value): self
@@ -50,7 +50,7 @@ class ArrayStore implements DataStore
     #[\Override]
     public function isNotEmpty(): bool
     {
-        return !$this->isEmpty();
+        return ! $this->isEmpty();
     }
 
     #[\Override]
@@ -69,7 +69,7 @@ class ArrayStore implements DataStore
     }
 
     /**
-     * @param array<array-key, mixed> ...$arrays
+     * @param  array<array-key, mixed>  ...$arrays
      */
     public function merge(array ...$arrays): static
     {
