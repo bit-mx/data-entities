@@ -2,15 +2,15 @@
 
 namespace BitMx\DataEntities\Traits;
 
-use BitMx\DataEntities\Repositories\ParameterRepository;
+use BitMx\DataEntities\Stores\ParameterStore;
 
 trait HasParameters
 {
-    public ParameterRepository $parameters;
+    public ParameterStore $parameters;
 
-    public function parameters(): ParameterRepository
+    public function parameters(): ParameterStore
     {
-        return $this->parameters ??= new ParameterRepository($this->defaultParameters());
+        return $this->parameters ??= new ParameterStore($this->defaultParameters());
     }
 
     /**

@@ -9,6 +9,7 @@ use BitMx\DataEntities\Traits\DataEntity\ExecutesQuery;
 use BitMx\DataEntities\Traits\DataEntity\HasConnection;
 use BitMx\DataEntities\Traits\DataEntity\HasFakeableResponse;
 use BitMx\DataEntities\Traits\HasParameters;
+use BitMx\DataEntities\Traits\HasQueryStatements;
 
 abstract class DataEntity
 {
@@ -17,8 +18,9 @@ abstract class DataEntity
     use HasConnection;
     use HasFakeableResponse;
     use HasParameters;
+    use HasQueryStatements;
 
-    protected Method $method = Method::SELECT;
+    protected ?Method $method = null;
 
     abstract public function resolveStoreProcedure(): string;
 

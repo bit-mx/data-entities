@@ -1,11 +1,12 @@
 <?php
 
-namespace BitMx\DataEntities\Repositories;
+namespace BitMx\DataEntities\Stores;
 
-use BitMx\DataEntities\Contracts\DataRepository;
+use BitMx\DataEntities\Contracts\DataStore;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
-class ParameterRepository implements DataRepository
+class ArrayStore implements DataStore
 {
     /**
      * @var array<array-key, mixed>
@@ -13,7 +14,7 @@ class ParameterRepository implements DataRepository
     protected array $data = [];
 
     /**
-     * @param  array<array-key, mixed>  $value
+     * @param array<array-key, mixed> $value
      */
     public function __construct(array $value = [])
     {
@@ -21,7 +22,7 @@ class ParameterRepository implements DataRepository
     }
 
     /**
-     * @param  array<array-key, mixed>  $value
+     * @param array<array-key, mixed> $value
      */
     #[\Override]
     public function set(array $value): self
@@ -49,7 +50,7 @@ class ParameterRepository implements DataRepository
     #[\Override]
     public function isNotEmpty(): bool
     {
-        return ! $this->isEmpty();
+        return !$this->isEmpty();
     }
 
     #[\Override]
@@ -68,12 +69,27 @@ class ParameterRepository implements DataRepository
     }
 
     /**
-     * @param  array<string, mixed>  ...$arrays
+     * @param array<array-key, mixed> ...$arrays
      */
     public function merge(array ...$arrays): static
     {
         $this->data = array_merge($this->data, ...$arrays);
 
         return $this;
+    }
+
+    public function prepend(mixed $value, int|string|null $key = null): DataStore
+    {
+        Arr::prepend($this->data, $value, $key);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<array-key, mixed>
+     */
+    public function toCollection(): Collection
+    {
+        return Collection::make($this->data);
     }
 }
