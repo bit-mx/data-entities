@@ -1,0 +1,25 @@
+<?php
+
+namespace {{ namespace }};
+
+use BitMx\DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\Method;
+
+class {{ class }} extends DataEntity
+{
+    protected ?Method $method = Method::SELECT;
+
+    #[\Override]
+    public function resolveStoreProcedure(): string
+    {
+        //
+    }
+
+    #[\Override]
+    public function defaultParameters(): array
+    {
+        return [
+            //
+        ];
+    }
+}

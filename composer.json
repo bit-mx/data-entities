@@ -31,5 +31,12 @@
         "allow-plugins": {
             "phpstan/extension-installer": true
         }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BitMx\\DataEntities\\DataEntitiesServiceProvider"
+            ]
+        }
     }
 }
