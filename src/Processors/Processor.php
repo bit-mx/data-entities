@@ -45,6 +45,10 @@ class Processor implements ProcessorContract
         try {
             $data = call_user_func([$this->getClient(), $this->getExecuter()], $this->prepareQuery(), $this->pendingQuery->parameters()->all());
 
+            if (! is_array($data)) {
+                $data = [];
+            }
+
             $data = json_decode((string) json_encode($data), true);
 
             $isSuccess = true;
