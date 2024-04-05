@@ -2,7 +2,7 @@
     "name": "bit-mx/data-entities",
     "type": "library",
     "license": "MIT",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "autoload": {
         "psr-4": {
             "BitMx\\DataEntities\\": "src/"
