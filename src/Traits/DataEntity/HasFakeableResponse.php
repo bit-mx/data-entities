@@ -32,8 +32,10 @@ trait HasFakeableResponse
         return static::$fake;
     }
 
-    public static function executeQueryNormally(): void
+    public static function resetMock(): void
     {
+        static::$mockResponses = [];
+        static::$assertions = [];
         static::$fake = false;
     }
 }

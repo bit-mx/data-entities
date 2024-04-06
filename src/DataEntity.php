@@ -4,6 +4,7 @@ namespace BitMx\DataEntities;
 
 use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Responses\Response;
+use BitMx\DataEntities\Traits\DataEntity\Assertable;
 use BitMx\DataEntities\Traits\DataEntity\Bootable;
 use BitMx\DataEntities\Traits\DataEntity\ExecutesQuery;
 use BitMx\DataEntities\Traits\DataEntity\HasConnection;
@@ -14,6 +15,7 @@ use BitMx\DataEntities\Traits\HasQueryStatements;
 
 abstract class DataEntity
 {
+    use Assertable;
     use Bootable;
     use ExecutesQuery;
     use HasConnection;
