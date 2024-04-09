@@ -2,20 +2,22 @@
 
 namespace BitMx\DataEntities\Responses;
 
+use BitMx\DataEntities\Factories\DataEntityFactory;
+
 final class MockResponse
 {
     /**
      * @param  array<array-key, mixed>  $data
      */
     public function __construct(
-        protected array $data,
+        protected array|DataEntityFactory $data,
     ) {
     }
 
     /**
      * @param  array<array-key, mixed>  $data
      */
-    public static function make(array $data): static
+    public static function make(array|DataEntityFactory $data): static
     {
         return new self($data);
     }
@@ -25,6 +27,10 @@ final class MockResponse
      */
     public function data(): array
     {
+        if ($this->data instanceof DataEntityFactory) {
+            return $this->data->create();
+        }
+
         return $this->data;
     }
 }

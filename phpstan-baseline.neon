@@ -1,6 +1,9 @@
 parameters:
     ignoreErrors:
         -
+            message: "#^Unsafe usage of new static\\(\\)\\.$#"
+            path: src/Factories/DataEntityFactory.php
+        -
             message: "$Parameter #1 \\$callback of function call_user_func expects callable$"
             count: 1
             path: src/Processors/Processor.php
