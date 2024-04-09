@@ -57,6 +57,6 @@ class MakeDataEntityFactory extends GeneratorCommand
      */
     protected function getDefaultNamespace(mixed $rootNamespace): string
     {
-        return $rootNamespace.'\RequestFactories';
+        return $rootNamespace.'\DataEntityFactories';
     }
 }
