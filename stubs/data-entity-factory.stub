@@ -1,0 +1,18 @@
+<?php
+
+namespace {{ namespace }};
+
+use BitMx\DataEntities\Factories\DataEntityFactory;
+
+class {{ class }} extends DataEntityFactory
+{
+    /**
+     * @inheritDoc
+     */
+    public function definition(): array
+    {
+        return [
+            //
+        ];
+    }
+}
