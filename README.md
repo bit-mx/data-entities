@@ -7,9 +7,11 @@ Table of Contents
 
 * [Introduction](#introduction)
 * [Installation](#installation)
+* [Setup](#setup)
 * [Compatibility](#compatibility)
 * [Getting Started](#getting-started)
     * [Create a Data Entity](#create-a-data-entity)
+    * [Connection](#connection)
     * [Execute the Data Entity](#execute-the-data-entity)
 * [Response useful methods](#response-useful-methods)
     * [getData](#getdata)
@@ -33,6 +35,23 @@ You can install the package via composer:
 
 ```bash
 composer require bit-mx/data-entities
+```
+
+## Setup
+
+You need to publish the configuration file to set the connection name.
+
+```bash
+php artisan vendor:publish --provider="BitMx\DataEntities\DataEntitiesServiceProvider" --tag="config"
+```
+
+This command will create a new configuration file in the `config` directory.
+
+```php
+
+return [
+    'database' => env('DATA_ENTITIES_CONNECTION', 'sqlsrv'),
+];
 ```
 
 ## Compatibility
@@ -111,6 +130,29 @@ php artisan make:data-entity GetAllPostsDataEntity
 ```
 
 This command will create a new Data Entity in the `app/DataEntities` directory.
+
+### Connection
+
+You can set the connection name overriding the resolveDatabaseConnection method.
+
+```php
+namespace App\DataEntities;
+
+use DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseType;
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    ...
+    
+    #[\Override]
+    public function resolveDatabaseConnection(): string
+    {
+        return 'sqlsrv';
+    }
+}
+```
 
 ### Execute the Data Entity
 
