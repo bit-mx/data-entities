@@ -4,13 +4,13 @@ namespace {{ namespace }};
 
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Enums\Method;
-use BitMx\DataEntities\Enums\ResponseTypeEnum;
+use BitMx\DataEntities\Enums\ResponseType;
 
 class {{ class }} extends DataEntity
 {
     protected ?Method $method = Method::SELECT;
 
-    protected ?ResponseTypeEnum $responseType = ResponseTypeEnum::SINGLE;
+    protected ?ResponseType $responseType = ResponseType::SINGLE;
 
     #[\Override]
     public function resolveStoreProcedure(): string

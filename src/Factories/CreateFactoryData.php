@@ -9,6 +9,6 @@ class CreateFactoryData
      */
     public function __invoke(DataEntityFactory $factory): array
     {
-        return $factory->getData();
+        return $factory->getData()->getData();
     }
 }

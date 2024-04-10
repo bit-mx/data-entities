@@ -2,7 +2,7 @@
 
 namespace BitMx\DataEntities\Enums;
 
-enum ResponseTypeEnum
+enum ResponseType
 {
     case SINGLE;
     case COLLECTION;

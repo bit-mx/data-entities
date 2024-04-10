@@ -69,14 +69,12 @@ abstract class DataEntityFactory
         );
     }
 
-    /**
-     * @return array<array-key, mixed>
-     */
-    public function getData(): array
+    public function getData(): FactoryData
     {
-        return array_merge(
+        return new FactoryData(
             $this->definition(),
-            $this->attributes
+            $this->attributes,
+            $this->without,
         );
     }
 
