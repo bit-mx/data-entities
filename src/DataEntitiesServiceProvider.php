@@ -11,6 +11,8 @@ class DataEntitiesServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/data-entities.php' => config_path('data-entities.php'),
         ], 'config');
+
+        DataEntity::resetMock();
     }
 
     public function register(): void

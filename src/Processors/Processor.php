@@ -4,6 +4,7 @@ namespace BitMx\DataEntities\Processors;
 
 use BitMx\DataEntities\Contracts\ProcessorContract;
 use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseTypeEnum;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
@@ -49,7 +50,7 @@ class Processor implements ProcessorContract
                 $data = [];
             }
 
-            $data = json_decode((string) json_encode($data), true);
+            $data = $this->createDataArray($data);
 
             $isSuccess = true;
         } catch (QueryException $ex) {
@@ -71,5 +72,18 @@ class Processor implements ProcessorContract
             Method::SELECT => 'select',
             Method::STATEMENT => 'statement',
         };
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $data
+     * @return array<array-key, mixed>
+     */
+    protected function createDataArray(array $data): array
+    {
+        if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseTypeEnum::SINGLE) {
+            return json_decode((string) json_encode($data[0]), true);
+        }
+
+        return json_decode((string) json_encode($data), true);
     }
 }
