@@ -2,8 +2,6 @@
 
 Execute stored procedures in Laravel from Sqlserver without all the boilerplate code.
 
-[[_TOC_]]
-
 Table of Contents
 =================
 
