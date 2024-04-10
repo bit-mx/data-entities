@@ -4,7 +4,7 @@ namespace BitMx\DataEntities\Processors;
 
 use BitMx\DataEntities\Contracts\ProcessorContract;
 use BitMx\DataEntities\Enums\Method;
-use BitMx\DataEntities\Enums\ResponseTypeEnum;
+use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
@@ -80,7 +80,7 @@ class Processor implements ProcessorContract
      */
     protected function createDataArray(array $data): array
     {
-        if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseTypeEnum::SINGLE) {
+        if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
             return json_decode((string) json_encode($data[0]), true);
         }
 
