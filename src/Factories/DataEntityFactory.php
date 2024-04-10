@@ -15,7 +15,8 @@ abstract class DataEntityFactory
      */
     public function __construct(
         protected readonly array $attributes = [],
-        public readonly array $without = [],
+        protected readonly array $without = [],
+        protected readonly int $times = 1,
     ) {
         $this->faker = app(Generator::class);
     }
@@ -36,6 +37,7 @@ abstract class DataEntityFactory
     protected function newInstance(
         array $attributes = [],
         array $without = [],
+        int $times = 1,
     ): static {
         return new static(
             attributes: array_replace_recursive(
@@ -46,6 +48,7 @@ abstract class DataEntityFactory
                 $this->without,
                 $without,
             ),
+            times: $times,
         );
     }
 
@@ -56,6 +59,13 @@ abstract class DataEntityFactory
     {
         return $this->newInstance(
             attributes: $attributes,
+        );
+    }
+
+    public function count(int $times): static
+    {
+        return $this->newInstance(
+            times: $times,
         );
     }
 
@@ -91,6 +101,14 @@ abstract class DataEntityFactory
      */
     public function create(array $attributes = []): array
     {
-        return (new CreateFactoryData)($this->state($attributes));
+        if ($this->times === 1) {
+            return (new CreateFactoryData)($this->state($attributes));
+        }
+
+        return collect()
+            ->times($this->times, function () use ($attributes) {
+                return (new CreateFactoryData)($this->state($attributes));
+            })
+            ->all();
     }
 }

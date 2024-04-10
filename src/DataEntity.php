@@ -3,6 +3,7 @@
 namespace BitMx\DataEntities;
 
 use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseTypeEnum;
 use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Traits\DataEntity\Assertable;
 use BitMx\DataEntities\Traits\DataEntity\Bootable;
@@ -26,6 +27,8 @@ abstract class DataEntity
 
     protected ?Method $method = null;
 
+    protected ?ResponseTypeEnum $responseType = null;
+
     abstract public function resolveStoreProcedure(): string;
 
     public function createDtoFromResponse(Response $response): mixed
@@ -40,5 +43,14 @@ abstract class DataEntity
         }
 
         return $this->method;
+    }
+
+    public function getResponseType(): ResponseTypeEnum
+    {
+        if (! isset($this->responseType)) {
+            throw new \LogicException('Your data entity is missing a response type. You must add a response type property like [protected ResponseTypeEnum $responseType = ResponseTypeEnum::COLLECTION]');
+        }
+
+        return $this->responseType;
     }
 }
