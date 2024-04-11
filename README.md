@@ -18,6 +18,8 @@ Table of Contents
     * [success](#success)
     * [failed](#failed)
     * [throw](#throw)
+* [Boot](#boot)
+    * [Traits](#traits)
 * [Data Transfer objects](#data-transfer-objects)
 * [Debugging](#debugging)
 * [Testing](#testing)
@@ -219,6 +221,55 @@ using the throw method.
 
 $response->throw();
 ```
+
+## Boot
+
+You can use the boot method to execute code before and after the stored procedure is executed.
+
+```php
+namespace App\DataEntities;
+
+use BitMx\DataEntities\PendingQuery;
+use DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Responses\Response;
+use Illuminate\Support\Collection;
+
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    protected ?Method $method = Method::SELECT;
+    
+    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
+    ...
+    
+    #[\Override]
+    public function boot(PendingQuery $pendingQuery): void
+    {
+        $pendingQuery->parameters()->all('tag', 'laravel');
+    }
+    
+}
+```
+
+### Traits
+
+You can use traits to add functionality to your Data Entities. Add the method bootTrait to the Data Entity to use the
+trait.
+
+```php
+trait Taggable
+{
+    public function bootTaggable(PendingQuery $pendingQuery): void
+    {
+        $pendingQuery->parameters()->add('tag', 'laravel');
+    }
+}
+```
+
+The bootTaggable method will be called before the stored procedure is executed.
 
 ## Data Transfer objects
 
