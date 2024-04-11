@@ -52,4 +52,12 @@ trait Assertable
             'The query was not executed ',
         );
     }
+
+    /**
+     * @param  class-string  $class
+     */
+    public static function assertNotExecuted(string $class): void
+    {
+        Assert::assertFalse(static::classInAssertExists($class), 'The query was executed');
+    }
 }

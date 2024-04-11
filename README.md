@@ -22,6 +22,7 @@ Table of Contents
 * [Debugging](#debugging)
 * [Testing](#testing)
     * [Mocking the Data Entity](#mocking-the-data-entity)
+    * [Assertions](#assertions)
     * [Using factories](#using-factories)
 
 ## Introduction
@@ -356,6 +357,44 @@ it('should get the post', function () {
 
 When using the fake method, the execute method will return the data specified in the MockResponse::make method and
 won't execute the stored procedure.
+
+### Assertions
+
+You can use the assert method to assert that the Data Entity was executed.
+
+```php
+
+use App\DataEntities\GetPostDataEntity;
+use BitMx\DataEntities\DataEntity;
+use BitMx\DataEntities\Responses\MockResponse;
+
+it('should get the post', function () {
+    DataEntity::fake([
+        GetPostDataEntity::class => MockResponse::make([
+            'id' => 1,
+            'title' => 'Post title',
+            'content' => 'Post content',
+        ]),
+    ]);
+
+    $dataEntity = new GetPostDataEntity(1);
+
+    $response = $dataEntity->execute();
+
+    $post = $response->dto();
+
+    DataEntity::assertExecuted(GetPostDataEntity::class);
+});
+```
+
+#### Assertions
+
+You can use the following assertions:
+
+- **assertExecuted:** Assert that the Data Entity was executed.
+- **assertNotExecuted:** Assert that the Data Entity was not executed.
+- **assertExecutedCount:** Assert that the Data Entity was executed a specific number of times.
+- **assertExecutedOnce:** Assert that the Data Entity was executed once.
 
 ### Using factories
 
