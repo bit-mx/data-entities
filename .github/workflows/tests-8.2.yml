@@ -18,9 +18,5 @@ jobs:
           coverage: none
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
-      - name: Create env
-        run: cp .env.example .env
-      - name: Create key
-        run: php artisan key:generate
       - name: Running tests
         run: vendor/bin/pest
