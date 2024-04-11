@@ -1,4 +1,4 @@
-name: Syntax
+name: syntax 8.3
 on:
   pull_request:
     branches:
