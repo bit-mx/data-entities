@@ -211,7 +211,7 @@ if ($response->failed()) {
 
 ### throw
 
-By default, the Response object will throw an exception if the stored procedure fails. You can throw the exception
+By default, the Response object won't throw an exception if the stored procedure fails. You can throw an exception
 manually
 using the throw method.
 
