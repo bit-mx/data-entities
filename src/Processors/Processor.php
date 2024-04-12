@@ -58,7 +58,7 @@ class Processor implements ProcessorContract
             $isSuccess = false;
         }
 
-        return new Response($this->pendingQuery->getDataEntity(), $data, $isSuccess, $exception);
+        return new Response($this->pendingQuery, $data, $isSuccess, $exception);
     }
 
     protected function getClient(): Connection

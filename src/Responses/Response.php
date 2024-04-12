@@ -3,6 +3,7 @@
 namespace BitMx\DataEntities\Responses;
 
 use BitMx\DataEntities\DataEntity;
+use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
 
 readonly class Response
@@ -13,7 +14,7 @@ readonly class Response
      * @param  array<array-key, mixed>  $data
      */
     public function __construct(
-        protected DataEntity $dataEntity,
+        protected PendingQuery $pendingQuery,
         protected array $data = [],
         protected bool $success = true,
         protected ?\Throwable $senderException = null
@@ -33,7 +34,8 @@ readonly class Response
     public function dto(): mixed
     {
         return $this
-            ->dataEntity
+            ->pendingQuery
+            ->getDataEntity()
             ->createDtoFromResponse(
                 $this
             );
@@ -41,7 +43,12 @@ readonly class Response
 
     public function getDataEntity(): DataEntity
     {
-        return $this->dataEntity;
+        return $this->pendingQuery->getDataEntity();
+    }
+
+    public function getPendingQuery(): PendingQuery
+    {
+        return $this->pendingQuery;
     }
 
     /**
