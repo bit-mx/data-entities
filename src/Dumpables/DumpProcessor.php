@@ -2,6 +2,7 @@
 
 namespace BitMx\DataEntities\Dumpables;
 
+use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
 
@@ -18,6 +19,8 @@ class DumpProcessor
     {
         $query = $this->prepareQuery();
 
-        dd($query, $this->pendingQuery->parameters()->all());
+        $parameters = (new ParametersProcessor())->process($this->pendingQuery->parameters());
+
+        dd($query, $parameters);
     }
 }
