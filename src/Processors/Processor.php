@@ -5,6 +5,7 @@ namespace BitMx\DataEntities\Processors;
 use BitMx\DataEntities\Contracts\ProcessorContract;
 use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
@@ -44,11 +45,16 @@ class Processor implements ProcessorContract
         $exception = null;
 
         try {
-            $data = call_user_func([$this->getClient(), $this->getExecuter()], $this->prepareQuery(), $this->pendingQuery->parameters()->all());
+            $executionMethod = $this->getExecuter();
+            $preparedQuery = $this->prepareQuery();
 
-            if (! is_array($data)) {
-                $data = [];
-            }
+            $params = $this->createParameters();
+
+            $client = $this->getClient();
+
+            $data = $client->$executionMethod($preparedQuery, $params);
+
+            $data = is_array($data) ? $data : [];
 
             $data = $this->createDataArray($data);
 
@@ -61,11 +67,6 @@ class Processor implements ProcessorContract
         return new Response($this->pendingQuery, $data, $isSuccess, $exception);
     }
 
-    protected function getClient(): Connection
-    {
-        return DB::connection($this->pendingQuery->getDataEntity()->resolveDatabaseConnection());
-    }
-
     protected function getExecuter(): string
     {
         return match ($this->pendingQuery->getMethod()) {
@@ -75,11 +76,32 @@ class Processor implements ProcessorContract
     }
 
     /**
+     * @return array<array-key, mixed>
+     */
+    protected function createParameters(): array
+    {
+        $parameters = $this->pendingQuery->parameters();
+
+        $newParameters = (new ParametersProcessor())->process($parameters);
+
+        return $newParameters;
+    }
+
+    protected function getClient(): Connection
+    {
+        return DB::connection($this->pendingQuery->getDataEntity()->resolveDatabaseConnection());
+    }
+
+    /**
      * @param  array<array-key, mixed>  $data
      * @return array<array-key, mixed>
      */
     protected function createDataArray(array $data): array
     {
+        if (collect($data)->isEmpty()) {
+            return [];
+        }
+
         if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
             return json_decode((string) json_encode($data[0]), true);
         }

@@ -2,6 +2,7 @@
 
 namespace BitMx\DataEntities\Dumpables;
 
+use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
 use Illuminate\Support\Str;
@@ -21,7 +22,9 @@ class DumpRawProcessor
 
         $keys = $this->pendingQuery->parameters()->keys()->map(fn (string $key) => sprintf(':%s', $key));
 
-        $query = Str::replace($keys, $this->pendingQuery->parameters()->toCollection()->values(), $query);
+        $parameters = (new ParametersProcessor())->process($this->pendingQuery->parameters());
+
+        $query = Str::replace($keys, collect($parameters)->values(), $query);
 
         dd($query);
     }
