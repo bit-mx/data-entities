@@ -22,11 +22,13 @@ class ParametersProcessor
         return $newParameters->all();
     }
 
-    protected function processParameterValue(mixed $value): string|int|bool
+    protected function processParameterValue(mixed $value): string|int
     {
         return match (true) {
             $value instanceof \DateTime => $value->format('Y-m-d H:i:s'),
             is_bool($value) => $value ? 1 : 0,
+            $value instanceof \BackedEnum => $value->value,
+            $value instanceof \Stringable => (string) $value,
             default => $value,
         };
     }
