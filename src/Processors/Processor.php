@@ -82,7 +82,7 @@ class Processor implements ProcessorContract
     {
         $parameters = $this->pendingQuery->parameters();
 
-        $newParameters = (new ParametersProcessor())->process($parameters);
+        $newParameters = (new ParametersProcessor($this->pendingQuery))->process();
 
         return $newParameters;
     }

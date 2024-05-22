@@ -29,6 +29,7 @@ class DataEntitiesServiceProvider extends ServiceProvider
         $this->commands([
             Commands\MakeDataEntity::class,
             Commands\MakeDataEntityFactory::class,
+            Commands\MakaDataEntityCastable::class,
         ]);
     }
 }

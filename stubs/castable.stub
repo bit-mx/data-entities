@@ -1,0 +1,17 @@
+<?php
+
+namespace {{ namespace }};
+
+use BitMx\DataEntities\Contracts\Castable;
+
+class {{ class }} implements Castable
+{
+    /**
+     * @param array<string, mixed> $parameters
+     */
+    public function transform(string $key, mixed $value, array $parameters): mixed
+    {
+        //
+    }
+}
+

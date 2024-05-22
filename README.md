@@ -173,6 +173,114 @@ $data = $response->getData();
 
 The execute method returns a Response object that contains the data returned by the stored procedure.
 
+### Casts
+
+You can use the casts method to transform the parameters before sending them to the Store Procedure.
+
+```php
+
+namespace App\DataEntities;
+
+use Carbon\Carbon;use DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseType;
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    ...
+    
+    #[\Override]
+    public function defaultParameters(): array
+    {
+        return [
+            'date' => Carbon::now(),
+        ];
+    } 
+    
+     /**
+     * @return array<string, string>
+     */
+     #[\Override]
+    protected function casts(): array
+    {
+        return [
+            'date' => 'datetime:Y-m-d H:i',
+        ];
+    }
+}
+```
+
+This will transform the date parameter to a formatted date string before sending it to the stored procedure.
+
+#### Available casts
+
+- **datetime:**
+  : Converts the value to a datetime string using the specified format.
+  You can pass a format as an argument to the cast.
+  Examples:
+
+    - `datetime` Returns Y-m-d H:i:s
+    - `datetime:Y-m-d`
+    - `datetime:H:i:s`
+    - `datetime:Y-m-d H:i:s`
+- **date:**
+  : Converts the value to a date `Y-m-d`
+
+- **bool:**
+  : Converts the value to a boolean in int.
+  Example: If the value is true, it will be converted to 1, and if it is false, it will be converted to 0.
+
+- **int:**
+  : Converts the value to an integer.
+
+- **float:**
+  : Converts the value to a float. You can pass the number of decimals as an argument to the cast.
+  Example:
+
+      - `float` Returns a float with 2 decimals.
+      - `float:4` Returns a float with 4 decimals.
+      - `float:0` Returns an integer.
+
+- **string:**
+  : Converts the value to a string.
+
+- **json:**
+  : Converts the value to a json string.
+  Example:
+
+    - if you pass an array, it will be converted to a json string.
+        - [1, 2,4] will be converted to "[1,2,4]"
+        - ['name' => 'John'] will be converted to '{"name":"John"}'
+        - You can pass the JSON options as an argument to the cast.
+        - `'json:'. JSON_PRETTY_PRINT` will return the json string with the JSON_PRETTY_PRINT option.
+
+### Custom casts
+
+You can create custom casts by implementing the Castable interface.
+
+```php
+namespace BitMx\DataEntities\Casts;
+
+use BitMx\DataEntities\Contracts\Castable;
+
+class CustomCast implements Castable
+{
+    /**
+     * {@inheritDoc}
+     */
+    public function transform(string $key, mixed $value, array $parameters): mixed
+    {
+        
+    }
+}
+```
+
+You can create a new cast using the artisan command.
+
+```bash
+php artisan make:data-entity-cast CustomCast
+```
+
 ## Response useful methods
 
 The Response object has some useful methods to work with the data returned by the stored procedure.
