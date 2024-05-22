@@ -31,6 +31,28 @@ readonly class Response
         return $this->success;
     }
 
+    public function isNotEmpty(): bool
+    {
+        return ! $this->isEmpty();
+    }
+
+    public function isEmpty(): bool
+    {
+        return empty($this->data());
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function data(?string $key = null): array|string|null|int|float|bool
+    {
+        if (! is_null($key)) {
+            return $this->data[$key];
+        }
+
+        return $this->data;
+    }
+
     public function dto(): mixed
     {
         return $this
@@ -49,13 +71,5 @@ readonly class Response
     public function getPendingQuery(): PendingQuery
     {
         return $this->pendingQuery;
-    }
-
-    /**
-     * @return array<array-key, mixed>
-     */
-    public function data(): array
-    {
-        return $this->data;
     }
 }
