@@ -42,14 +42,17 @@ readonly class Response
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return array<array-key, mixed>|string|bool|int|float|null
      */
-    public function data(?string $key = null, mixed $default = null): array|string|null|int|float|bool
+    public function data(?string $key = null, mixed $default = null): mixed
     {
         if (! is_null($key)) {
             return $this->data[$key] ?? $default;
         }
 
+        /**
+         * @var array<array-key, mixed>
+         */
         return $this->data;
     }
 
