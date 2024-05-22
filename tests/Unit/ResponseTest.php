@@ -58,6 +58,16 @@ it('can get the data by a key', function () {
     expect($response->data('key'))->toBe('test');
 });
 
+it('can get the data by a key with default', function () {
+    DataEntity::fake([
+        $this->dataEntity::class => MockResponse::make(['key' => 'test']),
+    ]);
+
+    $response = $this->dataEntity->execute();
+
+    expect($response->data('key2', 'key_default'))->toBe('key_default');
+});
+
 it('can get isEmpty is data is empty', function () {
     DataEntity::fake([
         $this->dataEntity::class => MockResponse::make([]),

@@ -44,10 +44,10 @@ readonly class Response
     /**
      * @return array<array-key, mixed>
      */
-    public function data(?string $key = null): array|string|null|int|float|bool
+    public function data(?string $key = null, mixed $default = null): array|string|null|int|float|bool
     {
         if (! is_null($key)) {
-            return $this->data[$key];
+            return $this->data[$key] ?? $default;
         }
 
         return $this->data;
