@@ -6,6 +6,7 @@ use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
 readonly class Response
 {
@@ -53,6 +54,19 @@ readonly class Response
         }
 
         return Arr::get($this->data, $key, $default);
+    }
+
+    public function object(): object
+    {
+        return (object) $this->data();
+    }
+
+    /**
+     * @return Collection<array-key, mixed>
+     */
+    public function collect(): Collection
+    {
+        return collect($this->data());
     }
 
     public function dto(): mixed
