@@ -2,34 +2,34 @@
 
 namespace BitMx\DataEntities\Parameters;
 
-use BitMx\DataEntities\Contracts\DataStore;
+use BitMx\DataEntities\PendingQuery;
 
 class ParametersProcessor
 {
+    public function __construct(
+        protected PendingQuery $pendingQuery
+    ) {
+    }
+
     /**
      * @return array<array-key, mixed>
      */
-    public function process(DataStore $store): array
+    public function process(): array
     {
-        $parameters = collect($store->all());
+        $parameters = collect($this->pendingQuery->parameters()->all());
 
-        $newParameters = $parameters->mapWithKeys(function (mixed $value, string $key) {
-            return [
-                $key => $this->processParameterValue($value),
-            ];
-        });
+        $newParameters = $parameters->mapWithKeys(fn (mixed $value, string $key) => [
+            $key => $this->processParameterValue($value, $key, $parameters->all()),
+        ]);
 
         return $newParameters->all();
     }
 
-    protected function processParameterValue(mixed $value): string|int
+    /**
+     * @param  array<string, mixed>  $parameters
+     */
+    protected function processParameterValue(mixed $value, string $key, array $parameters): string|int|bool|float|null
     {
-        return match (true) {
-            $value instanceof \DateTime => $value->format('Y-m-d H:i:s'),
-            is_bool($value) => $value ? 1 : 0,
-            $value instanceof \BackedEnum => $value->value,
-            $value instanceof \Stringable => (string) $value,
-            default => $value,
-        };
+        return Transformer::make($value, $key, $this->pendingQuery->getCasts(), $parameters)->transform();
     }
 }

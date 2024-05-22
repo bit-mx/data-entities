@@ -10,9 +10,9 @@ readonly class BootTraits
     {
         $dataEntity = $pendingQuery->getDataEntity();
 
-        $taits = $this->classUses($dataEntity);
+        $traits = $this->classUses($dataEntity);
 
-        $this->bootTraits($taits, $pendingQuery);
+        $this->bootTraits($traits, $pendingQuery);
 
         return $pendingQuery;
     }
@@ -23,42 +23,7 @@ readonly class BootTraits
      */
     protected function classUses(object|string $class): array
     {
-        if (is_object($class)) {
-            $class = get_class($class);
-        }
-
-        $results = [];
-
-        /**
-         * @var array<class-string, class-string>|false $classParents
-         */
-        $classParents = class_parents($class);
-
-        if ($classParents === false) {
-            $classParents = [];
-        }
-
-        foreach (array_reverse($classParents) + [$class => $class] as $class) {
-            $results += $this->getTraitUsesRecursive($class);
-        }
-
-        return array_unique($results);
-    }
-
-    /**
-     * @param  class-string  $trait
-     * @return array<class-string, class-string>
-     */
-    protected function getTraitUsesRecursive(string $trait): array
-    {
-        /** @var array<class-string, class-string> $traits */
-        $traits = class_uses($trait) ?: [];
-
-        foreach ($traits as $trait) {
-            $traits += static::getTraitUsesRecursive($trait);
-        }
-
-        return $traits;
+        return class_uses_recursive($class);
     }
 
     /**

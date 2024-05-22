@@ -19,7 +19,7 @@ class DumpProcessor
     {
         $query = $this->prepareQuery();
 
-        $parameters = (new ParametersProcessor())->process($this->pendingQuery->parameters());
+        $parameters = (new ParametersProcessor($this->pendingQuery))->process();
 
         dd($query, $parameters);
     }
