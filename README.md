@@ -5,27 +5,34 @@ Execute stored procedures in Laravel from Sqlserver without all the boilerplate 
 Table of Contents
 =================
 
-* [Introduction](#introduction)
-* [Installation](#installation)
-* [Setup](#setup)
-* [Compatibility](#compatibility)
-* [Getting Started](#getting-started)
-    * [Create a Data Entity](#create-a-data-entity)
-    * [Connection](#connection)
-    * [Execute the Data Entity](#execute-the-data-entity)
-* [Response useful methods](#response-useful-methods)
-    * [getData](#getdata)
-    * [success](#success)
-    * [failed](#failed)
-    * [throw](#throw)
-* [Boot](#boot)
-    * [Traits](#traits)
-* [Data Transfer objects](#data-transfer-objects)
-* [Debugging](#debugging)
-* [Testing](#testing)
-    * [Mocking the Data Entity](#mocking-the-data-entity)
-    * [Assertions](#assertions)
-    * [Using factories](#using-factories)
+    * [Introduction](#introduction)
+    * [Installation](#installation)
+    * [Setup](#setup)
+    * [Compatibility](#compatibility)
+    * [Getting Started](#getting-started)
+        * [Create a Data Entity](#create-a-data-entity)
+        * [Connection](#connection)
+        * [Execute the Data Entity](#execute-the-data-entity)
+        * [Casts](#casts)
+            * [Available casts](#available-casts)
+            * [Custom casts](#custom-casts)
+        * [Response useful methods](#response-useful-methods)
+            * [data](#data)
+            * [Data with a key](#data-with-a-key)
+            * [Data with a key and a default value](#data-with-a-key-and-a-default-value)
+            * [As object](#as-object)
+            * [As collection](#as-collection)
+            * [success](#success)
+            * [failed](#failed)
+            * [throw](#throw)
+        * [Boot](#boot)
+            * [Traits](#traits)
+        * [Data Transfer objects](#data-transfer-objects)
+        * [Debugging](#debugging)
+        * [Testing](#testing)
+            * [Mocking the Data Entity](#mocking-the-data-entity)
+            * [Assertions](#assertions)
+        * [Using factories](#using-factories)
 
 ## Introduction
 
@@ -285,12 +292,46 @@ php artisan make:data-entity-cast CustomCast
 
 The Response object has some useful methods to work with the data returned by the stored procedure.
 
-### getData
+### data
 
 The getData method returns the data returned by the stored procedure as an array.
 
 ```php
-$data = $response->getData();
+$data = $response->data();
+```
+
+### Data with a key
+
+You can get the data with a key
+
+```php
+$data = $response->data('key');
+```
+
+### Data with a key and a default value
+
+You can get the data with a key and a default value
+
+```php  
+$data = $response
+    ->data('key', 'default value');
+```
+
+### As object
+
+You can get the data as an object
+
+```php
+$data = $response->object();
+```
+
+### As collection
+
+You can get the data as a collection
+
+```php
+
+$data = $response->collect();
 ```
 
 ### success

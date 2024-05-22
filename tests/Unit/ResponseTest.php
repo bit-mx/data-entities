@@ -5,6 +5,7 @@ use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Responses\Response;
+use Illuminate\Support\Collection;
 
 beforeEach(function () {
     $this->dataEntity = new class extends DataEntity
@@ -38,7 +39,7 @@ it('you can get the pending query', function () {
         ->and($pendingQuery->getDataEntity())->toBe($this->dataEntity);
 });
 
-it('can get the data', function () {
+it('can get the data as array', function () {
     DataEntity::fake([
         $this->dataEntity::class => MockResponse::make(['test' => 'test']),
     ]);
@@ -56,6 +57,28 @@ it('can get the data by a key', function () {
     $response = $this->dataEntity->execute();
 
     expect($response->data('key'))->toBe('test');
+});
+
+it('can get the data as an object', function () {
+    DataEntity::fake([
+        $this->dataEntity::class => MockResponse::make(['test' => 'test']),
+    ]);
+
+    $response = $this->dataEntity->execute();
+
+    expect($response->object())->toBeObject()
+        ->and($response->object()->test)->toBe('test');
+});
+
+it('can get the data as collection', function () {
+    DataEntity::fake([
+        $this->dataEntity::class => MockResponse::make(['key1' => 'test', 'key2' => 'test']),
+    ]);
+
+    $response = $this->dataEntity->execute();
+
+    expect($response->collect())->toBeInstanceOf(Collection::class)
+        ->and($response->collect()->count())->toBe(2);
 });
 
 it('can get the data by a key with default', function () {

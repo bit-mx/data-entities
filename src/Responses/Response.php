@@ -5,6 +5,8 @@ namespace BitMx\DataEntities\Responses;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
 readonly class Response
 {
@@ -42,18 +44,29 @@ readonly class Response
     }
 
     /**
-     * @return array<array-key, mixed>|string|bool|int|float|null
+     * @param  ?array-key  $key
+     * @return ($key is null ? array<array-key, mixed> : mixed)
      */
-    public function data(?string $key = null, mixed $default = null): mixed
+    public function data(string|int|null $key = null, mixed $default = null): mixed
     {
-        if (! is_null($key)) {
-            return $this->data[$key] ?? $default;
+        if (is_null($key)) {
+            return $this->data;
         }
 
-        /**
-         * @var array<array-key, mixed>
-         */
-        return $this->data;
+        return Arr::get($this->data, $key, $default);
+    }
+
+    public function object(): object
+    {
+        return (object) $this->data();
+    }
+
+    /**
+     * @return Collection<array-key, mixed>
+     */
+    public function collect(): Collection
+    {
+        return collect($this->data());
     }
 
     public function dto(): mixed
