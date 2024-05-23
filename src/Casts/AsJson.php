@@ -29,6 +29,8 @@ class AsJson implements Castable
         }
 
         $flags = collect($this->attributes)
+            ->filter(fn (string $item): bool => str($item)->startsWith('JSON_'))
+            ->map(fn (string $item) => constant($item))
             ->reduce(function (int $carry, int $item): int {
                 return $carry | $item;
             }, 0);

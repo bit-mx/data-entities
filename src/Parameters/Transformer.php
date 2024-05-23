@@ -48,8 +48,8 @@ final class Transformer
 
         $attributes = $pieces->count() > 1 ? explode(',', $pieces->get(1, '')) : [];
 
-        if (array_key_exists($class, CastMap::get())) {
-            $class = CastMap::get()[$class];
+        if (array_key_exists($class, CastAlias::get())) {
+            $class = CastAlias::get()[$class];
         }
 
         if (! class_exists($class)) {
@@ -77,6 +77,7 @@ final class Transformer
     protected function getRule(): ?string
     {
         if (! array_key_exists($this->key, $this->casts)) {
+
             if (is_bool($this->value)) {
                 return 'bool';
             }
