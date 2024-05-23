@@ -104,6 +104,24 @@ it('cast a Date value', function () {
         ->toBe('2000-01-01');
 });
 
+it('cast a array value', function () {
+    $transformer = Transformer::make([1, 2, 3, 4], 'json_key', ['json_key' => 'json'], []);
+
+    $result = $transformer->transform();
+
+    expect($result)->toBeString()
+        ->toBe('[1,2,3,4]');
+});
+
+it('cast a array value with numbers', function () {
+    $transformer = Transformer::make(['1', '2', '3', '4'], 'json_key', ['json_key' => 'json:JSON_NUMERIC_CHECK'], []);
+
+    $result = $transformer->transform();
+
+    expect($result)->toBeString()
+        ->toBe('[1,2,3,4]');
+});
+
 it('cast a value of DateTimeInterface when no cast is set', function () {
     $transformer = Transformer::make(Carbon::parse('2000-01-01 12:30'), 'key', [], []);
 

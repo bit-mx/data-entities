@@ -9,7 +9,7 @@ use BitMx\DataEntities\Casts\AsInteger;
 use BitMx\DataEntities\Casts\AsJson;
 use BitMx\DataEntities\Casts\AsString;
 
-class CastMap
+class CastAlias
 {
     /**
      * @return array<string, mixed>
