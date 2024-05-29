@@ -5,6 +5,8 @@ use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Responses\Response;
+use BitMx\DataEntities\Tests\Helpers\StringEnum;
+use BitMx\DataEntities\Tests\Helpers\UppercaseAccessor;
 use Illuminate\Support\Collection;
 
 beforeEach(function () {
@@ -156,4 +158,121 @@ it('returns a empty array if there is no data', function () {
     $dto = $response->dto();
 
     expect($dto->test)->toBe('test');
+});
+
+it('mutate response data', function () {
+    $dataEntity = new class extends DataEntity
+    {
+        protected ?Method $method = Method::SELECT;
+
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        public function defaultParameters(): array
+        {
+            return [
+                'test' => 'test',
+            ];
+        }
+
+        protected function accessors(): array
+        {
+            return [
+                'value_int' => 'integer',
+                'value_decimal' => 'decimal',
+                'value_string' => 'string',
+                'value_bool' => 'boolean',
+                'value_date' => 'date',
+                'value_enum' => StringEnum::class,
+                'value_array' => 'array',
+                'value_object' => 'object',
+                'value_collection' => 'collection',
+                'value_date_immutable' => 'date_immutable',
+            ];
+        }
+
+        public function createDtoFromResponse(Response $response): mixed
+        {
+            return (object) $response->data();
+        }
+    };
+
+    DataEntity::fake([
+        $dataEntity::class => MockResponse::make([
+            'value_int' => '1',
+            'value_decimal' => '1.1',
+            'value_string' => 1,
+            'value_bool' => 1,
+            'value_date' => '2021-01-01',
+            'value_date_immutable' => '2021-01-01',
+            'value_enum' => StringEnum::PAID->value,
+            'value_array' => '["test", "test2"]',
+            'value_object' => '{"test": "test"}',
+            'value_collection' => '[{"test": "test"}, {"test": "test2"}]',
+            'value_no_mutated' => '1',
+        ]),
+    ]);
+
+    $response = $dataEntity->execute();
+
+    expect($response->data('value_int'))->toBeInt()
+        ->and($response->data('value_int'))->toBe(1)
+        ->and($response->data('value_decimal'))->toBeFloat()
+        ->and($response->data('value_decimal'))->toBe(1.1)
+        ->and($response->data('value_string'))->toBeString()
+        ->and($response->data('value_string'))->toBe('1')
+        ->and($response->data('value_bool'))->toBeBool()
+        ->and($response->data('value_bool'))->toBeTrue()
+        ->and($response->data('value_date'))->toBeInstanceOf(DateTime::class)
+        ->and($response->data('value_date_immutable'))->toBeInstanceOf(DateTimeImmutable::class)
+        ->and($response->data('value_enum'))->toBeInstanceOf(StringEnum::class)
+        ->and($response->data('value_enum'))->toBe(StringEnum::PAID)
+        ->and($response->data('value_array'))->toBeArray()
+        ->and($response->data('value_array'))->toBe(['test', 'test2'])
+        ->and($response->data('value_object'))->toBeObject()
+        ->and($response->data('value_object')->test)->toBe('test')
+        ->and($response->data('value_collection'))->toBeInstanceOf(Collection::class)
+        ->and($response->data('value_collection')->count())->toBe(2)
+        ->and($response->data('value_no_mutated'))->toBe('1');
+
+});
+
+it('get value with a custom Accessor', function () {
+
+    $dataEntity = new class extends DataEntity
+    {
+        protected ?Method $method = Method::SELECT;
+
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        public function defaultParameters(): array
+        {
+            return [
+                'test' => 'test',
+            ];
+        }
+
+        protected function accessors(): array
+        {
+            return [
+                'value' => UppercaseAccessor::class,
+            ];
+        }
+    };
+
+    DataEntity::fake([
+        $dataEntity::class => MockResponse::make([
+            'value' => 'test',
+        ]),
+    ]);
+
+    $response = $dataEntity->execute();
+
+    expect($response->data('value'))->toBe('TEST');
+
 });

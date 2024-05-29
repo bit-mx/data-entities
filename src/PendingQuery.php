@@ -3,19 +3,22 @@
 namespace BitMx\DataEntities;
 
 use BitMx\DataEntities\Enums\Method;
-use BitMx\DataEntities\PendingQuery\AddCasts;
+use BitMx\DataEntities\PendingQuery\AddAccessors;
+use BitMx\DataEntities\PendingQuery\AddMutators;
 use BitMx\DataEntities\PendingQuery\BootDataEntity;
 use BitMx\DataEntities\PendingQuery\BootTraits;
 use BitMx\DataEntities\PendingQuery\MergeParameters;
 use BitMx\DataEntities\PendingQuery\MergeQueryStatements;
-use BitMx\DataEntities\Traits\DataEntity\HasCastablesAtributes;
+use BitMx\DataEntities\Traits\DataEntity\HasAccessors;
+use BitMx\DataEntities\Traits\DataEntity\HasMutators;
 use BitMx\DataEntities\Traits\HasParameters;
 use BitMx\DataEntities\Traits\HasQueryStatements;
 use BitMx\DataEntities\Traits\PendingQuery\Tappable;
 
 class PendingQuery
 {
-    use HasCastablesAtributes;
+    use HasAccessors;
+    use HasMutators;
     use HasParameters;
     use HasQueryStatements;
     use Tappable;
@@ -31,7 +34,8 @@ class PendingQuery
             ->tap(new BootTraits)
             ->tap(new MergeParameters)
             ->tap(new MergeQueryStatements)
-            ->tap(new AddCasts);
+            ->tap(new AddMutators)
+            ->tap(new AddAccessors);
     }
 
     public function getMethod(): Method

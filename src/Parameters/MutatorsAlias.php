@@ -2,14 +2,14 @@
 
 namespace BitMx\DataEntities\Parameters;
 
-use BitMx\DataEntities\Casts\AsBool;
-use BitMx\DataEntities\Casts\AsDate;
-use BitMx\DataEntities\Casts\AsDateTimeFormated;
-use BitMx\DataEntities\Casts\AsInteger;
-use BitMx\DataEntities\Casts\AsJson;
-use BitMx\DataEntities\Casts\AsString;
+use BitMx\DataEntities\Mutators\AsBool;
+use BitMx\DataEntities\Mutators\AsDate;
+use BitMx\DataEntities\Mutators\AsDateTimeFormated;
+use BitMx\DataEntities\Mutators\AsInteger;
+use BitMx\DataEntities\Mutators\AsJson;
+use BitMx\DataEntities\Mutators\AsString;
 
-class CastAlias
+class MutatorsAlias
 {
     /**
      * @return array<string, mixed>

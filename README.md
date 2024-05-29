@@ -13,26 +13,27 @@ Table of Contents
         * [Create a Data Entity](#create-a-data-entity)
         * [Connection](#connection)
         * [Execute the Data Entity](#execute-the-data-entity)
-        * [Casts](#casts)
-            * [Available casts](#available-casts)
-            * [Custom casts](#custom-casts)
-        * [Response useful methods](#response-useful-methods)
-            * [data](#data)
-            * [Data with a key](#data-with-a-key)
-            * [Data with a key and a default value](#data-with-a-key-and-a-default-value)
-            * [As object](#as-object)
-            * [As collection](#as-collection)
-            * [success](#success)
-            * [failed](#failed)
-            * [throw](#throw)
+        * [Mutators](#mutators)
+            * [Available mutators](#available-mutators)
+            * [Custom mutators](#custom-mutators)
+        * [Accessors](#accessors)
+            * [Available accessors](#available-accessors)
+            * [Custom accessor](#custom-accessor)
+        * [Custom accessor](#custom-accessor-1)
         * [Boot](#boot)
-            * [Traits](#traits)
+        * [Traits](#traits)
         * [Data Transfer objects](#data-transfer-objects)
         * [Debugging](#debugging)
         * [Testing](#testing)
             * [Mocking the Data Entity](#mocking-the-data-entity)
             * [Assertions](#assertions)
-        * [Using factories](#using-factories)
+            * [Using factories](#using-factories)
+        * [Data Transfer objects](#data-transfer-objects-1)
+        * [Debugging](#debugging-1)
+        * [Testing](#testing-1)
+            * [Mocking the Data Entity](#mocking-the-data-entity-1)
+            * [Assertions](#assertions-1)
+            * [Using factories](#using-factories-1)
 
 ## Introduction
 
@@ -180,9 +181,9 @@ $data = $response->getData();
 
 The execute method returns a Response object that contains the data returned by the stored procedure.
 
-### Casts
+### Mutators
 
-You can use the casts method to transform the parameters before sending them to the Store Procedure.
+You can use the mutators method to transform the parameters before sending them to the Store Procedure.
 
 ```php
 
@@ -208,7 +209,7 @@ class GetAllPostsDataEntity extends DataEntity
      * @return array<string, string>
      */
      #[\Override]
-    protected function casts(): array
+    protected function mutators(): array
     {
         return [
             'date' => 'datetime:Y-m-d H:i',
@@ -219,7 +220,7 @@ class GetAllPostsDataEntity extends DataEntity
 
 This will transform the date parameter to a formatted date string before sending it to the stored procedure.
 
-#### Available casts
+#### Available mutators
 
 - **datetime:**
   : Converts the value to a datetime string using the specified format.
@@ -253,24 +254,24 @@ This will transform the date parameter to a formatted date string before sending
 
 - **json:**
   : Converts the value to a json string.
-  Example:
+  : Example:
 
-    - if you pass an array, it will be converted to a json string.
-        - [1, 2,4] will be converted to "[1,2,4]"
-        - ['name' => 'John'] will be converted to '{"name":"John"}'
-        - You can pass the JSON options as an argument to the cast.
-        - `'json:'. JSON_PRETTY_PRINT` will return the json string with the JSON_PRETTY_PRINT option.
+  : - if you pass an array, it will be converted to a json string.
+  - [1, 2,4] will be converted to "[1,2,4]"
+  - ['name' => 'John'] will be converted to '{"name":"John"}'
+  - You can pass the JSON options as an argument to the cast.
+  - `'json:'. JSON_PRETTY_PRINT` will return the json string with the JSON_PRETTY_PRINT option.
 
-### Custom casts
+### Custom mutators
 
-You can create custom casts by implementing the Castable interface.
+You can create custom mutators by implementing the Mutable interface.
 
 ```php
-namespace BitMx\DataEntities\Casts;
+namespace BitMx\DataEntities\Mutators;
 
-use BitMx\DataEntities\Contracts\Castable;
+use BitMx\DataEntities\Contracts\Mutable;
 
-class CustomCast implements Castable
+class CustomMutator implements Mutable
 {
     /**
      * {@inheritDoc}
@@ -285,7 +286,103 @@ class CustomCast implements Castable
 You can create a new cast using the artisan command.
 
 ```bash
-php artisan make:data-entity-cast CustomCast
+php artisan make:data-entity-mutator CustomMutator
+```
+
+### Accessors
+
+You can use the accessors method to transform the data returned by the stored procedure.
+
+```php
+
+namespace App\DataEntities;
+
+use Carbon\Carbon;use DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseType;
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    ...
+    
+    #[\Override]
+    public function defaultParameters(): array
+    {
+        return [
+            'date' => Carbon::now(),
+        ];
+    } 
+    
+     /**
+     * @return array<string, string>
+     */
+     #[\Override]
+    protected function accessors(): array
+    {
+        return [
+            'contact_id' => 'integer',
+        ];
+    }
+}
+```
+
+This will transform the contact_id key to an integer before returning the data.
+
+#### Available accessors
+
+- **datetime:**
+  : Converts the value to a DateTime instance.
+
+- **datetime_immutable:**
+  : Converts the value to a DateTimeImmutable instance.
+
+- **bool:**
+  : Converts the value to a boolean
+  Example: If the value is 1, it will be converted true
+
+- **int:**
+  : Converts the value to an integer.
+
+- **float:**
+  : Converts the value to a float
+
+- **string:**
+  : Converts the value to a string.
+
+- **array:**
+  : Converts the value from a json string to an array.
+  -
+  - **object:**
+  : Converts the value from a json string to an object.
+
+- **collection:**
+  : Converts the value from a json string to a Laravel Collection.
+
+### Custom accessor
+
+You can create custom accessors by implementing the Accessable interface.
+
+```php
+namespace BitMx\DataEntities\Accessors;
+
+use BitMx\DataEntities\Contracts\Accessable;
+
+class CustomAccessor implements Accessable
+{
+    /**
+     * {@inheritDoc}
+     */
+    public function get(string $key, mixed $value, array $data): mixed
+    {
+        
+    }
+}
+```
+
+You can create a new accessor using the artisan command.
+
+```bash
+php artisan make:data-entity-accessor CustomAccessor
 ```
 
 ## Response useful methods

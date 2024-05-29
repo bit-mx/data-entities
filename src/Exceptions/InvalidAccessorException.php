@@ -2,6 +2,6 @@
 
 namespace BitMx\DataEntities\Exceptions;
 
-class InvalidCastException extends \Exception
+class InvalidAccessorException extends \Exception
 {
 }
