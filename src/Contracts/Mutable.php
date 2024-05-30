@@ -2,7 +2,7 @@
 
 namespace BitMx\DataEntities\Contracts;
 
-interface Castable
+interface Mutable
 {
     /**
      * @param  array<string, mixed>  $parameters

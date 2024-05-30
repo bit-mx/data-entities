@@ -4,6 +4,7 @@ namespace BitMx\DataEntities\Responses;
 
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\PendingQuery;
+use BitMx\DataEntities\Responses\Mutators\AccessorProcessor;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -49,11 +50,30 @@ readonly class Response
      */
     public function data(string|int|null $key = null, mixed $default = null): mixed
     {
+        $data = $this->mutatedData();
+
+        if (is_null($key)) {
+            return $data;
+        }
+
+        return Arr::get($data, $key, $default);
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    protected function mutatedData(): array
+    {
+        return AccessorProcessor::make($this->rawData(), $this->pendingQuery)->process();
+    }
+
+    public function rawData(?string $key = null): mixed
+    {
         if (is_null($key)) {
             return $this->data;
         }
 
-        return Arr::get($this->data, $key, $default);
+        return $this->data[$key];
     }
 
     public function object(): object

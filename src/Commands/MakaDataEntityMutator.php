@@ -4,23 +4,23 @@ namespace BitMx\DataEntities\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 
-class MakaDataEntityCastable extends GeneratorCommand
+class MakaDataEntityMutator extends GeneratorCommand
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'make:data-entity-cast {name}';
+    protected $signature = 'make:data-entity-mutator {name}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Creates a new custom cast class';
+    protected $description = 'Creates a new custom mutator class';
 
-    protected string $namespace = 'App\DataEntityCasts';
+    protected string $namespace = 'App\DataEntityMutators';
 
     #[\Override]
     protected function getStub(): string
@@ -30,7 +30,7 @@ class MakaDataEntityCastable extends GeneratorCommand
 
     public function getStubPath(): string
     {
-        return __DIR__.'/../../stubs/castable.stub';
+        return __DIR__.'/../../stubs/mutable.stub';
     }
 
     /**

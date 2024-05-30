@@ -1,10 +1,10 @@
 <?php
 
-namespace BitMx\DataEntities\Casts;
+namespace BitMx\DataEntities\Mutators;
 
-use BitMx\DataEntities\Contracts\Castable;
+use BitMx\DataEntities\Contracts\Mutable;
 
-class AsJson implements Castable
+class AsJson implements Mutable
 {
     /**
      * @var array<array-key, mixed>

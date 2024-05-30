@@ -4,11 +4,11 @@ namespace BitMx\DataEntities\PendingQuery;
 
 use BitMx\DataEntities\PendingQuery;
 
-class AddCasts
+class AddAccessors
 {
     public function __invoke(PendingQuery $pendingQuery): PendingQuery
     {
-        $pendingQuery->setCasts($pendingQuery->getDataEntity()->getCasts());
+        $pendingQuery->setAccessors($pendingQuery->getDataEntity()->getAccessors());
 
         return $pendingQuery;
     }

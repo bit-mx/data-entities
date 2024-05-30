@@ -1,10 +1,10 @@
 <?php
 
-namespace BitMx\DataEntities\Casts;
+namespace BitMx\DataEntities\Mutators;
 
-use BitMx\DataEntities\Contracts\Castable;
+use BitMx\DataEntities\Contracts\Mutable;
 
-class AsDateTimeFormated implements Castable
+class AsDate implements Mutable
 {
     /**
      * @var array<array-key, mixed>
@@ -22,13 +22,13 @@ class AsDateTimeFormated implements Castable
     /**
      * {@inheritDoc}
      */
-    public function transform(string $key, mixed $value, array $parameters): string
+    public function transform(string $key, mixed $value, array $parameters): mixed
     {
         if (! $value instanceof \DateTimeInterface) {
             throw new \InvalidArgumentException("The value of the parameter {$key} must be a DateTimeInterface instance");
         }
 
-        $format = $this->attributes[0] ?? 'Y-m-d H:i:s';
+        $format = $this->attributes[0] ?? 'Y-m-d';
 
         return $value->format($format);
     }

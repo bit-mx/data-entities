@@ -1,10 +1,10 @@
 <?php
 
-namespace BitMx\DataEntities\Casts;
+namespace BitMx\DataEntities\Mutators;
 
-use BitMx\DataEntities\Contracts\Castable;
+use BitMx\DataEntities\Contracts\Mutable;
 
-class AsDecimal implements Castable
+class AsDecimal implements Mutable
 {
     /**
      * {@inheritDoc}
