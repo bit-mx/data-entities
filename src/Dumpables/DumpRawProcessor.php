@@ -18,6 +18,13 @@ class DumpRawProcessor
 
     public function handler(): never
     {
+        $query = $this->formatQuery();
+
+        dd($query);
+    }
+
+    protected function formatQuery(): string
+    {
         $query = $this->prepareQuery();
 
         $keys = $this->pendingQuery->parameters()->keys()->map(fn (string $key) => sprintf(':%s', $key));
@@ -25,20 +32,27 @@ class DumpRawProcessor
         $parameters = (new ParametersProcessor($this->pendingQuery))->process();
 
         $parameters = collect($parameters)->mapWithKeys(function (mixed $value, string $key) {
-            if (is_string($value)) {
-                return [
-                    $key => sprintf("'%s'", $value),
-                ];
-            }
-
             return [
-                $key => $value,
+                $key => $this->getFormattedParameter($value),
             ];
         })
             ->all();
 
         $query = Str::replace($keys, collect($parameters)->values(), $query);
 
-        dd($query);
+        return $query;
+    }
+
+    protected function getFormattedParameter(int|string|float|bool|null $value): int|string|float|bool
+    {
+        if (is_null($value)) {
+            return 'NULL';
+        }
+
+        if (is_string($value)) {
+            return sprintf("'%s'", $value);
+        }
+
+        return $value;
     }
 }
