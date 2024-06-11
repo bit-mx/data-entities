@@ -4,7 +4,7 @@ namespace BitMx\DataEntities\PendingQuery;
 
 use BitMx\DataEntities\PendingQuery;
 
-class AddMutators
+readonly class AddMutators
 {
     public function __invoke(PendingQuery $pendingQuery): PendingQuery
     {

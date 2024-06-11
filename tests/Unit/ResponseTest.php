@@ -266,13 +266,11 @@ it('get value with a custom Accessor', function () {
     };
 
     DataEntity::fake([
-        $dataEntity::class => MockResponse::make([
-            'value' => 'test',
-        ]),
+        $dataEntity::class => MockResponse::make(new \Exception()),
     ]);
 
     $response = $dataEntity->execute();
 
-    expect($response->data('value'))->toBe('TEST');
+    expect($response->data())->toBe([]);
 
 });

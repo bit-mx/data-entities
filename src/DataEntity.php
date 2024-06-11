@@ -12,6 +12,7 @@ use BitMx\DataEntities\Traits\DataEntity\HasAccessors;
 use BitMx\DataEntities\Traits\DataEntity\HasConnection;
 use BitMx\DataEntities\Traits\DataEntity\HasDumpableQuery;
 use BitMx\DataEntities\Traits\DataEntity\HasFakeableResponse;
+use BitMx\DataEntities\Traits\DataEntity\HasMiddleware;
 use BitMx\DataEntities\Traits\DataEntity\HasMutators;
 use BitMx\DataEntities\Traits\HasParameters;
 use BitMx\DataEntities\Traits\HasQueryStatements;
@@ -25,6 +26,7 @@ abstract class DataEntity
     use HasConnection;
     use HasDumpableQuery;
     use HasFakeableResponse;
+    use HasMiddleware;
     use HasMutators;
     use HasParameters;
     use HasQueryStatements;

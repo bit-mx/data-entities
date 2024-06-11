@@ -4,7 +4,7 @@ namespace BitMx\DataEntities\PendingQuery;
 
 use BitMx\DataEntities\PendingQuery;
 
-class BootDataEntity
+readonly class BootDataEntity
 {
     public function __invoke(PendingQuery $pendingQuery): PendingQuery
     {

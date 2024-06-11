@@ -21,5 +21,14 @@ it('creates a PendingQuery', function () {
 
     expect($pendingQuery->getDataEntity())->toBe($this->dataEntity)
         ->and($pendingQuery->getMethod())->toBe(Method::SELECT);
+});
 
+it('executes query middlewares', function () {
+    $this->dataEntity->middleware()->onQuery(function (PendingQuery $pendingQuery) {
+        $pendingQuery->parameters()->add('test', 'test 1');
+    });
+
+    $pendingQuery = new PendingQuery($this->dataEntity);
+
+    expect($pendingQuery->parameters()->all())->toBe(['test' => 'test 1']);
 });

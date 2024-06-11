@@ -28,9 +28,11 @@ trait ExecutesQuery
     {
         $executer = $this->resolveClient();
 
-        $reponse = $executer->handle();
+        $response = $executer->handle();
 
-        return $reponse;
+        $response->getPendingQuery()->middleware()->executeResponsePipeline($response);
+
+        return $response;
     }
 
     protected function resolveClient(): ProcessorContract

@@ -7,6 +7,11 @@ namespace BitMx\DataEntities\Traits\Response;
  */
 trait ThrowsError
 {
+    public function getError(): ?string
+    {
+        return $this->senderException?->getMessage();
+    }
+
     public function throw(): void
     {
         if ($this->senderException === null) {
