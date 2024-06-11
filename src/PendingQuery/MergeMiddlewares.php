@@ -4,11 +4,15 @@ namespace BitMx\DataEntities\PendingQuery;
 
 use BitMx\DataEntities\PendingQuery;
 
-readonly class AddAccessors
+readonly class MergeMiddlewares
 {
     public function __invoke(PendingQuery $pendingQuery): PendingQuery
     {
-        $pendingQuery->setAccessors($pendingQuery->getDataEntity()->getAccessors());
+        $dataEntity = $pendingQuery->getDataEntity();
+
+        $middleware = $dataEntity->middleware();
+
+        $pendingQuery->middleware()->merge($middleware);
 
         return $pendingQuery;
     }

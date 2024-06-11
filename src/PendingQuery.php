@@ -7,9 +7,11 @@ use BitMx\DataEntities\PendingQuery\AddAccessors;
 use BitMx\DataEntities\PendingQuery\AddMutators;
 use BitMx\DataEntities\PendingQuery\BootDataEntity;
 use BitMx\DataEntities\PendingQuery\BootTraits;
+use BitMx\DataEntities\PendingQuery\MergeMiddlewares;
 use BitMx\DataEntities\PendingQuery\MergeParameters;
 use BitMx\DataEntities\PendingQuery\MergeQueryStatements;
 use BitMx\DataEntities\Traits\DataEntity\HasAccessors;
+use BitMx\DataEntities\Traits\DataEntity\HasMiddleware;
 use BitMx\DataEntities\Traits\DataEntity\HasMutators;
 use BitMx\DataEntities\Traits\HasParameters;
 use BitMx\DataEntities\Traits\HasQueryStatements;
@@ -18,6 +20,7 @@ use BitMx\DataEntities\Traits\PendingQuery\Tappable;
 class PendingQuery
 {
     use HasAccessors;
+    use HasMiddleware;
     use HasMutators;
     use HasParameters;
     use HasQueryStatements;
@@ -34,8 +37,12 @@ class PendingQuery
             ->tap(new BootTraits)
             ->tap(new MergeParameters)
             ->tap(new MergeQueryStatements)
+            ->tap(new MergeMiddlewares)
             ->tap(new AddMutators)
             ->tap(new AddAccessors);
+
+        // Execute the middleware
+        $this->middleware()->executeQueryPipeline($this);
     }
 
     public function getMethod(): Method

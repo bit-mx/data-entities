@@ -10,22 +10,22 @@ final class MockResponse
      * @param  array<array-key, mixed>  $data
      */
     public function __construct(
-        protected array|DataEntityFactory $data,
+        protected array|DataEntityFactory|\Throwable $data,
     ) {
     }
 
     /**
      * @param  array<array-key, mixed>  $data
      */
-    public static function make(array|DataEntityFactory $data): static
+    public static function make(array|DataEntityFactory|\Throwable $data): static
     {
         return new self($data);
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return array<array-key, mixed>|\Throwable
      */
-    public function data(): array
+    public function data(): array|\Throwable
     {
         if ($this->data instanceof DataEntityFactory) {
             return $this->data->create();

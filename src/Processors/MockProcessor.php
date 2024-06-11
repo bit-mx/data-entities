@@ -46,6 +46,11 @@ class MockProcessor implements ProcessorContract
 
     protected function createFakeResponse(MockResponse $mockResponse): Response
     {
+
+        if ($mockResponse->data() instanceof \Throwable) {
+            return new Response($this->pendingQuery, [], false, $mockResponse->data());
+        }
+
         return new Response($this->pendingQuery, $mockResponse->data(), true);
     }
 }
