@@ -46,6 +46,7 @@ class Processor implements ProcessorContract
 
         try {
             $executionMethod = $this->getExecuter();
+
             $preparedQuery = $this->prepareQuery();
 
             $params = $this->createParameters();
@@ -70,7 +71,7 @@ class Processor implements ProcessorContract
     protected function getExecuter(): string
     {
         return match ($this->pendingQuery->getMethod()) {
-            Method::SELECT => 'select',
+            Method::SELECT => 'selectResultSets',
             Method::STATEMENT => 'statement',
         };
     }
