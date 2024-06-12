@@ -20,7 +20,10 @@ interface DataStore
 
     public function isNotEmpty(): bool;
 
-    public function add(): self;
+    /**
+     * @param  string|int|array<array-key, mixed>|null  $key
+     */
+    public function add(string|int|array|null $key = null, mixed $value = null): self;
 
     /**
      * @param  array<array-key, mixed>  ...$arrays
