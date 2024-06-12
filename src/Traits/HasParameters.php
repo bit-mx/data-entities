@@ -6,7 +6,7 @@ use BitMx\DataEntities\Stores\ParameterStore;
 
 trait HasParameters
 {
-    public ParameterStore $parameters;
+    protected ParameterStore $parameters;
 
     public function parameters(): ParameterStore
     {

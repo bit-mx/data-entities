@@ -8,7 +8,7 @@ readonly class AddMutators
 {
     public function __invoke(PendingQuery $pendingQuery): PendingQuery
     {
-        $pendingQuery->setMutators($pendingQuery->getDataEntity()->getMutators());
+        $pendingQuery->mutators()->merge($pendingQuery->getDataEntity()->getMutators());
 
         return $pendingQuery;
     }

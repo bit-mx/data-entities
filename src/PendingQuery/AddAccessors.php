@@ -8,7 +8,7 @@ readonly class AddAccessors
 {
     public function __invoke(PendingQuery $pendingQuery): PendingQuery
     {
-        $pendingQuery->setAccessors($pendingQuery->getDataEntity()->getAccessors());
+        $pendingQuery->accessors()->merge($pendingQuery->getDataEntity()->getAccessors());
 
         return $pendingQuery;
     }
