@@ -43,7 +43,7 @@ final readonly class AccessorProcessor
     {
         return array_merge(
             AccessorsAlias::get(),
-            $this->pendingQuery->getAccessors()
+            $this->pendingQuery->accessors()->all()
         );
     }
 }

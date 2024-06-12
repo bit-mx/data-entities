@@ -30,6 +30,6 @@ class ParametersProcessor
      */
     protected function processParameterValue(mixed $value, string $key, array $parameters): string|int|bool|float|null
     {
-        return Transformer::make($value, $key, $this->pendingQuery->getMutators(), $parameters)->transform();
+        return Transformer::make($value, $key, $this->pendingQuery->mutators()->all(), $parameters)->transform();
     }
 }

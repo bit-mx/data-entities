@@ -12,21 +12,21 @@ use BitMx\DataEntities\PendingQuery\MergeMiddlewares;
 use BitMx\DataEntities\PendingQuery\MergeOutputParameters;
 use BitMx\DataEntities\PendingQuery\MergeParameters;
 use BitMx\DataEntities\PendingQuery\MergeQueryStatements;
-use BitMx\DataEntities\Traits\DataEntity\HasAccessors;
 use BitMx\DataEntities\Traits\DataEntity\HasAlias;
 use BitMx\DataEntities\Traits\DataEntity\HasMiddleware;
-use BitMx\DataEntities\Traits\DataEntity\HasMutators;
 use BitMx\DataEntities\Traits\HasOutputParameters;
 use BitMx\DataEntities\Traits\HasParameters;
 use BitMx\DataEntities\Traits\HasQueryStatements;
+use BitMx\DataEntities\Traits\PendingQuery\HasAccessorsStore;
+use BitMx\DataEntities\Traits\PendingQuery\HasMutatorStore;
 use BitMx\DataEntities\Traits\PendingQuery\Tappable;
 
 class PendingQuery
 {
-    use HasAccessors;
+    use HasAccessorsStore;
     use HasAlias;
     use HasMiddleware;
-    use HasMutators;
+    use HasMutatorStore;
     use HasOutputParameters;
     use HasParameters;
     use HasQueryStatements;
