@@ -77,11 +77,11 @@ readonly class Response
             return $parameter;
         }
 
-        if (empty($this->pendingQuery->getalias())) {
+        if ($this->pendingQuery->alias()->isEmpty()) {
             return $parameter;
         }
 
-        return $this->pendingQuery->getalias()[$parameter] ?? $parameter;
+        return $this->pendingQuery->alias()->all()[$parameter] ?? $parameter;
     }
 
     public function isEmpty(): bool
