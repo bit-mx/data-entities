@@ -59,8 +59,17 @@ class ArrayStore implements DataStore
         return empty($this->data);
     }
 
-    public function add(string|int|null $key = null, mixed $value = null): self
+    /**
+     * @param  string|int|array<array-key, mixed>|null  $key
+     */
+    public function add(string|int|array|null $key = null, mixed $value = null): self
     {
+        if (is_array($key)) {
+            $this->data = array_merge($this->data, $key);
+
+            return $this;
+        }
+
         isset($key)
             ? $this->data[$key] = $value
             : $this->data[] = $value;
