@@ -8,7 +8,7 @@ readonly class AddAlias
 {
     public function __invoke(PendingQuery $pendingQuery): PendingQuery
     {
-        $pendingQuery->setAlias($pendingQuery->getDataEntity()->getalias());
+        $pendingQuery->alias()->merge($pendingQuery->getDataEntity()->getalias());
 
         return $pendingQuery;
     }
