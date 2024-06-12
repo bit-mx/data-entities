@@ -11,6 +11,7 @@ use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
 use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class Processor implements ProcessorContract
@@ -103,10 +104,12 @@ class Processor implements ProcessorContract
             return [];
         }
 
+        $responseData = json_decode((string) json_encode($data), true);
+
         if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
-            return json_decode((string) json_encode($data[0]), true);
+            return Arr::get($responseData, '0.0', []);
         }
 
-        return json_decode((string) json_encode($data), true);
+        return $responseData;
     }
 }
