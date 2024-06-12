@@ -19,21 +19,26 @@ Table of Contents
         * [Accessors](#accessors)
             * [Available accessors](#available-accessors)
             * [Custom accessor](#custom-accessor)
-        * [Custom accessor](#custom-accessor-1)
+        * [Response useful methods](#response-useful-methods)
+            * [data](#data)
+            * [Data with a key](#data-with-a-key)
+            * [Data with a key and a default value](#data-with-a-key-and-a-default-value)
+            * [As object](#as-object)
+            * [As collection](#as-collection)
+            * [success](#success)
+            * [failed](#failed)
+            * [throw](#throw)
         * [Boot](#boot)
-        * [Traits](#traits)
+            * [Traits](#traits)
+        * [Middlewares](#middlewares)
+        * [Plugins](#plugins)
+            * [AlwaysThrowOnError](#alwaysthrowonerror)
         * [Data Transfer objects](#data-transfer-objects)
         * [Debugging](#debugging)
         * [Testing](#testing)
             * [Mocking the Data Entity](#mocking-the-data-entity)
             * [Assertions](#assertions)
             * [Using factories](#using-factories)
-        * [Data Transfer objects](#data-transfer-objects-1)
-        * [Debugging](#debugging-1)
-        * [Testing](#testing-1)
-            * [Mocking the Data Entity](#mocking-the-data-entity-1)
-            * [Assertions](#assertions-1)
-            * [Using factories](#using-factories-1)
 
 ## Introduction
 
@@ -516,6 +521,81 @@ trait Taggable
 ```
 
 The bootTaggable method will be called before the stored procedure is executed.
+
+## Middlewares
+
+You can use middlewares to execute code before and after the stored procedure is executed.
+
+```php
+namespace App\DataEntities;
+
+use BitMx\DataEntities\PendingQuery;
+use DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Responses\Response;
+use Illuminate\Support\Collection;
+
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    protected ?Method $method = Method::SELECT;
+    
+    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
+    ...
+    
+    #[\Override]
+    public function boot(PendingQuery $pendingQuery): void
+    {
+        $pendingQuery->middleware()->onQuery(function (PendingQuery $pendingQuery) {
+            $pendingQuery->parameters()->add('tag', 'laravel');
+        });
+        
+        $pendingQuery->middleware()->onResponse(function (Response $response) {
+            $data = $response->getData();
+            
+            $data['tag'] = 'laravel';
+            
+            $response->setData($data);
+        });
+    }
+}
+```
+
+## Plugins
+
+You can use plugins to add functionality to your Data Entities.
+
+### AlwaysThrowOnError
+
+The AlwaysThrowOnError plugin will throw an exception if the stored procedure fails.
+
+```php
+
+namespace App\DataEntities;
+
+use BitMx\DataEntities\PendingQuery;
+use BitMx\DataEntities\Plugins\AlwaysThrowOnError;
+use DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Responses\Response;
+use Illuminate\Support\Collection;
+
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    use AlwaysThrowOnError;
+
+    protected ?Method $method = Method::SELECT;
+    
+    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
+    ...
+   
+}
+```
 
 ## Data Transfer objects
 
