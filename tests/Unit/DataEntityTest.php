@@ -3,6 +3,8 @@
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Plugins\AlwaysThrowOnError;
+use BitMx\DataEntities\Responses\MockResponse;
 
 it('creates a data entity', function () {
     $dataEntity = new class extends DataEntity
@@ -43,6 +45,8 @@ test('if fake is enabled fake then DataEntity is fakeable', function () {
 
     $dataEntity = new class extends DataEntity
     {
+        use AlwaysThrowOnError;
+
         protected ?Method $method = Method::SELECT;
 
         protected ?ResponseType $responseType = ResponseType::SINGLE;
@@ -53,5 +57,12 @@ test('if fake is enabled fake then DataEntity is fakeable', function () {
         }
     };
 
-    expect($dataEntity::isFake())->toBeTrue();
-});
+    DataEntity::fake([
+        $dataEntity::class => MockResponse::make(new Exception('Error')),
+    ]);
+
+    $dataEntity->execute();
+
+    DataEntity::assertExecuted($dataEntity::class);
+})
+    ->throws(Exception::class, 'Error');
