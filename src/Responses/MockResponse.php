@@ -37,11 +37,11 @@ final readonly class MockResponse
     public function data(): array
     {
         if (empty($this->getOutput())) {
-            return $this->getData();
+            return [$this->getData()];
         }
 
         return [
-            $this->getData(),
+            [$this->getData()],
             $this->getOutput(),
         ];
     }
