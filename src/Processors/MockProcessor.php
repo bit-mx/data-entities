@@ -4,6 +4,7 @@ namespace BitMx\DataEntities\Processors;
 
 use BitMx\DataEntities\Contracts\ProcessorContract;
 use BitMx\DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\Exceptions\MockResponseNotFoundException;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\MockResponse;
@@ -49,6 +50,10 @@ class MockProcessor implements ProcessorContract
 
         if ($mockResponse->hasException()) {
             return new Response($this->pendingQuery, [], false, $mockResponse->exception());
+        }
+
+        if ($this->dataEntity->getResponseType() === ResponseType::SINGLE) {
+            return new Response($this->pendingQuery, $mockResponse->data()[0], true);
         }
 
         return new Response($this->pendingQuery, $mockResponse->data(), true);
