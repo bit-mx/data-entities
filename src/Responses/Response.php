@@ -44,11 +44,23 @@ class Response
      */
     protected function getData(array $data): array
     {
+        return Arr::get($data, '0', []);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $data
+     * @return array<array-key, mixed>
+     */
+    protected function getOutput(array $data): array
+    {
         if ($this->pendingQuery->outputParameters()->isEmpty()) {
-            return $data;
+            return [];
         }
 
-        return $data[0];
+        return collect($data)
+            ->filter(fn (array $value, int $key): bool => $key > 0)
+            ->flatMap(fn (array $value): array => $value[0])
+            ->all();
     }
 
     public function isEmpty(): bool
@@ -69,22 +81,6 @@ class Response
         }
 
         return Arr::get($data, $key, $default);
-    }
-
-    /**
-     * @param  array<array-key, mixed>  $data
-     * @return array<array-key, mixed>
-     */
-    protected function getOutput(array $data): array
-    {
-        if ($this->pendingQuery->outputParameters()->isEmpty()) {
-            return [];
-        }
-
-        return collect($data)
-            ->filter(fn (array $value, int $key): bool => $key > 0)
-            ->flatMap(fn (array $value): array => $value[0])
-            ->all();
     }
 
     /**
