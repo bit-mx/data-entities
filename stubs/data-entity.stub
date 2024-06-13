@@ -8,8 +8,6 @@ use BitMx\DataEntities\Enums\ResponseType;
 
 class {{ class }} extends DataEntity
 {
-    protected ?Method $method = Method::SELECT;
-
     protected ?ResponseType $responseType = ResponseType::SINGLE;
 
     #[\Override]

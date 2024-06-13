@@ -2,6 +2,7 @@
 
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Responses\Response;
@@ -12,7 +13,7 @@ use Illuminate\Support\Collection;
 beforeEach(function () {
     $this->dataEntity = new class extends DataEntity
     {
-        protected ?Method $method = Method::SELECT;
+        protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
         {
@@ -129,7 +130,7 @@ it('returns a empty array if there is no data', function () {
 
     $dataEntity = new class extends DataEntity
     {
-        protected ?Method $method = Method::SELECT;
+        protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
         {
@@ -165,6 +166,8 @@ it('mutate response data', function () {
     {
         protected ?Method $method = Method::SELECT;
 
+        protected ?ResponseType $responseType = ResponseType::SINGLE;
+
         public function resolveStoreProcedure(): string
         {
             return 'sp_test';
@@ -181,6 +184,7 @@ it('mutate response data', function () {
         {
             return [
                 'value_int' => 'integer',
+                'value_int2' => 'int',
                 'value_decimal' => 'decimal',
                 'value_string' => 'string',
                 'value_bool' => 'boolean',
@@ -202,6 +206,7 @@ it('mutate response data', function () {
     DataEntity::fake([
         $dataEntity::class => MockResponse::make([
             'value_int' => '1',
+            'value_int2' => '2',
             'value_decimal' => '1.1',
             'value_string' => 1,
             'value_bool' => 1,
@@ -217,8 +222,8 @@ it('mutate response data', function () {
 
     $response = $dataEntity->execute();
 
-    expect($response->data('value_int'))->toBeInt()
-        ->and($response->data('value_int'))->toBe(1)
+    expect($response->data('value_int'))->toBeInt()->toBe(1)
+        ->and($response->data('value_int2'))->toBeInt()->toBe(2)
         ->and($response->data('value_decimal'))->toBeFloat()
         ->and($response->data('value_decimal'))->toBe(1.1)
         ->and($response->data('value_string'))->toBeString()
@@ -239,11 +244,113 @@ it('mutate response data', function () {
 
 });
 
+it('mutate response collection data', function () {
+    $dataEntity = new class extends DataEntity
+    {
+        protected ?Method $method = Method::SELECT;
+
+        protected ?ResponseType $responseType = ResponseType::COLLECTION;
+
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        public function defaultParameters(): array
+        {
+            return [
+                'test' => 'test',
+            ];
+        }
+
+        protected function accessors(): array
+        {
+            return [
+                'value_int' => 'integer',
+                'value_int2' => 'int',
+                'value_decimal' => 'decimal',
+                'value_float' => 'float',
+                'value_string' => 'string',
+                'value_bool' => 'boolean',
+                'value_date' => 'date',
+                'value_enum' => StringEnum::class,
+                'value_array' => 'array',
+                'value_object' => 'object',
+                'value_collection' => 'collection',
+                'value_date_immutable' => 'date_immutable',
+            ];
+        }
+
+        public function createDtoFromResponse(Response $response): mixed
+        {
+            return (object) $response->data();
+        }
+    };
+
+    DataEntity::fake([
+        $dataEntity::class => MockResponse::make([
+            [
+                'value_int' => '1',
+                'value_int2' => '2',
+                'value_decimal' => '1.1',
+                'value_float' => '2.2',
+                'value_string' => 1,
+                'value_bool' => 1,
+                'value_date' => '2021-01-01',
+                'value_date_immutable' => '2021-01-01',
+                'value_enum' => StringEnum::PAID->value,
+                'value_array' => '["test", "test2"]',
+                'value_object' => '{"test": "test"}',
+                'value_collection' => '[{"test": "test"}, {"test": "test2"}]',
+                'value_no_mutated' => '1',
+            ],
+            [
+                'value_int' => '1',
+                'value_int2' => '2',
+                'value_decimal' => '1.1',
+                'value_float' => '2.2',
+                'value_string' => 1,
+                'value_bool' => 1,
+                'value_date' => '2021-01-01',
+                'value_date_immutable' => '2021-01-01',
+                'value_enum' => StringEnum::PAID->value,
+                'value_array' => '["test", "test2"]',
+                'value_object' => '{"test": "test"}',
+                'value_collection' => '[{"test": "test"}, {"test": "test2"}]',
+                'value_no_mutated' => '1',
+            ],
+        ]),
+    ]);
+
+    $response = $dataEntity->execute();
+
+    $data = $response->data();
+
+    expect($data[0]['value_int'])->toBeInt()->toBe(1)
+        ->and($data[0]['value_int2'])->toBeInt()->toBe(2)
+        ->and($data[0]['value_decimal'])->toBeFloat()->toBe(1.1)
+        ->and($data[0]['value_float'])->toBeFloat()->toBe(2.2)
+        ->and($data[0]['value_string'])->toBeString()->toBe('1')
+        ->and($data[0]['value_bool'])->toBeBool()->toBeTrue()
+        ->and($data[0]['value_date'])->toBeInstanceOf(DateTime::class)
+        ->and($data[0]['value_date_immutable'])->toBeInstanceOf(DateTimeImmutable::class)
+        ->and($data[0]['value_enum'])->toBeInstanceOf(StringEnum::class)->toBe(StringEnum::PAID)
+        ->and($data[0]['value_array'])->toBeArray()->toBe(['test', 'test2'])
+        ->and($data[0]['value_object'])->toBeObject()
+        ->and($data[0]['value_object']->test)->toBe('test')
+        ->and($data[0]['value_collection'])->toBeInstanceOf(Collection::class)
+        ->and($data[0]['value_collection']->count())->toBe(2)
+        ->and($data[0]['value_no_mutated'])->toBe('1');
+
+});
+
 it('get value with a custom Accessor', function () {
 
     $dataEntity = new class extends DataEntity
     {
         protected ?Method $method = Method::SELECT;
+
+        protected ?ResponseType $responseType = ResponseType::COLLECTION;
 
         public function resolveStoreProcedure(): string
         {
@@ -266,11 +373,14 @@ it('get value with a custom Accessor', function () {
     };
 
     DataEntity::fake([
-        $dataEntity::class => MockResponse::make(new \Exception()),
+        $dataEntity::class => MockResponse::makeWithException(new \Exception('error')),
     ]);
 
     $response = $dataEntity->execute();
 
     expect($response->data())->toBe([]);
 
-});
+    $response->throw();
+
+})
+    ->throws(\Exception::class, 'error');

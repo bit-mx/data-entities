@@ -58,7 +58,7 @@ test('if fake is enabled fake then DataEntity is fakeable', function () {
     };
 
     DataEntity::fake([
-        $dataEntity::class => MockResponse::make(new Exception('Error')),
+        $dataEntity::class => MockResponse::makeWithException(new Exception('Error')),
     ]);
 
     $dataEntity->execute();
