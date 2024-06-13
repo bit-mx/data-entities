@@ -35,7 +35,7 @@ abstract class DataEntity
     use HasParameters;
     use HasQueryStatements;
 
-    protected ?Method $method = null;
+    protected ?Method $method = Method::SELECT;
 
     protected ?ResponseType $responseType = null;
 

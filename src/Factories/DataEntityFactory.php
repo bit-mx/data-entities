@@ -75,6 +75,7 @@ abstract class DataEntityFactory
             $this->definition(),
             $this->attributes,
             $this->without,
+            $this->output()
         );
     }
 
@@ -82,6 +83,14 @@ abstract class DataEntityFactory
      * @return array<array-key, mixed>
      */
     abstract public function definition(): array;
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function output(): array
+    {
+        return [];
+    }
 
     /**
      * @param  array<array-key, mixed>|string  $attributes

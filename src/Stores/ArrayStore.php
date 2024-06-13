@@ -33,9 +33,9 @@ class ArrayStore implements DataStore
     }
 
     #[\Override]
-    public function get(string $key): mixed
+    public function get(string $key, mixed $default = null): mixed
     {
-        return Arr::get($this->data, $key);
+        return Arr::get($this->data, $key, $default);
     }
 
     /**

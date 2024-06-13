@@ -7,6 +7,7 @@ test('creates a new instance of FactoryData', function () {
         definition: ['name' => 'John Doe'],
         attributes: ['email' => 'test@example.com', 'name' => 'Jane Doe'],
         without: ['name'],
+        output: [],
     );
 
     expect($factoryData)->toBeInstanceOf(FactoryData::class);
@@ -17,6 +18,7 @@ it('gets the data merged between definition and attributes', function () {
         definition: ['name' => 'John Doe'],
         attributes: ['email' => 'test@example.com', 'name' => 'Jane Doe'],
         without: [],
+        output: [],
     );
 
     expect($factoryData->getData())->toBe([
@@ -30,6 +32,7 @@ it('get the data without the specified keys', function () {
         definition: ['name' => 'John Doe'],
         attributes: ['email' => 'test@example.com', 'name' => 'Jane Doe'],
         without: ['name'],
+        output: [],
     );
 
     expect($factoryData->getData())->toBe([

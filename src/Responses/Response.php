@@ -4,33 +4,34 @@ namespace BitMx\DataEntities\Responses;
 
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\PendingQuery;
-use BitMx\DataEntities\Responses\Mutators\AccessorProcessor;
+use BitMx\DataEntities\Traits\Response\HasMutatedData;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
-readonly class Response
+class Response
 {
+    use HasMutatedData;
     use ThrowsError;
 
     /**
      * @var array<array-key, mixed>
      */
-    protected array $data;
+    protected readonly array $data;
 
     /**
      * @var array<array-key, mixed>
      */
-    protected array $output;
+    protected readonly array $output;
 
     /**
      * @param  array<array-key, mixed>  $data
      */
     public function __construct(
-        protected PendingQuery $pendingQuery,
+        protected readonly PendingQuery $pendingQuery,
         array $data = [],
-        protected bool $success = true,
-        protected ?\Throwable $senderException = null
+        protected readonly bool $success = true,
+        protected readonly ?\Throwable $senderException = null
     ) {
         $this->data = $this->getData($data);
 
@@ -43,45 +44,11 @@ readonly class Response
      */
     protected function getData(array $data): array
     {
-        $outputParametersCount = $this->pendingQuery->outputParameters()->toCollection()->count();
-
-        if ($outputParametersCount === 0) {
+        if ($this->pendingQuery->outputParameters()->isEmpty()) {
             return $data;
         }
 
         return $data[0];
-    }
-
-    /**
-     * @param  array<array-key, mixed>  $data
-     * @return array<array-key, mixed>
-     */
-    protected function getOutput(array $data): array
-    {
-        $outputParametersCount = $this->pendingQuery->outputParameters()->toCollection()->count();
-
-        if ($outputParametersCount === 0) {
-            return [];
-        }
-
-        return collect($data)
-            ->filter(fn (array $value, int $key): bool => $key > 0)
-            ->flatMap(fn (array $value): array => $value[0])
-            ->mapWithKeys(fn (mixed $value, string $key): array => [$this->getAliasOutputParameter($key) => $value])
-            ->all();
-    }
-
-    protected function getAliasOutputParameter(string $parameter): string
-    {
-        if ($this->pendingQuery->outputParameters()->isEmpty()) {
-            return $parameter;
-        }
-
-        if ($this->pendingQuery->alias()->isEmpty()) {
-            return $parameter;
-        }
-
-        return $this->pendingQuery->alias()->all()[$parameter] ?? $parameter;
     }
 
     public function isEmpty(): bool
@@ -95,7 +62,7 @@ readonly class Response
      */
     public function data(string|int|null $key = null, mixed $default = null): mixed
     {
-        $data = $this->mutatedData($this->rawData());
+        $data = $this->mutatedData();
 
         if (is_null($key)) {
             return $data;
@@ -108,11 +75,21 @@ readonly class Response
      * @param  array<array-key, mixed>  $data
      * @return array<array-key, mixed>
      */
-    protected function mutatedData(array $data): array
+    protected function getOutput(array $data): array
     {
-        return AccessorProcessor::make($data, $this->pendingQuery)->process();
+        if ($this->pendingQuery->outputParameters()->isEmpty()) {
+            return [];
+        }
+
+        return collect($data)
+            ->filter(fn (array $value, int $key): bool => $key > 0)
+            ->flatMap(fn (array $value): array => $value[0])
+            ->all();
     }
 
+    /**
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
     public function rawData(?string $key = null): mixed
     {
         if (is_null($key)) {
@@ -143,7 +120,7 @@ readonly class Response
      */
     public function output(string|int|null $key = null, mixed $default = null): mixed
     {
-        $data = $this->mutatedData($this->rawOutput());
+        $data = $this->mutatedOutput();
 
         if (is_null($key)) {
             return $data;
@@ -152,6 +129,9 @@ readonly class Response
         return Arr::get($data, $key, $default);
     }
 
+    /**
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
     public function rawOutput(?string $key = null): mixed
     {
         if (is_null($key)) {
@@ -192,13 +172,5 @@ readonly class Response
     public function getPendingQuery(): PendingQuery
     {
         return $this->pendingQuery;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    protected function outputKeys(): array
-    {
-        return $this->pendingQuery->outputParameters()->toCollection()->keys()->toArray();
     }
 }
