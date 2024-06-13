@@ -3,6 +3,7 @@
 namespace BitMx\DataEntities\Responses;
 
 use BitMx\DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Traits\Response\HasMutatedData;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
@@ -44,7 +45,16 @@ class Response
      */
     protected function getData(array $data): array
     {
+        if ($this->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
+            return $data;
+        }
+
         return Arr::get($data, '0', []);
+    }
+
+    public function getDataEntity(): DataEntity
+    {
+        return $this->pendingQuery->getDataEntity();
     }
 
     /**
@@ -158,11 +168,6 @@ class Response
             ->createDtoFromResponse(
                 $this
             );
-    }
-
-    public function getDataEntity(): DataEntity
-    {
-        return $this->pendingQuery->getDataEntity();
     }
 
     public function getPendingQuery(): PendingQuery
