@@ -15,6 +15,7 @@ final readonly class MockResponse
         protected array $output = [],
         protected ?\Throwable $exception = null
     ) {
+
     }
 
     /**
@@ -35,7 +36,31 @@ final readonly class MockResponse
      */
     public function data(): array
     {
-        return array_merge($this->getData(), $this->output);
+        if (empty($this->getOutput())) {
+            return $this->getData();
+        }
+
+        return [
+            $this->getData(),
+            $this->getOutput(),
+        ];
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    protected function getOutput(): array
+    {
+
+        $output = $this->data instanceof DataEntityFactory
+            ? array_replace_recursive($this->data->getData()->getOutput(), $this->output)
+            : $this->output;
+
+        if (empty($output)) {
+            return [];
+        }
+
+        return [$output];
     }
 
     /**

@@ -8,11 +8,13 @@ readonly class FactoryData
      * @param  array<array-key, mixed>  $definition
      * @param  array<array-key, mixed>  $attributes
      * @param  array<array-key, mixed>  $without
+     * @param  array<array-key, mixed>  $output
      */
     public function __construct(
         private array $definition,
         private array $attributes,
         private array $without,
+        private array $output,
     ) {
     }
 
@@ -40,5 +42,13 @@ readonly class FactoryData
     public function getWithout(): array
     {
         return $this->without;
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function getOutput(): array
+    {
+        return $this->output;
     }
 }
