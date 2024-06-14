@@ -7,6 +7,7 @@ use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Stores\ArrayStore;
 use BitMx\DataEntities\Traits\Response\HasMutatedData;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
+use Illuminate\Support\Collection;
 
 class Response
 {
@@ -42,24 +43,56 @@ class Response
         $this->output = new ArrayStore($this->mutatedOutput());
     }
 
-    public function data(): ArrayStore
+    /**
+     * @param  ?array-key  $key
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
+    public function data(string|int|null $key = null, mixed $default = null): mixed
     {
-        return $this->data;
+        if ($key === null) {
+            return $this->data->all();
+        }
+
+        return $this->data->get($key, $default);
     }
 
-    public function output(): ArrayStore
+    /**
+     * @param  ?array-key  $key
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
+    public function output(string|int|null $key = null, mixed $default = null): mixed
     {
-        return $this->output;
+        if ($key === null) {
+            return $this->output->all();
+        }
+
+        return $this->output->get($key, $default);
     }
 
-    public function rawData(): ArrayStore
+    /**
+     * @param  ?array-key  $key
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
+    public function rawData(string|int|null $key, mixed $default): mixed
     {
-        return $this->rawData;
+        if ($key === null) {
+            return $this->rawData->all();
+        }
+
+        return $this->rawData->get($key, $default);
     }
 
-    public function rawOutput(): ArrayStore
+    /**
+     * @param  ?array-key  $key
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
+    public function rawOutput(string|int|null $key, mixed $default): mixed
     {
-        return $this->rawOutput;
+        if ($key === null) {
+            return $this->rawOutput->all();
+        }
+
+        return $this->rawOutput->get($key, $default);
     }
 
     public function failed(): bool
@@ -112,5 +145,50 @@ class Response
         $this->cached = $cached;
 
         return $this;
+    }
+
+    /**
+     * @param  string|int|array<array-key, mixed>|null  $key
+     */
+    public function addData(string|int|array|null $key = null, mixed $value = null): void
+    {
+        $this->data->add($key, $value);
+    }
+
+    /**
+     * @param  string|int|array<array-key, mixed>|null  $key
+     */
+    public function addOutput(string|int|array|null $key = null, mixed $value = null): void
+    {
+        $this->output->add($key, $value);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  ...$data
+     */
+    public function mergeData(array ...$data): void
+    {
+        $this->data->merge($data);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  ...$data
+     */
+    public function mergeOutput(array ...$data): void
+    {
+        $this->output->merge($data);
+    }
+
+    /**
+     * @return Collection<array-key, mixed>
+     */
+    public function collect(): Collection
+    {
+        return $this->data->toCollection();
+    }
+
+    public function object(): object
+    {
+        return $this->data->toObject();
     }
 }
