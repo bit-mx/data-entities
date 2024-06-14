@@ -6,6 +6,7 @@ use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
 use Illuminate\Support\Str;
+use Symfony\Component\VarDumper\VarDumper;
 
 class DumpRawProcessor
 {
@@ -20,7 +21,9 @@ class DumpRawProcessor
     {
         $query = $this->formatQuery();
 
-        dd($query);
+        VarDumper::dump($query);
+
+        exit(1);
     }
 
     protected function formatQuery(): string
