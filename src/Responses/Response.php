@@ -4,9 +4,9 @@ namespace BitMx\DataEntities\Responses;
 
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\PendingQuery;
+use BitMx\DataEntities\Stores\ArrayStore;
 use BitMx\DataEntities\Traits\Response\HasMutatedData;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class Response
@@ -14,7 +14,15 @@ class Response
     use HasMutatedData;
     use ThrowsError;
 
+    protected ArrayStore $rawData;
+
+    protected ArrayStore $rawOutput;
+
     protected bool $cached = false;
+
+    protected ArrayStore $data;
+
+    protected ArrayStore $output;
 
     /**
      * @param  array<array-key, mixed>  $data
@@ -22,23 +30,69 @@ class Response
      */
     public function __construct(
         protected readonly PendingQuery $pendingQuery,
-        protected readonly array $data = [],
-        protected readonly array $output = [],
+        array $data = [],
+        array $output = [],
         protected readonly bool $success = true,
         protected readonly ?\Throwable $senderException = null
     ) {
+        $this->rawData = new ArrayStore($data);
+        $this->rawOutput = new ArrayStore($output);
+
+        $this->data = new ArrayStore($this->mutatedData());
+
+        $this->output = new ArrayStore($this->mutatedOutput());
     }
 
     /**
+     * @param  ?array-key  $key
      * @return ($key is null ? array<array-key, mixed> : mixed)
      */
-    public function rawData(?string $key = null): mixed
+    public function data(string|int|null $key = null, mixed $default = null): mixed
     {
-        if (is_null($key)) {
-            return $this->data;
+        if ($key === null) {
+            return $this->data->all();
         }
 
-        return Arr::get($this->data, $key);
+        return $this->data->get($key, $default);
+    }
+
+    /**
+     * @param  ?array-key  $key
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
+    public function output(string|int|null $key = null, mixed $default = null): mixed
+    {
+        if ($key === null) {
+            return $this->output->all();
+        }
+
+        return $this->output->get($key, $default);
+    }
+
+    /**
+     * @param  ?array-key  $key
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
+    public function rawData(string|int|null $key, mixed $default): mixed
+    {
+        if ($key === null) {
+            return $this->rawData->all();
+        }
+
+        return $this->rawData->get($key, $default);
+    }
+
+    /**
+     * @param  ?array-key  $key
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
+    public function rawOutput(string|int|null $key, mixed $default): mixed
+    {
+        if ($key === null) {
+            return $this->rawOutput->all();
+        }
+
+        return $this->rawOutput->get($key, $default);
     }
 
     public function failed(): bool
@@ -58,62 +112,7 @@ class Response
 
     public function isEmpty(): bool
     {
-        return empty($this->data());
-    }
-
-    /**
-     * @param  ?array-key  $key
-     * @return ($key is null ? array<array-key, mixed> : mixed)
-     */
-    public function data(string|int|null $key = null, mixed $default = null): mixed
-    {
-        $data = $this->mutatedData();
-
-        if (is_null($key)) {
-            return $data;
-        }
-
-        return Arr::get($data, $key, $default);
-    }
-
-    /**
-     * @param  ?array-key  $key
-     * @return ($key is null ? array<array-key, mixed> : mixed)
-     */
-    public function output(string|int|null $key = null, mixed $default = null): mixed
-    {
-        $data = $this->mutatedOutput();
-
-        if (is_null($key)) {
-            return $data;
-        }
-
-        return Arr::get($data, $key, $default);
-    }
-
-    /**
-     * @return ($key is null ? array<array-key, mixed> : mixed)
-     */
-    public function rawOutput(?string $key = null): mixed
-    {
-        if (is_null($key)) {
-            return $this->output;
-        }
-
-        return Arr::get($this->output, $key);
-    }
-
-    public function object(): object
-    {
-        return (object) $this->data();
-    }
-
-    /**
-     * @return Collection<array-key, mixed>
-     */
-    public function collect(): Collection
-    {
-        return collect($this->data());
+        return $this->data->isEmpty();
     }
 
     public function dto(): mixed
@@ -146,5 +145,50 @@ class Response
         $this->cached = $cached;
 
         return $this;
+    }
+
+    /**
+     * @param  string|int|array<array-key, mixed>|null  $key
+     */
+    public function addData(string|int|array|null $key = null, mixed $value = null): void
+    {
+        $this->data->add($key, $value);
+    }
+
+    /**
+     * @param  string|int|array<array-key, mixed>|null  $key
+     */
+    public function addOutput(string|int|array|null $key = null, mixed $value = null): void
+    {
+        $this->output->add($key, $value);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  ...$data
+     */
+    public function mergeData(array ...$data): void
+    {
+        $this->data->merge($data);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  ...$data
+     */
+    public function mergeOutput(array ...$data): void
+    {
+        $this->output->merge($data);
+    }
+
+    /**
+     * @return Collection<array-key, mixed>
+     */
+    public function collect(): Collection
+    {
+        return $this->data->toCollection();
+    }
+
+    public function object(): object
+    {
+        return $this->data->toObject();
     }
 }

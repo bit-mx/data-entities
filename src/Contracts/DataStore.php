@@ -5,9 +5,9 @@ namespace BitMx\DataEntities\Contracts;
 interface DataStore
 {
     /**
-     * @param  array<array-key, mixed>  $value
+     * @param  array<array-key, mixed>  $items
      */
-    public function set(array $value): self;
+    public function set(array $items): self;
 
     public function get(string $key): mixed;
 

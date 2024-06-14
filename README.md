@@ -5,40 +5,40 @@ Execute stored procedures in Laravel from Sqlserver without all the boilerplate 
 Table of Contents
 =================
 
-    * [Introduction](#introduction)
-    * [Installation](#installation)
-    * [Setup](#setup)
-    * [Compatibility](#compatibility)
-    * [Getting Started](#getting-started)
-        * [Create a Data Entity](#create-a-data-entity)
-        * [Connection](#connection)
-        * [Execute the Data Entity](#execute-the-data-entity)
-        * [Mutators](#mutators)
-            * [Available mutators](#available-mutators)
-            * [Custom mutators](#custom-mutators)
-        * [Accessors](#accessors)
-            * [Available accessors](#available-accessors)
-            * [Custom accessor](#custom-accessor)
-        * [Response useful methods](#response-useful-methods)
-            * [data](#data)
-            * [Data with a key](#data-with-a-key)
-            * [Data with a key and a default value](#data-with-a-key-and-a-default-value)
-            * [As object](#as-object)
-            * [As collection](#as-collection)
-            * [success](#success)
-            * [failed](#failed)
-            * [throw](#throw)
-        * [Boot](#boot)
-            * [Traits](#traits)
-        * [Middlewares](#middlewares)
-        * [Plugins](#plugins)
-            * [AlwaysThrowOnError](#alwaysthrowonerror)
-        * [Data Transfer objects](#data-transfer-objects)
-        * [Debugging](#debugging)
-        * [Testing](#testing)
-            * [Mocking the Data Entity](#mocking-the-data-entity)
-            * [Assertions](#assertions)
-            * [Using factories](#using-factories)
+* [Introduction](#introduction)
+* [Installation](#installation)
+* [Setup](#setup)
+* [Compatibility](#compatibility)
+* [Getting Started](#getting-started)
+    * [Create a Data Entity](#create-a-data-entity)
+    * [Connection](#connection)
+    * [Execute the Data Entity](#execute-the-data-entity)
+    * [Mutators](#mutators)
+        * [Available mutators](#available-mutators)
+        * [Custom mutators](#custom-mutators)
+    * [Accessors](#accessors)
+        * [Available accessors](#available-accessors)
+        * [Custom accessor](#custom-accessor)
+    * [Response useful methods](#response-useful-methods)
+        * [data](#data)
+        * [Data with a key](#data-with-a-key)
+        * [Data with a key and a default value](#data-with-a-key-and-a-default-value)
+        * [As object](#as-object)
+        * [As collection](#as-collection)
+        * [success](#success)
+        * [failed](#failed)
+        * [throw](#throw)
+    * [Boot](#boot)
+        * [Traits](#traits)
+    * [Middlewares](#middlewares)
+    * [Plugins](#plugins)
+        * [AlwaysThrowOnError](#alwaysthrowonerror)
+    * [Data Transfer objects](#data-transfer-objects)
+    * [Debugging](#debugging)
+    * [Testing](#testing)
+        * [Mocking the Data Entity](#mocking-the-data-entity)
+        * [Assertions](#assertions)
+        * [Using factories](#using-factories)
 
 ## Introduction
 
@@ -96,8 +96,6 @@ use Illuminate\Support\Collection;
 
 class GetAllPostsDataEntity extends DataEntity
 {
-    protected ?Method $method = Method::SELECT;
-    
     protected ?ResponseType $responseType = ResponseType::SINGLE;
     
     public function __construct(
@@ -181,7 +179,7 @@ $dataEntity = new GetAllPostsDataEntity(1);
 
 $response = $dataEntity->execute();
 
-$data = $response->getData();
+$data = $response->data();
 ``` 
 
 The execute method returns a Response object that contains the data returned by the stored procedure.
@@ -396,7 +394,7 @@ The Response object has some useful methods to work with the data returned by th
 
 ### data
 
-The getData method returns the data returned by the stored procedure as an array.
+The data method returns the data returned by the stored procedure as an array.
 
 ```php
 $data = $response->data();
@@ -417,6 +415,28 @@ You can get the data with a key and a default value
 ```php  
 $data = $response
     ->data('key', 'default value');
+```
+
+### Add data value
+
+You can add a value to the data array
+
+```php
+$response->addData('key', 'value');
+```
+
+You can add as an array to the data array
+
+```php
+$response->addData(['key' => 'value']);
+```
+
+### Merge data
+
+You can merge an array with the data array
+
+```php
+$response->mergeData(['key' => 'value']);
 ```
 
 ### As object
@@ -490,8 +510,6 @@ use Illuminate\Support\Collection;
 
 class GetAllPostsDataEntity extends DataEntity
 {
-    protected ?Method $method = Method::SELECT;
-    
     protected ?ResponseType $responseType = ResponseType::SINGLE;
     
     ...
@@ -531,7 +549,6 @@ namespace App\DataEntities;
 
 use BitMx\DataEntities\PendingQuery;
 use DataEntities\DataEntity;
-use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\Responses\Response;
 use Illuminate\Support\Collection;
@@ -539,8 +556,6 @@ use Illuminate\Support\Collection;
 
 class GetAllPostsDataEntity extends DataEntity
 {
-    protected ?Method $method = Method::SELECT;
-    
     protected ?ResponseType $responseType = ResponseType::SINGLE;
     
     ...
@@ -553,12 +568,68 @@ class GetAllPostsDataEntity extends DataEntity
         });
         
         $pendingQuery->middleware()->onResponse(function (Response $response) {
-            $data = $response->getData();
-            
-            $data['tag'] = 'laravel';
-            
-            $response->setData($data);
+            $response->addData('tag', 'laravel');
+           
+            return $response;
         });
+    }
+}
+```
+
+You can alse use a invokable class as a middleware. This class should implement the QueryMiddleware or
+ResponseMiddleware interface.
+
+```php
+use BitMx\DataEntities\Contracts\QueryMiddleware;
+
+class PageMiddleware implements QueryMiddleware
+{
+    public function __invoke(PendingQuery $pendingQuery): PendingQuery
+    {
+        $pendingQuery->parameters()->add('page', 1);
+        
+        return $pendingQuery;
+    }
+}
+```
+
+```php
+use BitMx\DataEntities\Contracts\ResponseMiddleware;
+use BitMx\DataEntities\Responses\Response;
+
+class TagMiddleware implements ResponseMiddleware
+{
+    public function __invoke(Response $pendingQuery): Response
+    {
+        $response->addData('tag', 'laravel');
+        
+        return $response;
+    }
+}
+```
+
+```php
+namespace App\DataEntities;
+
+use BitMx\DataEntities\PendingQuery;
+use DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Responses\Response;
+use Illuminate\Support\Collection;
+
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
+    ...
+    
+    #[\Override]
+    public function boot(PendingQuery $pendingQuery): void
+    {
+        $pendingQuery->middleware()->onQuery(new PageMiddleware());
+        
+        $pendingQuery->middleware()->onResponse(new TagMiddleware());
     }
 }
 ```
@@ -927,6 +998,69 @@ it('should get the post', function () {
     $post = $response->dto();
 
     expect($post->published_date)->toBe(now());
+});
+```
+
+You can create a fake with an exception
+
+```php
+
+use App\DataEntities\GetPostDataEntity;
+use Tests\DataEntityFactories\PostDataEntityFactory;
+use BitMx\DataEntities\Responses\MockResponse;
+
+it('should get the post', function () {
+    $dataEntity = MockResponse::makeWithException(new \Exception('Error'));
+
+    $response = $dataEntity->execute();
+})
+    ->throws(\Exception::class, 'Error');
+```
+
+### Response type
+
+You can set the response type using the responseType method.
+
+```php
+namespace Tests\DataEntityFactories;
+
+use BitMx\DataEntities\Enums\ResponseType;use BitMx\DataEntities\Factories\DataEntityFactory;
+
+class PostDataEntityFactory extends DataEntityFactory
+{
+    /**
+     * {@inheritDoc}
+     */
+    public function definition(): array
+    {
+        return [
+            'id' => $this->faker->unique()->randomNumber(),
+            'title' => $this->faker->sentence(),
+            'content' => $this->faker->paragraph(),
+        ];
+    }
+    
+    public function responseType() : ResponseType{
+         return ResponseType::COLLECTION;
+    }
+}
+```
+
+You can change the response type on MockResponse
+
+```php
+
+use App\DataEntities\GetPostDataEntity;
+use Tests\DataEntityFactories\PostDataEntityFactory;
+use BitMx\DataEntities\Responses\MockResponse;
+
+it('should get the post', function () {
+    $dataEntity = MockResponse::make(PostDataEntityFactory::new()->asCollection());
+
+    $response = $dataEntity->execute();
+
+    ....
+
 });
 ```
 

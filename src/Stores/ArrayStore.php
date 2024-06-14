@@ -6,12 +6,15 @@ use BitMx\DataEntities\Contracts\DataStore;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
-class ArrayStore implements DataStore
+/**
+ * @implements \ArrayAccess<array-key, mixed>
+ */
+class ArrayStore implements \ArrayAccess, \Countable, DataStore
 {
     /**
      * @var array<array-key, mixed>
      */
-    protected array $data = [];
+    protected array $items = [];
 
     /**
      * @param  array<array-key, mixed>  $value
@@ -22,29 +25,23 @@ class ArrayStore implements DataStore
     }
 
     /**
-     * @param  array<array-key, mixed>  $value
+     * @param  array<array-key, mixed>  $items
      */
     #[\Override]
-    public function set(array $value): self
+    public function set(array $items): self
     {
-        $this->data = $value;
+        $this->items = $items;
 
         return $this;
     }
 
-    #[\Override]
-    public function get(string $key, mixed $default = null): mixed
-    {
-        return Arr::get($this->data, $key, $default);
-    }
-
     /**
-     * @return array<array-key, mixed>
+     * @param  ?array-key  $key
      */
     #[\Override]
-    public function all(): array
+    public function get(string|int|null $key, mixed $default = null): mixed
     {
-        return $this->data;
+        return Arr::get($this->items, $key, $default);
     }
 
     #[\Override]
@@ -56,7 +53,7 @@ class ArrayStore implements DataStore
     #[\Override]
     public function isEmpty(): bool
     {
-        return empty($this->data);
+        return empty($this->items);
     }
 
     /**
@@ -65,14 +62,14 @@ class ArrayStore implements DataStore
     public function add(string|int|array|null $key = null, mixed $value = null): self
     {
         if (is_array($key)) {
-            $this->data = array_merge($this->data, $key);
+            $this->items = [...$this->items, ...$key];
 
             return $this;
         }
 
         isset($key)
-            ? $this->data[$key] = $value
-            : $this->data[] = $value;
+            ? $this->items[$key] = $value
+            : $this->items[] = $value;
 
         return $this;
     }
@@ -82,14 +79,14 @@ class ArrayStore implements DataStore
      */
     public function merge(array ...$arrays): static
     {
-        $this->data = array_merge($this->data, ...$arrays);
+        $this->items = array_merge($this->items, ...$arrays);
 
         return $this;
     }
 
     public function prepend(mixed $value, int|string|null $key = null): DataStore
     {
-        Arr::prepend($this->data, $value, $key);
+        Arr::prepend($this->items, $value, $key);
 
         return $this;
     }
@@ -99,6 +96,57 @@ class ArrayStore implements DataStore
      */
     public function toCollection(): Collection
     {
-        return Collection::make($this->data);
+        return Collection::make($this->items);
+    }
+
+    public function toObject(): object
+    {
+        return (object) $this->items;
+    }
+
+    public function offsetExists(mixed $key): bool
+    {
+        return isset($this->items[$key]);
+    }
+
+    public function offsetGet(mixed $key): mixed
+    {
+        return $this->items[$key];
+    }
+
+    public function offsetSet(mixed $key, mixed $value): void
+    {
+        if (is_null($key)) {
+            $this->items[] = $value;
+        } else {
+            $this->items[$key] = $value;
+        }
+    }
+
+    public function offsetUnset(mixed $key): void
+    {
+        unset($this->items[$key]);
+    }
+
+    public function count(): int
+    {
+        return count($this->items);
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function toArray(): array
+    {
+        return $this->all();
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    #[\Override]
+    public function all(): array
+    {
+        return $this->items;
     }
 }
