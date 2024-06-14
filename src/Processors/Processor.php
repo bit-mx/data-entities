@@ -42,6 +42,8 @@ class Processor implements ProcessorContract
     protected function execute(): Response
     {
         $data = [];
+        $output = [];
+
         $isSuccess = false;
         $exception = null;
 
@@ -54,11 +56,15 @@ class Processor implements ProcessorContract
 
             $client = $this->getClient();
 
-            $data = $client->$executionMethod($preparedQuery, $params);
+            $responseData = $client->$executionMethod($preparedQuery, $params);
 
-            $data = is_array($data) ? $data : [];
+            $responseData = is_array($responseData) ? $responseData : [];
 
-            $data = $this->createDataArray($data);
+            $responseData = $this->createDataArray($responseData);
+
+            $data = $this->createData($responseData);
+
+            $output = $this->createOutput($responseData);
 
             $isSuccess = true;
         } catch (QueryException $ex) {
@@ -66,7 +72,7 @@ class Processor implements ProcessorContract
             $isSuccess = false;
         }
 
-        return new Response($this->pendingQuery, $data, $isSuccess, $exception);
+        return new Response($this->pendingQuery, $data, $output, $isSuccess, $exception);
     }
 
     protected function getExecuter(): string
@@ -111,5 +117,36 @@ class Processor implements ProcessorContract
         }
 
         return $responseData;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $responseData
+     * @return array<array-key, mixed>
+     */
+    protected function createData(array $responseData): array
+    {
+        $dataEntity = $this->pendingQuery->getDataEntity();
+
+        if ($dataEntity->getResponseType() === ResponseType::SINGLE) {
+            return $responseData;
+        }
+
+        return Arr::get($responseData, '0', []);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $responseData
+     * @return array<array-key, mixed>
+     */
+    protected function createOutput(array $responseData): array
+    {
+        if ($this->pendingQuery->outputParameters()->isEmpty()) {
+            return [];
+        }
+
+        return collect($responseData)
+            ->filter(fn (array $value, int $key): bool => $key > 0)
+            ->flatMap(fn (array $value): array => $value[0])
+            ->all();
     }
 }

@@ -26,28 +26,30 @@ trait ExecutesQuery
 
     protected function executeQuery(): Response
     {
-        $executer = $this->resolveClient();
+        $pendingQuery = $this->createPendingQuery();
 
-        $response = $executer->handle();
+        $executer = $this->resolveClient($pendingQuery);
 
-        $response->getPendingQuery()->middleware()->executeResponsePipeline($response);
+        $response = $pendingQuery->hasFakeResponse()
+            ? $this->createFakeResponse($pendingQuery->getFakeResponse())
+            : $executer->handle();
+
+        $response = $response->getPendingQuery()->middleware()->executeResponsePipeline($response);
 
         return $response;
     }
 
-    protected function resolveClient(): ProcessorContract
-    {
-        if (static::isFake()) {
-            return new MockProcessor($this->createPendingQuery(), $this, static::$mockResponses);
-        }
-
-        return new Processor($this->createPendingQuery());
-    }
-
     protected function createPendingQuery(): PendingQuery
     {
-        $pendingQuery = new PendingQuery($this);
+        return new PendingQuery($this);
+    }
 
-        return $pendingQuery;
+    protected function resolveClient(PendingQuery $pendingQuery): ProcessorContract
+    {
+        if (static::isFake()) {
+            return new MockProcessor($pendingQuery, $this, static::$mockResponses);
+        }
+
+        return new Processor($pendingQuery);
     }
 }

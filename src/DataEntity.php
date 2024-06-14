@@ -18,6 +18,7 @@ use BitMx\DataEntities\Traits\DataEntity\HasMutators;
 use BitMx\DataEntities\Traits\HasOutputParameters;
 use BitMx\DataEntities\Traits\HasParameters;
 use BitMx\DataEntities\Traits\HasQueryStatements;
+use BitMx\DataEntities\Traits\Response\FakeResponse;
 
 abstract class DataEntity
 {
@@ -62,5 +63,15 @@ abstract class DataEntity
         }
 
         return $this->responseType;
+    }
+
+    protected function createFakeResponse(FakeResponse $getFakeResponse): Response
+    {
+        return new Response(
+            $this->createPendingQuery(),
+            $getFakeResponse->getData(),
+            $getFakeResponse->getOutput(),
+            $getFakeResponse->isSuccess()
+        );
     }
 }

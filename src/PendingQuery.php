@@ -20,6 +20,7 @@ use BitMx\DataEntities\Traits\PendingQuery\HasAccessorsStore;
 use BitMx\DataEntities\Traits\PendingQuery\HasAliasStore;
 use BitMx\DataEntities\Traits\PendingQuery\HasMutatorStore;
 use BitMx\DataEntities\Traits\PendingQuery\Tappable;
+use BitMx\DataEntities\Traits\Response\FakeResponse;
 
 class PendingQuery
 {
@@ -33,6 +34,8 @@ class PendingQuery
     use Tappable;
 
     protected readonly Method $method;
+
+    protected ?FakeResponse $fakeResponse = null;
 
     public function __construct(protected DataEntity $dataEntity)
     {
@@ -61,5 +64,22 @@ class PendingQuery
     public function getDataEntity(): DataEntity
     {
         return $this->dataEntity;
+    }
+
+    public function hasFakeResponse(): bool
+    {
+        return ! is_null($this->fakeResponse);
+    }
+
+    public function getFakeResponse(): FakeResponse
+    {
+        return $this->fakeResponse;
+    }
+
+    public function setFakeResponse(FakeResponse $fakeResponse): self
+    {
+        $this->fakeResponse = $fakeResponse;
+
+        return $this;
     }
 }

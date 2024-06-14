@@ -11,7 +11,7 @@ final readonly class MockResponse
      * @param  array<array-key, mixed>  $output
      */
     public function __construct(
-        protected array|DataEntityFactory $data,
+        protected array|DataEntityFactory $data = [],
         protected array $output = [],
         protected ?\Throwable $exception = null
     ) {
@@ -36,31 +36,7 @@ final readonly class MockResponse
      */
     public function data(): array
     {
-        if (empty($this->getOutput())) {
-            return [$this->getData()];
-        }
-
-        return [
-            [$this->getData()],
-            $this->getOutput(),
-        ];
-    }
-
-    /**
-     * @return array<array-key, mixed>
-     */
-    protected function getOutput(): array
-    {
-
-        $output = $this->data instanceof DataEntityFactory
-            ? array_replace_recursive($this->data->getData()->getOutput(), $this->output)
-            : $this->output;
-
-        if (empty($output)) {
-            return [];
-        }
-
-        return [$output];
+        return $this->getData();
     }
 
     /**
@@ -73,6 +49,28 @@ final readonly class MockResponse
         }
 
         return $this->data;
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function output(): array
+    {
+        return $this->getOutput();
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    protected function getOutput(): array
+    {
+
+        $output = $this->data instanceof DataEntityFactory
+            ? array_replace_recursive($this->data->getData()->getOutput(), $this->output)
+            : $this->output;
+
+        return $output;
+
     }
 
     public function hasException(): bool
