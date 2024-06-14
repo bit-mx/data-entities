@@ -101,4 +101,9 @@ class ArrayStore implements DataStore
     {
         return Collection::make($this->data);
     }
+
+    public function toObject(): object
+    {
+        return (object) $this->data;
+    }
 }
