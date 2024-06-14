@@ -1,5 +1,6 @@
 <?php
 
+use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\Factories\DataEntityFactory;
 
 beforeEach(function () {
@@ -18,8 +19,32 @@ it('creates a new instance of DataEntityFactory', function () {
 });
 
 it('gets the definition from the factory', function () {
-
     expect($this->factory->create())->toBe(['name' => 'John Doe']);
+});
+
+it('gets the definition from the factory with a collection type', function () {
+    expect($this->factory->asCollection()->create())->toBe([['name' => 'John Doe']]);
+});
+
+it('gets the definition from the factory with a single type after collection', function () {
+    expect($this->factory->asCollection()->asSingle()->create())->toBe(['name' => 'John Doe']);
+});
+
+it('set collection on definition', function () {
+    $factory = new class extends DataEntityFactory
+    {
+        public function definition(): array
+        {
+            return ['name' => 'John Doe'];
+        }
+
+        public function responseType(): ResponseType
+        {
+            return ResponseType::COLLECTION;
+        }
+    };
+
+    expect($factory->create())->toBe([['name' => 'John Doe']]);
 });
 
 it('creates a new state', function () {

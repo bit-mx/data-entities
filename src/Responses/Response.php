@@ -3,7 +3,6 @@
 namespace BitMx\DataEntities\Responses;
 
 use BitMx\DataEntities\DataEntity;
-use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Traits\Response\HasMutatedData;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
@@ -15,82 +14,19 @@ class Response
     use HasMutatedData;
     use ThrowsError;
 
-    /**
-     * @var array<array-key, mixed>
-     */
-    protected readonly array $data;
-
-    /**
-     * @var array<array-key, mixed>
-     */
-    protected readonly array $output;
+    protected bool $cached = false;
 
     /**
      * @param  array<array-key, mixed>  $data
+     * @param  array<array-key, mixed>  $output
      */
     public function __construct(
         protected readonly PendingQuery $pendingQuery,
-        array $data = [],
+        protected readonly array $data = [],
+        protected readonly array $output = [],
         protected readonly bool $success = true,
         protected readonly ?\Throwable $senderException = null
     ) {
-        $this->data = $this->getData($data);
-
-        $this->output = $this->getOutput($data);
-    }
-
-    /**
-     * @param  array<array-key, mixed>  $data
-     * @return array<array-key, mixed>
-     */
-    protected function getData(array $data): array
-    {
-        if ($this->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
-            return $data;
-        }
-
-        return Arr::get($data, '0', []);
-    }
-
-    public function getDataEntity(): DataEntity
-    {
-        return $this->pendingQuery->getDataEntity();
-    }
-
-    /**
-     * @param  array<array-key, mixed>  $data
-     * @return array<array-key, mixed>
-     */
-    protected function getOutput(array $data): array
-    {
-        if ($this->pendingQuery->outputParameters()->isEmpty()) {
-            return [];
-        }
-
-        return collect($data)
-            ->filter(fn (array $value, int $key): bool => $key > 0)
-            ->flatMap(fn (array $value): array => $value[0])
-            ->all();
-    }
-
-    public function isEmpty(): bool
-    {
-        return empty($this->data());
-    }
-
-    /**
-     * @param  ?array-key  $key
-     * @return ($key is null ? array<array-key, mixed> : mixed)
-     */
-    public function data(string|int|null $key = null, mixed $default = null): mixed
-    {
-        $data = $this->mutatedData();
-
-        if (is_null($key)) {
-            return $data;
-        }
-
-        return Arr::get($data, $key, $default);
     }
 
     /**
@@ -118,6 +54,26 @@ class Response
     public function isNotEmpty(): bool
     {
         return ! $this->isEmpty();
+    }
+
+    public function isEmpty(): bool
+    {
+        return empty($this->data());
+    }
+
+    /**
+     * @param  ?array-key  $key
+     * @return ($key is null ? array<array-key, mixed> : mixed)
+     */
+    public function data(string|int|null $key = null, mixed $default = null): mixed
+    {
+        $data = $this->mutatedData();
+
+        if (is_null($key)) {
+            return $data;
+        }
+
+        return Arr::get($data, $key, $default);
     }
 
     /**
@@ -170,8 +126,25 @@ class Response
             );
     }
 
+    public function getDataEntity(): DataEntity
+    {
+        return $this->pendingQuery->getDataEntity();
+    }
+
     public function getPendingQuery(): PendingQuery
     {
         return $this->pendingQuery;
+    }
+
+    public function isCached(): bool
+    {
+        return $this->cached;
+    }
+
+    public function setCached(bool $cached = true): self
+    {
+        $this->cached = $cached;
+
+        return $this;
     }
 }

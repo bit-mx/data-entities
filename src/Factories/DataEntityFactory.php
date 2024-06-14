@@ -2,6 +2,7 @@
 
 namespace BitMx\DataEntities\Factories;
 
+use BitMx\DataEntities\Enums\ResponseType;
 use Faker\Generator;
 use Illuminate\Support\Arr;
 
@@ -17,6 +18,7 @@ abstract class DataEntityFactory
         protected readonly array $attributes = [],
         protected readonly array $without = [],
         protected readonly int $times = 1,
+        protected ?ResponseType $responseType = null,
     ) {
         $this->faker = app(Generator::class);
     }
@@ -37,7 +39,8 @@ abstract class DataEntityFactory
     protected function newInstance(
         array $attributes = [],
         array $without = [],
-        int $times = 1,
+        ?int $times = null,
+        ?ResponseType $responseType = null,
     ): static {
         return new static(
             attributes: array_replace_recursive(
@@ -48,8 +51,19 @@ abstract class DataEntityFactory
                 $this->without,
                 $without,
             ),
-            times: $times,
+            times: $times ?? $this->times,
+            responseType: $responseType ?? $this->getResponseType(),
         );
+    }
+
+    protected function getResponseType(): ResponseType
+    {
+        return $this->responseType ?? $this->responseType();
+    }
+
+    public function responseType(): ResponseType
+    {
+        return ResponseType::SINGLE;
     }
 
     /**
@@ -64,8 +78,13 @@ abstract class DataEntityFactory
 
     public function count(int $times): static
     {
+        $times = $times < 1 ? 1 : $times;
+
         return $this->newInstance(
             times: $times,
+            responseType: $times > 1
+                ? ResponseType::COLLECTION
+                : null,
         );
     }
 
@@ -92,6 +111,33 @@ abstract class DataEntityFactory
         return [];
     }
 
+    public function asCollection(): static
+    {
+        return $this->setCollectionResponseType();
+    }
+
+    protected function setCollectionResponseType(): static
+    {
+        return $this->setResponseType(ResponseType::COLLECTION);
+    }
+
+    protected function setResponseType(ResponseType $responseType): static
+    {
+        return $this->newInstance(
+            responseType: $responseType,
+        );
+    }
+
+    public function asSingle(): static
+    {
+        return $this->setSingleResponseType();
+    }
+
+    protected function setSingleResponseType(): static
+    {
+        return $this->setResponseType(ResponseType::SINGLE);
+    }
+
     /**
      * @param  array<array-key, mixed>|string  $attributes
      */
@@ -109,7 +155,9 @@ abstract class DataEntityFactory
     public function create(array $attributes = []): array
     {
         if ($this->times === 1) {
-            return (new CreateFactoryData)($this->state($attributes));
+            $data = (new CreateFactoryData)($this->state($attributes));
+
+            return $this->getResponseType() === ResponseType::SINGLE ? $data : [$data];
         }
 
         return collect()
