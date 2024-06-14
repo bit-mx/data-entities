@@ -5,6 +5,7 @@ namespace BitMx\DataEntities\Dumpables;
 use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
+use Symfony\Component\VarDumper\VarDumper;
 
 class DumpProcessor
 {
@@ -21,6 +22,11 @@ class DumpProcessor
 
         $parameters = (new ParametersProcessor($this->pendingQuery))->process();
 
-        dd($query, $parameters);
+        VarDumper::dump([
+            $query,
+            $parameters,
+        ]);
+
+        exit(1);
     }
 }
