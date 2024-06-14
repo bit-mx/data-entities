@@ -23,22 +23,25 @@ Table of Contents
         * [data](#data)
         * [Data with a key](#data-with-a-key)
         * [Data with a key and a default value](#data-with-a-key-and-a-default-value)
+        * [Add data value](#add-data-value)
+        * [Merge data](#merge-data)
         * [As object](#as-object)
         * [As collection](#as-collection)
         * [success](#success)
         * [failed](#failed)
         * [throw](#throw)
     * [Boot](#boot)
-        * [Traits](#traits)
     * [Middlewares](#middlewares)
     * [Plugins](#plugins)
         * [AlwaysThrowOnError](#alwaysthrowonerror)
+        * [HasCache](#hascache)
     * [Data Transfer objects](#data-transfer-objects)
     * [Debugging](#debugging)
     * [Testing](#testing)
         * [Mocking the Data Entity](#mocking-the-data-entity)
         * [Assertions](#assertions)
         * [Using factories](#using-factories)
+        * [Response type](#response-type)
 
 ## Introduction
 
@@ -666,6 +669,78 @@ class GetAllPostsDataEntity extends DataEntity
     ...
    
 }
+```
+
+### HasCache
+
+The HasCache plugin will cache the data returned by the stored procedure.
+
+Data Entity shloud implement the Cacheable interface.
+
+```php
+namespace App\DataEntities;
+
+use BitMx\DataEntities\Contracts\Cacheable;
+use BitMx\DataEntities\PendingQuery;
+use BitMx\DataEntities\Plugins\AlwaysThrowOnError;
+use BitMx\DataEntities\Plugins\HasCache;use DataEntities\DataEntity;
+use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Responses\Response;
+use Illuminate\Support\Collection;
+
+
+class GetAllPostsDataEntity extends DataEntity implements Cacheable
+{
+    use HasCache;
+
+    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
+    ...
+    
+    public function cacheExpiresAt(): \DateTimeInterface {
+        return now()->addMinutes(10);
+    }
+   
+}
+```
+
+You can invalidate the cache using the invalidateCache method.
+
+```php
+use App\DataEntities\GetPostDataEntity;
+
+$dataEntity = new GetPostDataEntity(1);
+
+$post = $response->invalidateCache();
+$response = $dataEntity->execute();
+
+```
+
+Or you can disable temporarily the cache using the disableCaching method.
+
+```php
+use App\DataEntities\GetPostDataEntity;
+
+$dataEntity = new GetPostDataEntity(1);
+
+$post = $response->disableCaching();
+$response = $dataEntity->execute();
+
+```
+
+Response object will have a isCached method to check if the data was cached.
+
+```php
+use App\DataEntities\GetPostDataEntity;
+
+$dataEntity = new GetPostDataEntity(1);
+
+$post = $response->disableCaching();
+$response = $dataEntity->execute();
+
+$response->isCached(); //
+
 ```
 
 ## Data Transfer objects
