@@ -2,11 +2,16 @@
 
 namespace BitMx\DataEntities\Plugins;
 
+use BitMx\DataEntities\Cache\CacheDriver;
+use BitMx\DataEntities\Cache\CacheKey;
 use BitMx\DataEntities\Cache\CacheMiddleware;
 use BitMx\DataEntities\Contracts\Cacheable;
 use BitMx\DataEntities\Exceptions\NoCacheableDataEntityException;
 use BitMx\DataEntities\PendingQuery;
 
+/**
+ * @method createPendingQuery()
+ */
 trait HasCache
 {
     protected bool $cachingEnabled = true;
@@ -75,5 +80,11 @@ trait HasCache
     public function disableCaching(): void
     {
         $this->cachingEnabled = false;
+    }
+
+    public function clearCache(): void
+    {
+        $driver = new CacheDriver($this->cacheDriver());
+        $driver->delete( hash('sha256', CacheKey::create($this->createPendingQuery())) );
     }
 }
