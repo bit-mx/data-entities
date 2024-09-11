@@ -14,9 +14,7 @@ final readonly class MockResponse
         protected array|DataEntityFactory $data = [],
         protected array $output = [],
         protected ?\Throwable $exception = null
-    ) {
-
-    }
+    ) {}
 
     /**
      * @param  array<array-key, mixed>  $data

@@ -2,6 +2,4 @@
 
 namespace BitMx\DataEntities\Exceptions;
 
-class DuplicatePipeNameException extends \Exception
-{
-}
+class DuplicatePipeNameException extends \Exception {}

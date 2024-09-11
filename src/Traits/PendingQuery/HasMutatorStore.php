@@ -13,6 +13,6 @@ trait HasMutatorStore
 
     public function mutators(): ParameterStore
     {
-        return $this->mutators ??= new ParameterStore();
+        return $this->mutators ??= new ParameterStore;
     }
 }

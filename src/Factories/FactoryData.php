@@ -15,8 +15,7 @@ readonly class FactoryData
         private array $attributes,
         private array $without,
         private array $output,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<array-key, mixed>

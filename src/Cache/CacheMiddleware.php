@@ -16,18 +16,16 @@ class CacheMiddleware implements QueryMiddleware
         protected readonly ?string $cacheKey,
         protected string $driver = 'default',
         protected bool $invalidate = false,
-    ) {
-        $this->cache = new CacheDriver($this->driver);
-    }
+    ) {}
 
     /**
      * {@inheritDoc}
      */
     public function __invoke(PendingQuery $pendingQuery): PendingQuery
     {
-        $cacheKey = $this->getHashedCacheKey($pendingQuery);
+        $cacheHandler = new CacheHandler($pendingQuery, $this->ttl, $this->cacheKey, $this->driver);
 
-        $cachedResponse = $this->cache->get($cacheKey);
+        $cachedResponse = $cacheHandler->get();
 
         // if the cache is null, we need to record the response
         if ($cachedResponse instanceof CachedResponse) {
@@ -39,27 +37,17 @@ class CacheMiddleware implements QueryMiddleware
                 return $pendingQuery;
             }
 
-            $this->cache->delete($cacheKey);
+            $cacheHandler->clear();
         }
 
         $pendingQuery->middleware()->onResponse(
             callable: new CacheResponseMiddleware(
-                cacheKey: $cacheKey,
-                cacheExpires: $this->ttl,
+                cacheKey: $this->cacheKey,
+                cacheTtl: $this->ttl,
                 cacheDriver: $this->driver
             )
         );
 
         return $pendingQuery;
-    }
-
-    protected function getHashedCacheKey(PendingQuery $pendingQuery): string
-    {
-        return hash('sha256', $this->getCacheKey($pendingQuery));
-    }
-
-    protected function getCacheKey(PendingQuery $pendingQuery): string
-    {
-        return $this->cacheKey ?? CacheKey::create($pendingQuery);
     }
 }

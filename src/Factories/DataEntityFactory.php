@@ -29,7 +29,7 @@ abstract class DataEntityFactory
     public static function new(
         array $attributes = [],
     ): static {
-        return (new static())->state($attributes)->newInstance();
+        return (new static)->state($attributes)->newInstance();
     }
 
     /**

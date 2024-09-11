@@ -18,8 +18,7 @@ final class Transformer
         protected string $key,
         protected array $transformers = [],
         protected array $parameters = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<string, mixed>  $mutators

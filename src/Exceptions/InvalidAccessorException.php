@@ -2,6 +2,4 @@
 
 namespace BitMx\DataEntities\Exceptions;
 
-class InvalidAccessorException extends \Exception
-{
-}
+class InvalidAccessorException extends \Exception {}

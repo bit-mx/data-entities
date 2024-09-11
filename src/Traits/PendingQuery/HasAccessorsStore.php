@@ -13,6 +13,6 @@ trait HasAccessorsStore
 
     public function accessors(): ParameterStore
     {
-        return $this->accessors ??= new ParameterStore();
+        return $this->accessors ??= new ParameterStore;
     }
 }

@@ -9,11 +9,11 @@ use BitMx\DataEntities\Responses\Response;
 
 class CacheResponseMiddleware implements ResponseMiddleware
 {
-    protected CacheStore $cache;
+    protected readonly CacheStore $cache;
 
     public function __construct(
-        protected readonly string $cacheKey,
-        protected readonly int $cacheExpires = 3600,
+        protected readonly ?string $cacheKey,
+        protected readonly int $cacheTtl = 3600,
         protected readonly string $cacheDriver = 'default'
     ) {
         $this->cache = new CacheDriver($this->cacheDriver);
@@ -25,11 +25,18 @@ class CacheResponseMiddleware implements ResponseMiddleware
             return $response;
         }
 
-        $expiresAt = now()->toImmutable()->addSeconds($this->cacheExpires);
+        $cacheHandler = new CacheHandler(
+            pendingQuery: $response->getPendingQuery(),
+            ttl: $this->cacheTtl,
+            cacheKey: $this->cacheKey,
+            driver: $this->cacheDriver
+        );
 
-        $this->cache->set(
-            key: $this->cacheKey,
-            cachedResponse: new CachedResponse(RecordedResponse::fromResponse($response), $expiresAt, $this->cacheExpires)
+        $cacheHandler->set(
+            new CachedResponse(
+                RecordedResponse::fromResponse($response),
+                $this->cacheTtl
+            )
         );
 
         return $response;
