@@ -12,8 +12,7 @@ class FakeResponse
         protected readonly array $data = [],
         protected readonly array $output = [],
         protected readonly bool $success = true,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<array-key, mixed>

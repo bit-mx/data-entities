@@ -12,8 +12,7 @@ final readonly class AccessorProcessor
     public function __construct(
         protected array $data,
         protected PendingQuery $pendingQuery,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<array-key, mixed>

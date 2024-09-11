@@ -2,6 +2,4 @@
 
 namespace BitMx\DataEntities\Exceptions;
 
-class InvalidParameterValueException extends \Exception
-{
-}
+class InvalidParameterValueException extends \Exception {}

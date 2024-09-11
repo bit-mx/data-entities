@@ -2,6 +2,4 @@
 
 namespace BitMx\DataEntities\Exceptions;
 
-class InvalidMethodException extends \Exception
-{
-}
+class InvalidMethodException extends \Exception {}

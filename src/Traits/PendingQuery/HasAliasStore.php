@@ -10,6 +10,6 @@ trait HasAliasStore
 
     public function alias(): ParameterStore
     {
-        return $this->alias ??= new ParameterStore();
+        return $this->alias ??= new ParameterStore;
     }
 }

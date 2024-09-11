@@ -16,8 +16,7 @@ final readonly class Accessor
         protected string $key,
         protected array $accessors = [],
         protected array $data = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<string, mixed>  $accessors
@@ -60,7 +59,7 @@ final readonly class Accessor
         /**
          * @var Accessable $accessor
          */
-        $accessor = new $class();
+        $accessor = new $class;
 
         return $accessor->get(
             key: $this->key,

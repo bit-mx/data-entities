@@ -19,8 +19,7 @@ class MockProcessor implements ProcessorContract
         protected readonly PendingQuery $pendingQuery,
         protected DataEntity $dataEntity,
         protected readonly array $mockResponses,
-    ) {
-    }
+    ) {}
 
     public function handle(): Response
     {

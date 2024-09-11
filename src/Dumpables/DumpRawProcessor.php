@@ -14,8 +14,7 @@ class DumpRawProcessor
 
     public function __construct(
         protected readonly PendingQuery $pendingQuery,
-    ) {
-    }
+    ) {}
 
     public function handler(): never
     {

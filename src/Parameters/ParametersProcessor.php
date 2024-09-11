@@ -8,8 +8,7 @@ class ParametersProcessor
 {
     public function __construct(
         protected PendingQuery $pendingQuery
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<array-key, mixed>

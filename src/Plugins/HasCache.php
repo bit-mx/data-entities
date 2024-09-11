@@ -2,11 +2,16 @@
 
 namespace BitMx\DataEntities\Plugins;
 
+use BitMx\DataEntities\Cache\CacheHandler;
 use BitMx\DataEntities\Cache\CacheMiddleware;
 use BitMx\DataEntities\Contracts\Cacheable;
+use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Exceptions\NoCacheableDataEntityException;
 use BitMx\DataEntities\PendingQuery;
 
+/**
+ * @mixin DataEntity
+ */
 trait HasCache
 {
     protected bool $cachingEnabled = true;
@@ -75,5 +80,19 @@ trait HasCache
     public function disableCaching(): void
     {
         $this->cachingEnabled = false;
+    }
+
+    public function clearCache(): void
+    {
+        $pendingQuery = $this->createPendingQuery();
+
+        $cacheHandler = new CacheHandler(
+            pendingQuery: $pendingQuery,
+            ttl: $this->getCacheExpiresInSeconds($pendingQuery),
+            cacheKey: $this->cacheKey($pendingQuery),
+            driver: $this->cacheDriver(),
+        );
+
+        $cacheHandler->clear();
     }
 }

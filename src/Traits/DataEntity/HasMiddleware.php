@@ -10,6 +10,6 @@ trait HasMiddleware
 
     public function middleware(): MiddlewarePipeline
     {
-        return $this->middlewarePipeline ??= new MiddlewarePipeline();
+        return $this->middlewarePipeline ??= new MiddlewarePipeline;
     }
 }

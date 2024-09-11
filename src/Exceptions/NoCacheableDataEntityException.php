@@ -2,6 +2,4 @@
 
 namespace BitMx\DataEntities\Exceptions;
 
-class NoCacheableDataEntityException extends \Exception
-{
-}
+class NoCacheableDataEntityException extends \Exception {}

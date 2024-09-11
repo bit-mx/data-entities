@@ -2,6 +2,4 @@
 
 namespace BitMx\DataEntities\Exceptions;
 
-class MockResponseNotFoundException extends \Exception
-{
-}
+class MockResponseNotFoundException extends \Exception {}

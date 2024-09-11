@@ -13,7 +13,12 @@ class CacheKey
         $parameters = $pendingQuery->parameters()->all();
         $outputParameters = $pendingQuery->outputParameters()->all();
 
-        $json = json_encode(compact('className', 'storeProcedure', 'parameters', 'outputParameters'));
+        $json = json_encode([
+            'className' => $className,
+            'storeProcedure' => $storeProcedure,
+            'parameters' => $parameters,
+            'outputParameters' => $outputParameters,
+        ]);
 
         if ($json === false) {
             throw new \RuntimeException('Failed to encode cache key');

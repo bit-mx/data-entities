@@ -13,8 +13,7 @@ class RecordedResponse implements JsonSerializable
     public function __construct(
         public array $data = [],
         public array $output = [],
-    ) {
-    }
+    ) {}
 
     public static function fromResponse(Response $response): self
     {

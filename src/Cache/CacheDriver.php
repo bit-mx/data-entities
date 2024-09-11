@@ -10,8 +10,7 @@ readonly class CacheDriver implements CacheStore
 {
     public function __construct(
         protected string $driver,
-    ) {
-    }
+    ) {}
 
     public function set(string $key, CachedResponse $cachedResponse): void
     {

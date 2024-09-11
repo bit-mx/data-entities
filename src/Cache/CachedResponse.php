@@ -8,11 +8,13 @@ use DateTimeImmutable;
 
 class CachedResponse
 {
+    protected readonly DateTimeImmutable $expiresAt;
+
     public function __construct(
         public readonly RecordedResponse $recordedResponse,
-        public readonly ?DateTimeImmutable $expiresAt,
         public readonly int $ttl,
     ) {
+        $this->expiresAt = now()->toImmutable()->addSeconds($this->ttl);
     }
 
     public function hasNotExpired(): bool
@@ -22,7 +24,7 @@ class CachedResponse
 
     public function hasExpired(): bool
     {
-        return $this->expiresAt->getTimestamp() <= (new DateTimeImmutable)->getTimestamp();
+        return $this->expiresAt->getTimestamp() <= now()->getTimestamp();
     }
 
     /**
