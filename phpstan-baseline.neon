@@ -3,4 +3,10 @@ parameters:
         -
             message: "#^Unsafe usage of new static\\(\\)\\.$#"
             path: src/Factories/DataEntityFactory.php
+        -
+            identifier:  trait.unused
+            path: src\Plugins\HasCache.php
+        -
+            identifier:  trait.unused
+            path: src\Plugins\AlwaysThrowOnError.php
 
