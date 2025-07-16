@@ -6,7 +6,10 @@ use BitMx\DataEntities\PendingQuery;
 
 readonly class BootTraits
 {
-    public function __invoke(PendingQuery $pendingQuery): PendingQuery
+    /**
+     * @param  \Closure(PendingQuery): PendingQuery  $next
+     */
+    public function __invoke(PendingQuery $pendingQuery, \Closure $next): PendingQuery
     {
         $dataEntity = $pendingQuery->getDataEntity();
 
@@ -14,7 +17,7 @@ readonly class BootTraits
 
         $this->bootTraits($traits, $pendingQuery);
 
-        return $pendingQuery;
+        return $next($pendingQuery);
     }
 
     /**

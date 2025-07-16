@@ -3,16 +3,20 @@
 namespace BitMx\DataEntities\Processors;
 
 use BitMx\DataEntities\Contracts\ProcessorContract;
-use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Exceptions\InvalidLazyQueryException;
 use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
+use BitMx\DataEntities\Strategies\Contracts\QueryStrategyContract;
+use BitMx\DataEntities\Strategies\LazyQueryStrategy;
+use BitMx\DataEntities\Strategies\SimpleQueryStrategy;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
 use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 
 class Processor implements ProcessorContract
 {
@@ -40,46 +44,60 @@ class Processor implements ProcessorContract
 
     protected function execute(): Response
     {
+        return $this->executeStatement();
+    }
+
+    protected function executeStatement(): Response
+    {
+        if (! $this->pendingQuery->useLazyCollection()) {
+            return $this->executeQuery(new SimpleQueryStrategy);
+        }
+
+        if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
+            throw new InvalidLazyQueryException(
+                'Lazy collection cannot be used with single response type. Please use collection response type instead.'
+            );
+        }
+
+        return $this->executeQuery(new LazyQueryStrategy);
+    }
+
+    protected function executeQuery(QueryStrategyContract $strategy): Response
+    {
         $data = [];
         $output = [];
-
         $isSuccess = false;
         $exception = null;
+        $lazyCollection = LazyCollection::make();
 
         try {
-            $executionMethod = $this->getExecuter();
-
             $preparedQuery = $this->prepareQuery();
-
             $params = $this->createParameters();
-
             $client = $this->getClient();
 
-            $responseData = $client->$executionMethod($preparedQuery, $params);
+            $result = $strategy->execute($client, $preparedQuery, $params);
 
-            $responseData = is_array($responseData) ? $responseData : [];
-
-            $responseData = $this->createDataArray($responseData);
-
-            $data = $this->createData($responseData);
-
-            $output = $this->createOutput($responseData);
+            if ($result instanceof LazyCollection) {
+                $lazyCollection = $result;
+            } else {
+                $responseData = $this->createDataArray($result);
+                $data = $this->createData($responseData);
+                $output = $this->createOutput($responseData);
+            }
 
             $isSuccess = true;
         } catch (QueryException $ex) {
             $exception = $ex;
-            $isSuccess = false;
         }
 
-        return new Response($this->pendingQuery, $data, $output, $isSuccess, $exception);
-    }
-
-    protected function getExecuter(): string
-    {
-        return match ($this->pendingQuery->getMethod()) {
-            Method::SELECT => 'selectResultSets',
-            Method::STATEMENT => 'statement',
-        };
+        return new Response(
+            pendingQuery: $this->pendingQuery,
+            data: $data,
+            output: $output,
+            success: $isSuccess,
+            senderException: $exception,
+            rawLazyData: $lazyCollection,
+        );
     }
 
     /**

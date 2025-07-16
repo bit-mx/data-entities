@@ -2,6 +2,8 @@
 
 namespace BitMx\DataEntities\Traits\Executer;
 
+use BitMx\DataEntities\Exceptions\InvalidLazyQueryException;
+
 /**
  * @property-read  \BitMx\DataEntities\PendingQuery $pendingQuery
  */
@@ -10,6 +12,13 @@ trait HasQuery
     protected function prepareQuery(): string
     {
         $storeProcedure = $this->pendingQuery->statements()->toCollection()->join('; ');
+
+        if ($this->pendingQuery->statements()->toCollection()->count() > 1) {
+            throw new InvalidLazyQueryException(
+                'Multiple statements are not supported in a single query execution. '.
+                'Please use a single statement or separate them into multiple queries.'
+            );
+        }
 
         $storeProcedure = (string) str(sprintf(
             '%s %s',

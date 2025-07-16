@@ -7,9 +7,11 @@ use BitMx\DataEntities\PendingQuery;
 
 readonly class MergeQueryStatements
 {
-    public function __invoke(PendingQuery $pendingQuery): PendingQuery
+    /**
+     * @param  \Closure(PendingQuery): PendingQuery  $next
+     */
+    public function __invoke(PendingQuery $pendingQuery, \Closure $next): PendingQuery
     {
-
         $dataEntity = $pendingQuery->getDataEntity();
 
         $storeProcedure = sprintf('EXEC %s ', $dataEntity->resolveStoreProcedure());
@@ -25,6 +27,6 @@ readonly class MergeQueryStatements
         $pendingQuery->statements()
             ->merge($statements, $currentStatements, [$storeProcedure]);
 
-        return $pendingQuery;
+        return $next($pendingQuery);
     }
 }
