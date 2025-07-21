@@ -16,10 +16,6 @@ trait HasMutatedData
      */
     protected function mutatedData(): array
     {
-        if ($this->pendingQuery->accessors()->isEmpty()) {
-            return [];
-        }
-
         if ($this->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
             return $this->mutateSingleData($this->aliasData());
         }
@@ -107,6 +103,10 @@ trait HasMutatedData
      */
     protected function mutateCollectionData(array $data): array
     {
+        if(!$this->hasAccessors()) {
+            return $data;
+        }
+
         return collect($data)
             ->map(fn (mixed $value): array => $this->mutateSingleData($value))
             ->all();

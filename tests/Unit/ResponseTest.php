@@ -1,5 +1,6 @@
 <?php
 
+use BitMx\DataEntities\Attributes\UseLazyQuery;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
@@ -9,10 +10,10 @@ use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Tests\Helpers\StringEnum;
 use BitMx\DataEntities\Tests\Helpers\UppercaseAccessor;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 beforeEach(function () {
-    $this->dataEntity = new class extends DataEntity
-    {
+    $this->dataEntity = new class extends DataEntity {
         protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
@@ -128,8 +129,7 @@ it('returns a empty array if there is no data', function () {
 
 @it('returns a DTO', function () {
 
-    $dataEntity = new class extends DataEntity
-    {
+    $dataEntity = new class extends DataEntity {
         protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
@@ -162,8 +162,7 @@ it('returns a empty array if there is no data', function () {
 });
 
 it('mutate response data', function () {
-    $dataEntity = new class extends DataEntity
-    {
+    $dataEntity = new class extends DataEntity {
         protected ?Method $method = Method::SELECT;
 
         protected ?ResponseType $responseType = ResponseType::SINGLE;
@@ -245,8 +244,7 @@ it('mutate response data', function () {
 });
 
 it('mutate response collection data', function () {
-    $dataEntity = new class extends DataEntity
-    {
+    $dataEntity = new class extends DataEntity {
         protected ?Method $method = Method::SELECT;
 
         protected ?ResponseType $responseType = ResponseType::COLLECTION;
@@ -346,8 +344,7 @@ it('mutate response collection data', function () {
 
 it('get value with a custom Accessor', function () {
 
-    $dataEntity = new class extends DataEntity
-    {
+    $dataEntity = new class extends DataEntity {
         protected ?Method $method = Method::SELECT;
 
         protected ?ResponseType $responseType = ResponseType::COLLECTION;
@@ -373,7 +370,7 @@ it('get value with a custom Accessor', function () {
     };
 
     DataEntity::fake([
-        $dataEntity::class => MockResponse::makeWithException(new \Exception('error')),
+        $dataEntity::class => MockResponse::makeWithException(new Exception('error')),
     ]);
 
     $response = $dataEntity->execute();
@@ -383,4 +380,71 @@ it('get value with a custom Accessor', function () {
     $response->throw();
 
 })
-    ->throws(\Exception::class, 'error');
+    ->throws(Exception::class, 'error');
+
+it('returns a lazy collection if UseLAzyQuery attribute es defined', function () {
+    $dataEntity = new #[UseLazyQuery] class extends DataEntity {
+        protected ?ResponseType $responseType = ResponseType::COLLECTION;
+
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        public function defaultParameters(): array
+        {
+            return [
+                'test' => 'test',
+            ];
+        }
+    };
+
+    DataEntity::fake([
+        $dataEntity::class => MockResponse::make([['test' => 'test']]),
+    ]);
+
+    $response = $dataEntity->execute();
+
+    expect($response->data())->toBeEmpty()
+        ->and($response->lazy())->toBeInstanceOf(LazyCollection::class)
+        ->and($response->lazy()->first())->toBe(['test' => 'test']);
+});
+
+it('returns a lazy collection casted if UseLAzyQuery attribute es defined', function () {
+    $dataEntity = new #[UseLazyQuery] class extends DataEntity {
+        protected ?ResponseType $responseType = ResponseType::COLLECTION;
+
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        public function defaultParameters(): array
+        {
+            return [
+                'test' => 'test',
+            ];
+        }
+
+        public function accessors(): array
+        {
+            return [
+                'id' => 'integer',
+            ];
+        }
+    };
+
+    DataEntity::fake([
+        $dataEntity::class => MockResponse::make([
+            [
+                'test' => 'test',
+                'id' => '2',
+            ],
+        ]),
+    ]);
+
+    $response = $dataEntity->execute();
+
+    expect($response->data())->toBeEmpty()
+        ->and($response->lazy()->first()['id'] === 2)->toBeTrue();
+});

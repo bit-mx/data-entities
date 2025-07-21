@@ -9,6 +9,7 @@ use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Responses\Response;
 use Illuminate\Support\Arr;
+use Illuminate\Support\LazyCollection;
 
 class MockProcessor implements ProcessorContract
 {
@@ -50,6 +51,10 @@ class MockProcessor implements ProcessorContract
             return new Response($this->pendingQuery, [], [], false, $mockResponse->exception());
         }
 
-        return new Response($this->pendingQuery, $mockResponse->data(), $mockResponse->output(), true);
+        if(!$this->pendingQuery->usesLazyCollection()) {
+            return new Response($this->pendingQuery, $mockResponse->data(), $mockResponse->output(), true);
+        }
+
+        return new Response($this->pendingQuery, [], [], true, null, LazyCollection::make($mockResponse->data()));
     }
 }

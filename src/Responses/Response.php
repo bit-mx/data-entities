@@ -14,8 +14,8 @@ use Throwable;
 
 class Response
 {
-    use HasLazyData;
     use HasMutatedData;
+    use HasLazyData;
     use ThrowsError;
 
     protected ArrayStore $rawData;
@@ -82,7 +82,7 @@ class Response
      * @param  ?array-key  $key
      * @return ($key is null ? array<array-key, mixed> : mixed)
      */
-    public function rawData(string|int|null $key, mixed $default): mixed
+    public function rawData(string|int|null $key = null, mixed $default = null): mixed
     {
         if ($key === null) {
             return $this->rawData->all();

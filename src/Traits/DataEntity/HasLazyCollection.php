@@ -6,7 +6,7 @@ trait HasLazyCollection
 {
     protected bool $useLazyCollection = false;
 
-    public function useLazyCollection(): bool
+    public function usesLazyCollection(): bool
     {
         return $this->useLazyCollection;
     }

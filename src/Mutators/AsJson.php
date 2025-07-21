@@ -15,7 +15,7 @@ class AsJson implements Mutable
     /**
      * @param  array<array-key, mixed>  $attributes
      */
-    public function __construct(array ...$attributes)
+    public function __construct(...$attributes)
     {
         $this->attributes = $attributes;
     }

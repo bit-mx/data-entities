@@ -49,14 +49,8 @@ class Processor implements ProcessorContract
 
     protected function executeStatement(): Response
     {
-        if (! $this->pendingQuery->useLazyCollection()) {
+        if (! $this->pendingQuery->usesLazyCollection()) {
             return $this->executeQuery(new SimpleQueryStrategy);
-        }
-
-        if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
-            throw new InvalidLazyQueryException(
-                'Lazy collection cannot be used with single response type. Please use collection response type instead.'
-            );
         }
 
         return $this->executeQuery(new LazyQueryStrategy);
