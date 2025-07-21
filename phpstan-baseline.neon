@@ -9,7 +9,3 @@ parameters:
         -
             identifier:  trait.unused
             path: src\Plugins\AlwaysThrowOnError.php
-        -
-            identifier:  trait.unused
-            path: src\Plugins\UseLazyCollection.php
-

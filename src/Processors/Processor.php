@@ -123,17 +123,17 @@ class Processor implements ProcessorContract
      */
     protected function createDataArray(array $data): array
     {
-        if (collect($data)->isEmpty()) {
+        if (empty($data)) {
             return [];
         }
 
-        $responseData = json_decode((string) json_encode($data), true);
+        $data = json_decode((string) json_encode($data), true);
 
         if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
-            return Arr::get($responseData, '0.0', []);
+            return Arr::get($data, '0.0', []);
         }
 
-        return $responseData;
+        return $data;
     }
 
     /**

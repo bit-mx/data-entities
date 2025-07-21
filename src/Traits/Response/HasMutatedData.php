@@ -16,6 +16,10 @@ trait HasMutatedData
      */
     protected function mutatedData(): array
     {
+        if ($this->pendingQuery->accessors()->isEmpty()) {
+            return [];
+        }
+
         if ($this->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
             return $this->mutateSingleData($this->aliasData());
         }

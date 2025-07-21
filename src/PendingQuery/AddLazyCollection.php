@@ -2,6 +2,7 @@
 
 namespace BitMx\DataEntities\PendingQuery;
 
+use BitMx\DataEntities\Attributes\UseLazyQuery;
 use BitMx\DataEntities\PendingQuery;
 
 readonly class AddLazyCollection
@@ -11,7 +12,13 @@ readonly class AddLazyCollection
      */
     public function __invoke(PendingQuery $pendingQuery, \Closure $next): PendingQuery
     {
-        if ($pendingQuery->getDataEntity()->useLazyCollection()) {
+        $dataEntity = $pendingQuery->getDataEntity();
+
+        $reflection = new \ReflectionClass($dataEntity);
+
+        $attributes = $reflection->getAttributes(UseLazyQuery::class);
+
+        if (! empty($attributes)) {
             $pendingQuery->enableUseLazyCollection();
         }
 

@@ -5,13 +5,16 @@ namespace BitMx\DataEntities\Responses;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Stores\ArrayStore;
+use BitMx\DataEntities\Traits\Response\HasLazyData;
 use BitMx\DataEntities\Traits\Response\HasMutatedData;
 use BitMx\DataEntities\Traits\Response\ThrowsError;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
+use Throwable;
 
 class Response
 {
+    use HasLazyData;
     use HasMutatedData;
     use ThrowsError;
 
@@ -26,11 +29,6 @@ class Response
     protected ArrayStore $output;
 
     /**
-     * @var LazyCollection<array-key, mixed>
-     */
-    protected readonly LazyCollection $lazyData;
-
-    /**
      * @param  array<array-key, mixed>  $data
      * @param  array<array-key, mixed>  $output
      * @param  LazyCollection<array-key, mixed>  $rawLazyData
@@ -40,38 +38,18 @@ class Response
         array $data = [],
         array $output = [],
         protected readonly bool $success = true,
-        protected readonly ?\Throwable $senderException = null,
+        protected readonly ?Throwable $senderException = null,
         protected readonly LazyCollection $rawLazyData = new LazyCollection,
     ) {
-        $this->lazyData = $this->getLazyData();
-
         $this->rawData = new ArrayStore($data);
         $this->rawOutput = new ArrayStore($output);
-
         $this->data = new ArrayStore($this->mutatedData());
-
         $this->output = new ArrayStore($this->mutatedOutput());
-
     }
 
-    /**
-     * @return LazyCollection<array-key, mixed>
-     */
-    protected function getLazyData(): LazyCollection
+    public function isEmpty(): bool
     {
-        if ($this->rawLazyData->isEmpty()) {
-            return LazyCollection::make();
-        }
-
-        return $this->rawLazyData->map(fn (object $item) => $this->mutateSingleData((array) $item));
-    }
-
-    /**
-     * @return LazyCollection<array-key, mixed>
-     */
-    public function lazy(): LazyCollection
-    {
-        return $this->lazyData;
+        return $this->data->isEmpty();
     }
 
     /**
@@ -141,18 +119,13 @@ class Response
         return ! $this->isEmpty();
     }
 
-    public function isEmpty(): bool
-    {
-        return $this->data->isEmpty();
-    }
-
     public function dto(): mixed
     {
         return $this
             ->pendingQuery
             ->getDataEntity()
             ->createDtoFromResponse(
-                $this
+                $this,
             );
     }
 
@@ -221,5 +194,10 @@ class Response
     public function object(): object
     {
         return $this->data->toObject();
+    }
+
+    protected function hasAccessors(): bool
+    {
+        return $this->pendingQuery->accessors()->isNotEmpty();
     }
 }

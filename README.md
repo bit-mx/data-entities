@@ -745,31 +745,29 @@ $response->isCached(); //
 
 ### Lazy Collection
 
-You can use the `UseLazyCollection` plugin to return a lazy collection from the stored procedure.
+If you want to return a LazyCollection instance, you can use the UseLazyQuery attribute.
 
 ```php
 namespace App\DataEntities;
 
+use BitMx\DataEntities\Attributes\UseLazyQuery;
 use BitMx\DataEntities\Contracts\Cacheable;
 use BitMx\DataEntities\PendingQuery;
-use BitMx\DataEntities\Plugins\UseLazyCollection;
 use DataEntities\DataEntity;
 use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\Responses\Response;
 use Illuminate\Support\Collection;
 
-
+#[UseLazyQuery]
 class GetAllPostsDataEntity extends DataEntity
 {
-    use UseLazyCollection;
-
-    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    protected ?ResponseType $responseType = ResponseType::COLLECTION;
    
 }
 ```
 
-This plugin will return a LazyCollection instance whn lzy method is called on the Response object.
+This plugin will return a LazyCollection instance when lazy method is called on the Response object.
 
 ```php  
 use App\DataEntities\GetAllPostsDataEntity;
@@ -780,7 +778,7 @@ $posts = $response->lazy();
 
 #### Note
 
-When using the UseLazyCollection plugin, the response type only supports COLLECTION. If you try to use SINGLE, it will throw an exception.
+When using the UseLazyQuery attribute, the response type only supports COLLECTION. If you try to use SINGLE, it will throw an exception.
 
 
 ## Data Transfer objects
