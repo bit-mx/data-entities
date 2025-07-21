@@ -14,7 +14,7 @@ readonly class AddLazyCollection
      */
     public function __invoke(PendingQuery $pendingQuery, \Closure $next): PendingQuery
     {
-        if($this->hasUseLazyQueryAttribute($pendingQuery)) {
+        if ($this->hasUseLazyQueryAttribute($pendingQuery)) {
             $this->enableLazyCollection($pendingQuery);
         }
 
@@ -31,7 +31,7 @@ readonly class AddLazyCollection
         $pendingQuery->enableUseLazyCollection();
     }
 
-    protected function hasUseLazyQueryAttribute(PendingQuery $pendingQuery):bool
+    protected function hasUseLazyQueryAttribute(PendingQuery $pendingQuery): bool
     {
         $dataEntity = $pendingQuery->getDataEntity();
 
@@ -39,6 +39,6 @@ readonly class AddLazyCollection
 
         $attributes = $reflection->getAttributes(UseLazyQuery::class);
 
-        return !empty($attributes);
+        return ! empty($attributes);
     }
 }

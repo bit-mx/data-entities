@@ -14,8 +14,8 @@ use Throwable;
 
 class Response
 {
-    use HasMutatedData;
     use HasLazyData;
+    use HasMutatedData;
     use ThrowsError;
 
     protected ArrayStore $rawData;

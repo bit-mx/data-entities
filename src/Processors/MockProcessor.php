@@ -51,7 +51,7 @@ class MockProcessor implements ProcessorContract
             return new Response($this->pendingQuery, [], [], false, $mockResponse->exception());
         }
 
-        if(!$this->pendingQuery->usesLazyCollection()) {
+        if (! $this->pendingQuery->usesLazyCollection()) {
             return new Response($this->pendingQuery, $mockResponse->data(), $mockResponse->output(), true);
         }
 

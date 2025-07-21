@@ -13,7 +13,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 
 beforeEach(function () {
-    $this->dataEntity = new class extends DataEntity {
+    $this->dataEntity = new class extends DataEntity
+    {
         protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
@@ -129,7 +130,8 @@ it('returns a empty array if there is no data', function () {
 
 @it('returns a DTO', function () {
 
-    $dataEntity = new class extends DataEntity {
+    $dataEntity = new class extends DataEntity
+    {
         protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
@@ -162,7 +164,8 @@ it('returns a empty array if there is no data', function () {
 });
 
 it('mutate response data', function () {
-    $dataEntity = new class extends DataEntity {
+    $dataEntity = new class extends DataEntity
+    {
         protected ?Method $method = Method::SELECT;
 
         protected ?ResponseType $responseType = ResponseType::SINGLE;
@@ -244,7 +247,8 @@ it('mutate response data', function () {
 });
 
 it('mutate response collection data', function () {
-    $dataEntity = new class extends DataEntity {
+    $dataEntity = new class extends DataEntity
+    {
         protected ?Method $method = Method::SELECT;
 
         protected ?ResponseType $responseType = ResponseType::COLLECTION;
@@ -344,7 +348,8 @@ it('mutate response collection data', function () {
 
 it('get value with a custom Accessor', function () {
 
-    $dataEntity = new class extends DataEntity {
+    $dataEntity = new class extends DataEntity
+    {
         protected ?Method $method = Method::SELECT;
 
         protected ?ResponseType $responseType = ResponseType::COLLECTION;
@@ -383,7 +388,8 @@ it('get value with a custom Accessor', function () {
     ->throws(Exception::class, 'error');
 
 it('returns a lazy collection if UseLAzyQuery attribute es defined', function () {
-    $dataEntity = new #[UseLazyQuery] class extends DataEntity {
+    $dataEntity = new #[UseLazyQuery] class extends DataEntity
+    {
         protected ?ResponseType $responseType = ResponseType::COLLECTION;
 
         public function resolveStoreProcedure(): string
@@ -411,7 +417,8 @@ it('returns a lazy collection if UseLAzyQuery attribute es defined', function ()
 });
 
 it('returns a lazy collection casted if UseLAzyQuery attribute es defined', function () {
-    $dataEntity = new #[UseLazyQuery] class extends DataEntity {
+    $dataEntity = new #[UseLazyQuery] class extends DataEntity
+    {
         protected ?ResponseType $responseType = ResponseType::COLLECTION;
 
         public function resolveStoreProcedure(): string

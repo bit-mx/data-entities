@@ -36,7 +36,7 @@ it('executes query middlewares', function () {
     expect($pendingQuery->parameters()->all())->toBe(['test' => 'test 1']);
 });
 
-test('if data entity has UseLazyQuery attribute', function(){
+test('if data entity has UseLazyQuery attribute', function () {
 
     $dataEntity = new #[UseLazyQuery] class extends DataEntity
     {
@@ -53,7 +53,7 @@ test('if data entity has UseLazyQuery attribute', function(){
     expect($pendingQuery->usesLazyCollection())->toBeTrue();
 });
 
-it('throws an exception if data entity has UseLazyQuery attribute and response type is SINGLE ', function(){
+it('throws an exception if data entity has UseLazyQuery attribute and response type is SINGLE ', function () {
 
     $dataEntity = new #[UseLazyQuery] class extends DataEntity
     {
@@ -69,4 +69,4 @@ it('throws an exception if data entity has UseLazyQuery attribute and response t
 
     expect($pendingQuery->usesLazyCollection())->not->toBeTrue();
 })
-->throws(InvalidLazyQueryException::class);
+    ->throws(InvalidLazyQueryException::class);

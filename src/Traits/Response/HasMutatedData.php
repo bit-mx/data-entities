@@ -103,7 +103,7 @@ trait HasMutatedData
      */
     protected function mutateCollectionData(array $data): array
     {
-        if(!$this->hasAccessors()) {
+        if (! $this->hasAccessors()) {
             return $data;
         }
 
