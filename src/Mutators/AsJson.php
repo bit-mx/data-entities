@@ -3,6 +3,7 @@
 namespace BitMx\DataEntities\Mutators;
 
 use BitMx\DataEntities\Contracts\Mutable;
+use Illuminate\Support\Collection;
 
 class AsJson implements Mutable
 {
@@ -28,7 +29,10 @@ class AsJson implements Mutable
             throw new \InvalidArgumentException("The value of the parameter {$key} must be an array or object");
         }
 
-        $flags = collect($this->attributes)
+        /** @var Collection<int, string> $attributesCollection */
+        $attributesCollection = collect($this->attributes);
+
+        $flags = $attributesCollection
             ->filter(fn (string $item): bool => str($item)->startsWith('JSON_'))
             ->map(fn (string $item) => constant($item))
             ->reduce(function (int $carry, int $item): int {

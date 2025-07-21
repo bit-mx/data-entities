@@ -6,10 +6,13 @@ use BitMx\DataEntities\PendingQuery;
 
 readonly class AddAlias
 {
-    public function __invoke(PendingQuery $pendingQuery): PendingQuery
+    /**
+     * @param  \Closure(PendingQuery): PendingQuery  $next
+     */
+    public function __invoke(PendingQuery $pendingQuery, \Closure $next): PendingQuery
     {
         $pendingQuery->alias()->merge($pendingQuery->getDataEntity()->getalias());
 
-        return $pendingQuery;
+        return $next($pendingQuery);
     }
 }

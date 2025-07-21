@@ -6,10 +6,13 @@ use BitMx\DataEntities\PendingQuery;
 
 readonly class AddAccessors
 {
-    public function __invoke(PendingQuery $pendingQuery): PendingQuery
+    /**
+     * @param  \Closure(PendingQuery): PendingQuery  $next
+     */
+    public function __invoke(PendingQuery $pendingQuery, \Closure $next): PendingQuery
     {
         $pendingQuery->accessors()->merge($pendingQuery->getDataEntity()->getAccessors());
 
-        return $pendingQuery;
+        return $next($pendingQuery);
     }
 }

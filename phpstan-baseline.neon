@@ -9,4 +9,3 @@ parameters:
         -
             identifier:  trait.unused
             path: src\Plugins\AlwaysThrowOnError.php
-

@@ -103,6 +103,10 @@ trait HasMutatedData
      */
     protected function mutateCollectionData(array $data): array
     {
+        if (! $this->hasAccessors()) {
+            return $data;
+        }
+
         return collect($data)
             ->map(fn (mixed $value): array => $this->mutateSingleData($value))
             ->all();

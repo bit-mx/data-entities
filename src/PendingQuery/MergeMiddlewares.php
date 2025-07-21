@@ -6,7 +6,10 @@ use BitMx\DataEntities\PendingQuery;
 
 readonly class MergeMiddlewares
 {
-    public function __invoke(PendingQuery $pendingQuery): PendingQuery
+    /**
+     * @param  \Closure(PendingQuery): PendingQuery  $next
+     */
+    public function __invoke(PendingQuery $pendingQuery, \Closure $next): PendingQuery
     {
         $dataEntity = $pendingQuery->getDataEntity();
 
@@ -14,6 +17,6 @@ readonly class MergeMiddlewares
 
         $pendingQuery->middleware()->merge($middleware);
 
-        return $pendingQuery;
+        return $next($pendingQuery);
     }
 }

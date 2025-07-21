@@ -3,16 +3,19 @@
 namespace BitMx\DataEntities\Processors;
 
 use BitMx\DataEntities\Contracts\ProcessorContract;
-use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
+use BitMx\DataEntities\Strategies\Contracts\QueryStrategyContract;
+use BitMx\DataEntities\Strategies\LazyQueryStrategy;
+use BitMx\DataEntities\Strategies\SimpleQueryStrategy;
 use BitMx\DataEntities\Traits\Executer\HasQuery;
 use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 
 class Processor implements ProcessorContract
 {
@@ -40,46 +43,54 @@ class Processor implements ProcessorContract
 
     protected function execute(): Response
     {
+        return $this->executeStatement();
+    }
+
+    protected function executeStatement(): Response
+    {
+        if (! $this->pendingQuery->usesLazyCollection()) {
+            return $this->executeQuery(new SimpleQueryStrategy);
+        }
+
+        return $this->executeQuery(new LazyQueryStrategy);
+    }
+
+    protected function executeQuery(QueryStrategyContract $strategy): Response
+    {
         $data = [];
         $output = [];
-
         $isSuccess = false;
         $exception = null;
+        $lazyCollection = LazyCollection::make();
 
         try {
-            $executionMethod = $this->getExecuter();
-
             $preparedQuery = $this->prepareQuery();
-
             $params = $this->createParameters();
-
             $client = $this->getClient();
 
-            $responseData = $client->$executionMethod($preparedQuery, $params);
+            $result = $strategy->execute($client, $preparedQuery, $params);
 
-            $responseData = is_array($responseData) ? $responseData : [];
-
-            $responseData = $this->createDataArray($responseData);
-
-            $data = $this->createData($responseData);
-
-            $output = $this->createOutput($responseData);
+            if ($result instanceof LazyCollection) {
+                $lazyCollection = $result;
+            } else {
+                $responseData = $this->createDataArray($result);
+                $data = $this->createData($responseData);
+                $output = $this->createOutput($responseData);
+            }
 
             $isSuccess = true;
         } catch (QueryException $ex) {
             $exception = $ex;
-            $isSuccess = false;
         }
 
-        return new Response($this->pendingQuery, $data, $output, $isSuccess, $exception);
-    }
-
-    protected function getExecuter(): string
-    {
-        return match ($this->pendingQuery->getMethod()) {
-            Method::SELECT => 'selectResultSets',
-            Method::STATEMENT => 'statement',
-        };
+        return new Response(
+            pendingQuery: $this->pendingQuery,
+            data: $data,
+            output: $output,
+            success: $isSuccess,
+            senderException: $exception,
+            rawLazyData: $lazyCollection,
+        );
     }
 
     /**
@@ -105,17 +116,17 @@ class Processor implements ProcessorContract
      */
     protected function createDataArray(array $data): array
     {
-        if (collect($data)->isEmpty()) {
+        if (empty($data)) {
             return [];
         }
 
-        $responseData = json_decode((string) json_encode($data), true);
+        $data = json_decode((string) json_encode($data), true);
 
         if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
-            return Arr::get($responseData, '0.0', []);
+            return Arr::get($data, '0.0', []);
         }
 
-        return $responseData;
+        return $data;
     }
 
     /**

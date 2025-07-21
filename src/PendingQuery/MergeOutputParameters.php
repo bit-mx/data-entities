@@ -6,7 +6,10 @@ use BitMx\DataEntities\PendingQuery;
 
 readonly class MergeOutputParameters
 {
-    public function __invoke(PendingQuery $pendingQuery): PendingQuery
+    /**
+     * @param  \Closure(PendingQuery): PendingQuery  $next
+     */
+    public function __invoke(PendingQuery $pendingQuery, \Closure $next): PendingQuery
     {
         $dataEntity = $pendingQuery->getDataEntity();
 
@@ -14,6 +17,6 @@ readonly class MergeOutputParameters
 
         $pendingQuery->outputParameters()->merge($outputParameters);
 
-        return $pendingQuery;
+        return $next($pendingQuery);
     }
 }
