@@ -2,7 +2,6 @@
 
 namespace BitMx\DataEntities;
 
-use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\Responses\Response;
 use BitMx\DataEntities\Traits\DataEntity\Assertable;
@@ -36,8 +35,6 @@ abstract class DataEntity
     use HasParameters;
     use HasQueryStatements;
 
-    protected ?Method $method = Method::SELECT;
-
     protected ?ResponseType $responseType = null;
 
     abstract public function resolveStoreProcedure(): string;
@@ -45,15 +42,6 @@ abstract class DataEntity
     public function createDtoFromResponse(Response $response): mixed
     {
         return null;
-    }
-
-    public function getMethod(): Method
-    {
-        if (! isset($this->method)) {
-            throw new \LogicException('Your data entity is missing a method. You must add a method property like [protected Method $method = Method::SELECT]');
-        }
-
-        return $this->method;
     }
 
     public function getResponseType(): ResponseType

@@ -20,7 +20,6 @@ it('creates a data entity', function () {
     };
 
     expect($dataEntity->resolveStoreProcedure())->toBe('sp_test')
-        ->and($dataEntity->getMethod())->toBe(Method::SELECT)
         ->and($dataEntity->getResponseType())->toBe(ResponseType::SINGLE);
 });
 

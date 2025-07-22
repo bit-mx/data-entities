@@ -22,8 +22,7 @@ beforeEach(function () {
 it('creates a PendingQuery', function () {
     $pendingQuery = new PendingQuery($this->dataEntity);
 
-    expect($pendingQuery->getDataEntity())->toBe($this->dataEntity)
-        ->and($pendingQuery->getMethod())->toBe(Method::SELECT);
+    expect($pendingQuery->getDataEntity())->toBe($this->dataEntity);
 });
 
 it('executes query middlewares', function () {

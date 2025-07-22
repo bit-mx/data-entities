@@ -2,7 +2,6 @@
 
 namespace BitMx\DataEntities\PendingQuery;
 
-use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\PendingQuery;
 
 readonly class MergeQueryStatements
@@ -17,10 +16,6 @@ readonly class MergeQueryStatements
         $storeProcedure = sprintf('EXEC %s ', $dataEntity->resolveStoreProcedure());
 
         $statements = [];
-
-        if ($pendingQuery->getMethod() === Method::STATEMENT) {
-            $statements[] = 'SET NOCOUNT ON';
-        }
 
         $currentStatements = $dataEntity->statements()->all();
 
