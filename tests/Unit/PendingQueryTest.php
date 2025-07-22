@@ -1,5 +1,6 @@
 <?php
 
+use BitMx\DataEntities\Attributes\SingleItemResponse;
 use BitMx\DataEntities\Attributes\UseLazyQuery;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Enums\Method;
@@ -54,7 +55,7 @@ test('if data entity has UseLazyQuery attribute', function () {
 
 it('throws an exception if data entity has UseLazyQuery attribute and response type is SINGLE ', function () {
 
-    $dataEntity = new #[UseLazyQuery] class extends DataEntity
+    $dataEntity = new #[UseLazyQuery] #[SingleItemResponse] class extends DataEntity
     {
         protected ?ResponseType $responseType = ResponseType::SINGLE;
 

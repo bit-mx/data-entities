@@ -20,7 +20,7 @@ use BitMx\DataEntities\Traits\HasQueryStatements;
 use BitMx\DataEntities\Traits\PendingQuery\HasAccessorsStore;
 use BitMx\DataEntities\Traits\PendingQuery\HasAliasStore;
 use BitMx\DataEntities\Traits\PendingQuery\HasMutatorStore;
-use BitMx\DataEntities\Traits\PendingQuery\Tappable;
+use BitMx\DataEntities\Traits\PendingQuery\HasResponseType;
 use BitMx\DataEntities\Traits\Response\FakeResponse;
 use Illuminate\Support\Facades\Pipeline;
 
@@ -34,7 +34,7 @@ class PendingQuery
     use HasOutputParameters;
     use HasParameters;
     use HasQueryStatements;
-    use Tappable;
+    use HasResponseType;
 
     protected ?FakeResponse $fakeResponse = null;
 

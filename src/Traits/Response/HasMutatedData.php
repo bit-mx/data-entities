@@ -16,7 +16,7 @@ trait HasMutatedData
      */
     protected function mutatedData(): array
     {
-        if ($this->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
+        if ($this->getPendingQuery()->getResponseType() === ResponseType::SINGLE) {
             return $this->mutateSingleData($this->aliasData());
         }
 
@@ -50,7 +50,7 @@ trait HasMutatedData
      */
     protected function aliasData(): array
     {
-        return $this->getDataEntity()->getResponseType() === ResponseType::SINGLE
+        return $this->getPendingQuery()->getResponseType() === ResponseType::SINGLE
             ? $this->aliasSingleData()
             : $this->aliasCollectionData();
     }

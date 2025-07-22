@@ -75,7 +75,7 @@ return [
 
 ## Compatibility
 
-This package is compatible with Laravel 10.x and above.
+This package is compatible with Laravel 11.x and above.
 
 Due laravel 11 requires php 8.2, this package is compatible with php 8.2 and above.
 
@@ -99,7 +99,6 @@ use Illuminate\Support\Collection;
 
 class GetAllPostsDataEntity extends DataEntity
 {
-    protected ?ResponseType $responseType = ResponseType::SINGLE;
     
     public function __construct(
         protected int $authorId,
@@ -135,10 +134,47 @@ $dataEntity = new GetAllPostsDataEntity(1);
 $dataEntity->parameters()->add('tag', 'laravel');
 ```
 
-The ResponseType enum has two options: SINGLE and COLLECTION.
+By default, the Data Entity will return a Response with a collection of records. You can change this by setting the
+php attribute `SingleItemResponse`. This way, you can return a single record instead of a collection.
 
-SINGLE is used when the stored procedure returns a single row, and COLLECTION is used when the stored procedure returns
-multiple rows.
+```php
+namespace App\DataEntities;
+
+use DataEntities\DataEntity;
+use BitMx\DataEntities\Attributes\SingleItemResponse;
+use BitMx\DataEntities\Enums\Method;
+use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Responses\Response;
+use Illuminate\Support\Collection;
+
+#[SingleItemResponse]
+class GetAllPostsDataEntity extends DataEntity
+{
+    
+    public function __construct(
+        protected int $authorId,
+    ) 
+    {
+    
+    }
+    
+    #[\Override]
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListAllPost';
+    }
+
+    #[\Override]
+    public function defaultParameters(): array
+    {
+        return [
+            'author_id' => $this->authorId,
+        ];
+    } 
+}
+```
+
+### Creating a DataEntity class
 
 You can use the artisan command to create a new Data Entity:
 
@@ -513,7 +549,7 @@ use Illuminate\Support\Collection;
 
 class GetAllPostsDataEntity extends DataEntity
 {
-    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
     
     ...
     
@@ -559,7 +595,7 @@ use Illuminate\Support\Collection;
 
 class GetAllPostsDataEntity extends DataEntity
 {
-    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
     
     ...
     
@@ -623,7 +659,7 @@ use Illuminate\Support\Collection;
 
 class GetAllPostsDataEntity extends DataEntity
 {
-    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
     
     ...
     
@@ -664,7 +700,7 @@ class GetAllPostsDataEntity extends DataEntity
 
     protected ?Method $method = Method::SELECT;
     
-    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
     
     ...
    
@@ -694,7 +730,7 @@ class GetAllPostsDataEntity extends DataEntity implements Cacheable
 {
     use HasCache;
 
-    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
     
     ...
     
@@ -762,8 +798,10 @@ use Illuminate\Support\Collection;
 #[UseLazyQuery]
 class GetAllPostsDataEntity extends DataEntity
 {
-    protected ?ResponseType $responseType = ResponseType::COLLECTION;
-   
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListAllPost';
+    }
 }
 ```
 
@@ -778,8 +816,8 @@ $posts = $response->lazy();
 
 #### Note
 
-When using the UseLazyQuery attribute, the response type only supports COLLECTION. If you try to use SINGLE, it will throw an exception.
-
+When using the UseLazyQuery attribute, the response type only supports COLLECTION. If you try to use SINGLE, it will
+throw an exception.
 
 ## Data Transfer objects
 
@@ -816,7 +854,7 @@ class GetPostDataEntity extends DataEntity
 {
     protected ?Method $method = Method::SELECT;
     
-    protected ?ResponseType $responseType = ResponseType::SINGLE;
+    
     
     public function __construct(
         protected int $postId,

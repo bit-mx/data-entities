@@ -1,5 +1,6 @@
 <?php
 
+use BitMx\DataEntities\Attributes\SingleItemResponse;
 use BitMx\DataEntities\Attributes\UseLazyQuery;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Enums\Method;
@@ -13,10 +14,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 
 beforeEach(function () {
-    $this->dataEntity = new class extends DataEntity
+    $this->dataEntity = new #[SingleItemResponse] class extends DataEntity
     {
-        protected ?ResponseType $responseType = ResponseType::SINGLE;
-
         public function resolveStoreProcedure(): string
         {
             return 'sp_test';
@@ -31,7 +30,58 @@ beforeEach(function () {
     };
 });
 
-it('you can get the pending query', function () {
+it('returns a collection if response Attribute SingleItemResponse is not defined in class', function () {
+    $dataEntity = new class extends DataEntity
+    {
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        public function defaultParameters(): array
+        {
+            return [
+                'test' => 'test',
+            ];
+        }
+    };
+
+    DataEntity::fake([
+        $dataEntity::class => MockResponse::make([['test' => 'test']]),
+    ]);
+
+    $response = $dataEntity->execute();
+
+    expect($response->data())->toBeArray()
+        ->and($response->data()[0])->toBe(['test' => 'test']);
+});
+
+it('returns a single item if response Attribute SingleItemResponse is defined in class', function () {
+    $dataEntity = new #[SingleItemResponse] class extends DataEntity
+    {
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        public function defaultParameters(): array
+        {
+            return [
+                'test' => 'test',
+            ];
+        }
+    };
+
+    DataEntity::fake([
+        $dataEntity::class => MockResponse::make(['test' => 'test']),
+    ]);
+
+    $response = $dataEntity->execute();
+
+    expect($response->data())->toBe(['test' => 'test']);
+});
+
+it('can get the pending query', function () {
     DataEntity::fake([
         $this->dataEntity::class => MockResponse::make(['test' => 'test']),
     ]);
@@ -130,10 +180,8 @@ it('returns a empty array if there is no data', function () {
 
 @it('returns a DTO', function () {
 
-    $dataEntity = new class extends DataEntity
+    $dataEntity = new #[SingleItemResponse] class extends DataEntity
     {
-        protected ?ResponseType $responseType = ResponseType::SINGLE;
-
         public function resolveStoreProcedure(): string
         {
             return 'sp_test';
@@ -164,11 +212,9 @@ it('returns a empty array if there is no data', function () {
 });
 
 it('mutate response data', function () {
-    $dataEntity = new class extends DataEntity
+    $dataEntity = new #[SingleItemResponse] class extends DataEntity
     {
         protected ?Method $method = Method::SELECT;
-
-        protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
         {
@@ -250,8 +296,6 @@ it('mutate response collection data', function () {
     $dataEntity = new class extends DataEntity
     {
         protected ?Method $method = Method::SELECT;
-
-        protected ?ResponseType $responseType = ResponseType::COLLECTION;
 
         public function resolveStoreProcedure(): string
         {
