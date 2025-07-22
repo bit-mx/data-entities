@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BitMx\DataEntities\Cache;
 
 use BitMx\DataEntities\Contracts\CacheStore;

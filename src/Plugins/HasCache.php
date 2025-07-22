@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BitMx\DataEntities\Plugins;
 
 use BitMx\DataEntities\Cache\CacheHandler;
@@ -56,7 +58,7 @@ trait HasCache
         $expires = $dataEntity->cacheExpiresAt();
 
         if ($expires instanceof \DateTimeInterface) {
-            return now()->diffInSeconds($expires);
+            return (int) floor(now()->diffInSeconds($expires));
         }
 
         return $expires;

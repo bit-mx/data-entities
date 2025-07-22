@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BitMx\DataEntities\Parameters;
 
 use BitMx\DataEntities\PendingQuery;
