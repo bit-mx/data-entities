@@ -2,7 +2,6 @@
 
 namespace BitMx\DataEntities;
 
-use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\PendingQuery\AddAccessors;
 use BitMx\DataEntities\PendingQuery\AddAlias;
 use BitMx\DataEntities\PendingQuery\AddLazyCollection;
@@ -37,14 +36,10 @@ class PendingQuery
     use HasQueryStatements;
     use Tappable;
 
-    protected readonly Method $method;
-
     protected ?FakeResponse $fakeResponse = null;
 
     public function __construct(protected DataEntity $dataEntity)
     {
-        $this->method = $dataEntity->getMethod();
-
         Pipeline::send($this)
             ->through([
                 BootDataEntity::class,
@@ -62,11 +57,6 @@ class PendingQuery
 
         // Execute the middleware
         $this->middleware()->executeQueryPipeline($this);
-    }
-
-    public function getMethod(): Method
-    {
-        return $this->method;
     }
 
     public function getDataEntity(): DataEntity
