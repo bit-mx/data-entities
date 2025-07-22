@@ -122,7 +122,7 @@ class Processor implements ProcessorContract
 
         $data = json_decode((string) json_encode($data), true);
 
-        if ($this->pendingQuery->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
+        if ($this->pendingQuery->getResponseType() === ResponseType::SINGLE) {
             return Arr::get($data, '0.0', []);
         }
 
@@ -135,9 +135,7 @@ class Processor implements ProcessorContract
      */
     protected function createData(array $responseData): array
     {
-        $dataEntity = $this->pendingQuery->getDataEntity();
-
-        if ($dataEntity->getResponseType() === ResponseType::SINGLE) {
+        if ($this->pendingQuery->getResponseType() === ResponseType::SINGLE) {
             return $responseData;
         }
 

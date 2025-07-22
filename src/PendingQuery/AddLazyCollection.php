@@ -23,11 +23,12 @@ readonly class AddLazyCollection
 
     protected function enableLazyCollection(PendingQuery $pendingQuery): void
     {
-        if ($pendingQuery->getDataEntity()->getResponseType() === ResponseType::SINGLE) {
+        if ($pendingQuery->getResponseType() === ResponseType::SINGLE) {
             throw new InvalidLazyQueryException(
                 'Lazy collection cannot be used with single response type. Please use collection response type instead.'
             );
         }
+
         $pendingQuery->enableUseLazyCollection();
     }
 

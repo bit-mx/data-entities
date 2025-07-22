@@ -1,7 +1,6 @@
 <?php
 
 use BitMx\DataEntities\DataEntity;
-use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\Plugins\AlwaysThrowOnError;
 use BitMx\DataEntities\Responses\MockResponse;
@@ -9,8 +8,6 @@ use BitMx\DataEntities\Responses\MockResponse;
 it('creates a data entity', function () {
     $dataEntity = new class extends DataEntity
     {
-        protected ?Method $method = Method::SELECT;
-
         protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
@@ -19,17 +16,12 @@ it('creates a data entity', function () {
         }
     };
 
-    expect($dataEntity->resolveStoreProcedure())->toBe('sp_test')
-        ->and($dataEntity->getResponseType())->toBe(ResponseType::SINGLE);
+    expect($dataEntity->resolveStoreProcedure())->toBe('sp_test');
 });
 
 test('if is not enable fake then DataEntity is not fakeable', function () {
     $dataEntity = new class extends DataEntity
     {
-        protected ?Method $method = Method::SELECT;
-
-        protected ?ResponseType $responseType = ResponseType::SINGLE;
-
         public function resolveStoreProcedure(): string
         {
             return 'sp_test';
@@ -45,10 +37,6 @@ test('if fake is enabled fake then DataEntity is fakeable', function () {
     $dataEntity = new class extends DataEntity
     {
         use AlwaysThrowOnError;
-
-        protected ?Method $method = Method::SELECT;
-
-        protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
         {

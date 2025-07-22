@@ -1,8 +1,7 @@
 <?php
 
+use BitMx\DataEntities\Attributes\SingleItemResponse;
 use BitMx\DataEntities\DataEntity;
-use BitMx\DataEntities\Enums\Method;
-use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\Plugins\HasCache;
 use BitMx\DataEntities\Responses\MockResponse;
 
@@ -12,13 +11,9 @@ use function Pest\Laravel\travelTo;
 it('cache response', function () {
     freezeTime();
 
-    $dataEntity = new class extends DataEntity implements \BitMx\DataEntities\Contracts\Cacheable
+    $dataEntity = new #[SingleItemResponse] class extends DataEntity implements \BitMx\DataEntities\Contracts\Cacheable
     {
         use HasCache;
-
-        protected ?Method $method = Method::SELECT;
-
-        protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
         {
@@ -52,13 +47,9 @@ it('cache response', function () {
 it('clears cache', function () {
     freezeTime();
 
-    $dataEntity = new class extends DataEntity implements \BitMx\DataEntities\Contracts\Cacheable
+    $dataEntity = new #[SingleItemResponse] class extends DataEntity implements \BitMx\DataEntities\Contracts\Cacheable
     {
         use HasCache;
-
-        protected ?Method $method = Method::SELECT;
-
-        protected ?ResponseType $responseType = ResponseType::SINGLE;
 
         public function resolveStoreProcedure(): string
         {
