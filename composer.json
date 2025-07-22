@@ -9,7 +9,9 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "BitMx\\DataEntities\\Tests\\": "tests"
+            "BitMx\\DataEntities\\Tests\\": "tests",
+            "Utils\\Rector\\": "utils/rector/src",
+            "Utils\\Rector\\Tests\\": "utils/rector/tests"
         }
     },
     "authors": [
@@ -34,7 +36,8 @@
         "orchestra/testbench": "^8.0|^9.0|^v10.0",
         "pestphp/pest": "^2.34",
         "pestphp/pest-plugin-laravel": "^2.3",
-        "symfony/var-dumper": "^7.1"
+        "symfony/var-dumper": "^7.1",
+        "rector/rector": "^2.1"
     },
     "config": {
         "allow-plugins": {

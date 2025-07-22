@@ -42,6 +42,7 @@ Table of Contents
         * [Assertions](#assertions)
         * [Using factories](#using-factories)
         * [Response type](#response-type)
+    * [Upgrading to version 4](#upgrading-to-version-4)
 
 ## Introduction
 
@@ -1222,3 +1223,98 @@ php artisan make:data-entity-factory PostDataEntityFactory
 ```
 
 This command will create a new factory in the `tests/DataEntityFactories` directory.
+
+### Upgrading to version 4
+
+
+## Key Changes
+
+Version 4.0 introduces two primary breaking changes to simplify the `DataEntity` class.
+
+### 1. Removal of the `responseType` Property
+
+The `$responseType` property has been removed from the `DataEntity` class. By default, all responses now return a collection of items.
+
+To specify that a response should return a single item, you must now use the `\BitMx\DataEntities\Attributes\SingleItemResponse` attribute directly on your `DataEntity` class.
+
+**Example:**
+
+
+```php
+namespace App\DataEntities;
+
+use BitMx\DataEntities\Attributes\SingleItemResponse;
+use BitMx\DataEntities\DataEntity;
+
+#[SingleItemResponse]
+class GetPostDataEntity extends DataEntity
+{
+    public function __construct(
+        protected int $postId,
+    ) {
+    }
+
+    #[\Override]
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListPost';
+    }
+
+    #[\Override]
+    public function defaultParameters(): array
+    {
+        return [
+            'post_id' => $this->postId,
+        ];
+    }
+}
+```
+
+### 2. Removal of the `$method` Property
+
+The `$method` property has also been removed from the base `DataEntity` class, as it is no longer utilized by the package.
+
+## Automated Upgrade with Rector
+
+To facilitate a smooth transition, we provide a set of Rector rules that can automate the upgrade process for your project.
+
+Follow these steps to update your code automatically.
+
+### Step 1: Install Rector
+
+First, ensure you have Rector installed as a development dependency in your project.
+
+```bash
+composer require rector/rector --dev
+```
+
+### Step 2: Configure Rector
+
+Next, create or update your `rector.php` configuration file in the root of your project to include the custom rules for this package.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use BitMx\DataEntities\Rector\RemoveMethodFromDataEntityRector;
+use BitMx\DataEntities\Rector\ResponseTypePropertyToAttributeRector;
+use Rector\Config\RectorConfig;
+
+return RectorConfig::configure()
+    ->withRules([
+        ResponseTypePropertyToAttributeRector::class,
+        RemoveMethodFromDataEntityRector::class,
+    ])
+    ->withImportNames();
+```
+
+### Step 3: Run the Upgrade
+
+Finally, execute the Rector `process` command, pointing it to the directory where your `DataEntity` classes are located.
+
+```bash
+vendor/bin/rector process app/DataEntities
+```
+
+Rector will analyze the files and apply the necessary modifications to align them with the new standards of version 4.0.

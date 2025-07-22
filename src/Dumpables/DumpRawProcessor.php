@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BitMx\DataEntities\Dumpables;
 
 use BitMx\DataEntities\Parameters\ParametersProcessor;
@@ -33,14 +35,16 @@ class DumpRawProcessor
 
         $parameters = (new ParametersProcessor($this->pendingQuery))->process();
 
+        /** @var list<string> $parameters */
         $parameters = collect($parameters)->mapWithKeys(function (mixed $value, string $key) {
             return [
                 $key => $this->getFormattedParameter($value),
             ];
         })
+            ->values()
             ->all();
 
-        $query = Str::replace($keys, collect($parameters)->values(), $query);
+        $query = Str::replace($keys, $parameters, $query);
 
         return $query;
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BitMx\DataEntities\Traits\Response;
 
 use BitMx\DataEntities\Responses\Response;
