@@ -13,11 +13,12 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PHPStan\Type\ObjectType;
 use Rector\Rector\AbstractRector;
+use Rector\Tests\TypeDeclaration\Rector\ResponseTypePropertyToAttributeRector\ResponseTypePropertyToAttributeRectorTest;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 /**
- * @see \Rector\Tests\TypeDeclaration\Rector\ResponseTypePropertyToAttributeRector\ResponseTypePropertyToAttributeRectorTest
+ * @see ResponseTypePropertyToAttributeRectorTest
  */
 final class ResponseTypePropertyToAttributeRector extends AbstractRector
 {

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace BitMx\DataEntities\Traits\Response;
 
+use BitMx\DataEntities\Responses\Response;
+
 /**
- * @mixin \BitMx\DataEntities\Responses\Response
+ * @mixin Response
  */
 trait ThrowsError
 {

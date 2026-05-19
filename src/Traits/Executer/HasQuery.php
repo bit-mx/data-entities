@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace BitMx\DataEntities\Traits\Executer;
 
 use BitMx\DataEntities\Exceptions\InvalidLazyQueryException;
+use BitMx\DataEntities\PendingQuery;
 
 /**
- * @property-read  \BitMx\DataEntities\PendingQuery $pendingQuery
+ * @property-read  PendingQuery $pendingQuery
  */
 trait HasQuery
 {

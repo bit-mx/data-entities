@@ -15,6 +15,7 @@ readonly class BootTraits
     {
         $dataEntity = $pendingQuery->getDataEntity();
 
+        /** @var array<string, string> $traits */
         $traits = $this->classUses($dataEntity);
 
         $this->bootTraits($traits, $pendingQuery);
@@ -24,7 +25,7 @@ readonly class BootTraits
 
     /**
      * @param  object|class-string  $class
-     * @return array<class-string>
+     * @return array<string, string>
      */
     protected function classUses(object|string $class): array
     {
@@ -32,7 +33,7 @@ readonly class BootTraits
     }
 
     /**
-     * @param  array<class-string>  $traits
+     * @param  array<string, string>  $traits
      */
     protected function bootTraits(array $traits, PendingQuery $pendingQuery): void
     {
@@ -41,11 +42,9 @@ readonly class BootTraits
         }
     }
 
-    /**
-     * @param  class-string|object  $trait
-     */
     protected function bootTrait(string|object $trait, PendingQuery $pendingQuery): void
     {
+        /** @var class-string $trait */
         $traitReflection = new \ReflectionClass($trait);
 
         $bootMethodName = 'boot'.$traitReflection->getShortName();

@@ -1,6 +1,7 @@
 <?php
 
 use BitMx\DataEntities\Attributes\SingleItemResponse;
+use BitMx\DataEntities\Contracts\Cacheable;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Plugins\HasCache;
 use BitMx\DataEntities\Responses\MockResponse;
@@ -11,7 +12,7 @@ use function Pest\Laravel\travelTo;
 it('cache response', function () {
     freezeTime();
 
-    $dataEntity = new #[SingleItemResponse] class extends DataEntity implements \BitMx\DataEntities\Contracts\Cacheable
+    $dataEntity = new #[SingleItemResponse] class extends DataEntity implements Cacheable
     {
         use HasCache;
 
@@ -20,7 +21,7 @@ it('cache response', function () {
             return 'sp_test';
         }
 
-        public function cacheExpiresAt(): int|\DateTimeInterface
+        public function cacheExpiresAt(): int|DateTimeInterface
         {
             return now()->addMinute();
         }
@@ -47,7 +48,7 @@ it('cache response', function () {
 it('clears cache', function () {
     freezeTime();
 
-    $dataEntity = new #[SingleItemResponse] class extends DataEntity implements \BitMx\DataEntities\Contracts\Cacheable
+    $dataEntity = new #[SingleItemResponse] class extends DataEntity implements Cacheable
     {
         use HasCache;
 
@@ -56,7 +57,7 @@ it('clears cache', function () {
             return 'sp_test';
         }
 
-        public function cacheExpiresAt(): int|\DateTimeInterface
+        public function cacheExpiresAt(): int|DateTimeInterface
         {
             return now()->addMinute();
         }
