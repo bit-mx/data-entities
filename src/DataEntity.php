@@ -18,6 +18,7 @@ use BitMx\DataEntities\Traits\DataEntity\HasMutators;
 use BitMx\DataEntities\Traits\DataEntity\HasQueryExecutor;
 use BitMx\DataEntities\Traits\DataEntity\HasQueryTimeout;
 use BitMx\DataEntities\Traits\DataEntity\HasRequiredParameters;
+use BitMx\DataEntities\Traits\DataEntity\HasTransactions;
 use BitMx\DataEntities\Traits\DataEntity\MapsToDto;
 use BitMx\DataEntities\Traits\HasOutputParameters;
 use BitMx\DataEntities\Traits\HasParameters;
@@ -42,6 +43,7 @@ abstract class DataEntity
     use HasQueryStatements;
     use HasQueryTimeout;
     use HasRequiredParameters;
+    use HasTransactions;
     use MapsToDto;
 
     abstract public function resolveStoreProcedure(): string;

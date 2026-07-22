@@ -74,6 +74,7 @@ DataEntity::assertExecutedOnce(GetPostDataEntity::class);
 - Use `alias()` to rename SQL columns before accessors run.
 - Use `defaultOutputParameters()` for stored procedure output params; read them with `$response->output()`. On SQL Server they map to `DECLARE`/`OUTPUT`; on MySQL they map to session variables (the declared SQL type is ignored).
 - Override `resolveQueryExecutor(): ?string` on a Data Entity to force a specific query executor; otherwise it is resolved from the connection driver.
+- For multi-entity atomic work on one connection, use `DataEntity::transaction(fn () => ..., connection: 'sqlsrv')` or `DB::connection(...)->transaction(...)`.
 - Use `AlwaysThrowOnError` when failures should throw automatically.
 - For caching, implement `Cacheable` and use the `HasCache` trait; call `invalidateCache()` / `disableCaching()` on the Data Entity instance, not on the Response.
 - For large result sets, use `#[UseLazyQuery]` with `$response->stream()` (single-pass) or `$response->lazy()` (re-iterable). Incompatible with `#[SingleItemResponse]` and output parameters.

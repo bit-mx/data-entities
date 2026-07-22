@@ -274,6 +274,31 @@ public function queryTimeout(): ?int
 }
 ```
 
+### Transactions
+
+When several Data Entities must succeed or fail together, wrap them in a transaction on the **same** connection:
+
+```php
+use BitMx\DataEntities\DataEntity;
+use Illuminate\Support\Facades\DB;
+
+DB::connection('sqlsrv')->transaction(function () {
+    (new CreateOrderDataEntity($payload))->execute();
+    (new ReserveInventoryDataEntity($orderId))->execute();
+});
+```
+
+Or use the helper (defaults to `config('data-entities.database')`):
+
+```php
+DataEntity::transaction(function () {
+    (new CreateOrderDataEntity($payload))->execute();
+    (new ReserveInventoryDataEntity($orderId))->execute();
+}, connection: 'sqlsrv');
+```
+
+Entities that target different connections cannot share one transaction.
+
 ### Database support
 
 The package generates the correct SQL for each database engine through query executors. The executor is resolved

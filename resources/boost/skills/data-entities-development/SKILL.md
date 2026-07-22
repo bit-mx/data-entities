@@ -284,6 +284,21 @@ public function createDtoFromResponse(Response $response): PostData
 $post = $response->dto();
 ```
 
+## Transactions
+
+Run multiple entities atomically on the same connection:
+
+```php
+use BitMx\DataEntities\DataEntity;
+
+DataEntity::transaction(function () {
+    (new CreateOrderDataEntity($payload))->execute();
+    (new ReserveInventoryDataEntity($orderId))->execute();
+}, connection: 'sqlsrv');
+```
+
+Equivalent to `DB::connection('sqlsrv')->transaction(...)`. Different connections cannot share one transaction.
+
 ## Debugging
 
 ```php
