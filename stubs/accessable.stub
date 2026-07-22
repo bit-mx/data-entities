@@ -4,7 +4,7 @@ namespace {{ namespace }};
 
 use BitMx\DataEntities\Contracts\Accessable;
 
-class {{ $class }} implements Accessable
+class {{ class }} implements Accessable
 {
     /**
      * @param array<string, mixed> $data
