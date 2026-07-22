@@ -254,10 +254,12 @@ class GetAllPostsDataEntity extends DataEntity
     }
 }
 
-$posts = (new GetAllPostsDataEntity())->execute()->lazy();
+$posts = (new GetAllPostsDataEntity())->execute()->lazy(); // re-iterable, remembers rows
+$posts = (new GetAllPostsDataEntity())->execute()->stream(); // single-pass, low memory
 ```
 
 Incompatible with `#[SingleItemResponse]` and output parameters (throws `InvalidLazyQueryException`).
+For true MySQL streaming, set `PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false` on the connection.
 
 ## DTOs
 

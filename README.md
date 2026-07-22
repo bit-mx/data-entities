@@ -1014,11 +1014,30 @@ $response = $dataEntity->execute();
 $posts = $response->lazy();
 ```
 
+`lazy()` is re-iterable: rows are remembered in memory after the first pass. For large result sets where you must avoid accumulating rows, use `stream()` (or `lazy(remember: false)`). Streaming is single-pass; iterating twice throws a `RuntimeException`.
+
+```php
+foreach ($response->stream() as $post) {
+    // process one row at a time without keeping the full result set in memory
+}
+```
+
 #### Note
 
 When using the `UseLazyQuery` attribute, the response type only supports a collection. If you try to use `#[SingleItemResponse]`, it will throw an exception.
 
 `#[UseLazyQuery]` is also incompatible with output parameters. Lazy queries use a cursor over a single result set, so output values would be lost; combining both throws `InvalidLazyQueryException`.
+
+On MySQL, PDO buffers result sets by default. For true streaming, configure the connection with unbuffered queries:
+
+```php
+'mysql' => [
+    // ...
+    'options' => [
+        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false,
+    ],
+],
+```
 
 ## Data Transfer objects
 

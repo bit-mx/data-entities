@@ -73,5 +73,5 @@ DataEntity::assertExecutedOnce(GetPostDataEntity::class);
 - Override `resolveQueryExecutor(): ?string` on a Data Entity to force a specific query executor; otherwise it is resolved from the connection driver.
 - Use `AlwaysThrowOnError` when failures should throw automatically.
 - For caching, implement `Cacheable` and use the `HasCache` trait; call `invalidateCache()` / `disableCaching()` on the Data Entity instance, not on the Response.
-- For large result sets, use `#[UseLazyQuery]` and `$response->lazy()` (incompatible with `#[SingleItemResponse]` and output parameters).
+- For large result sets, use `#[UseLazyQuery]` with `$response->stream()` (single-pass) or `$response->lazy()` (re-iterable). Incompatible with `#[SingleItemResponse]` and output parameters.
 - Activate the `data-entities-development` skill for detailed patterns.
