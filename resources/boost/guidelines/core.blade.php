@@ -14,9 +14,12 @@
 ### Artisan commands
 
 - `php artisan make:data-entity {name}`
+- `php artisan make:data-entity {name} --from-procedure=spName --connection=sqlsrv`
 - `php artisan make:data-entity-factory {name}`
 - `php artisan make:data-entity-mutator {name}`
 - `php artisan make:data-entity-accessor {name}`
+- `php artisan data-entities:list` — inventory entities → procedure/connection
+- `php artisan data-entities:check` — detect drift vs DB procedure signatures
 
 ### Core usage
 

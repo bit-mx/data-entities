@@ -35,7 +35,13 @@ Preferred location: `app/DataEntities`.
 
 ```bash
 php artisan make:data-entity GetPostDataEntity
+php artisan make:data-entity GetPostDataEntity --from-procedure=spListPost --connection=sqlsrv
+php artisan data-entities:list
+php artisan data-entities:check
 ```
+
+`data-entities:list` inventories entities with their stored procedure and connection.
+`data-entities:check` verifies each procedure exists and, when the entity has no required constructor arguments, compares input/output parameter names against the database signature (useful in CI after deploying legacy schema changes).
 
 ```php
 namespace App\DataEntities;

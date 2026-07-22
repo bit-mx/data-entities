@@ -233,6 +233,16 @@ php artisan make:data-entity CreatePostDataEntity --from-procedure=dbo.spCreateP
 
 The generator introspects SQL Server (`sys.parameters`) or MySQL (`information_schema.parameters`) and fills the constructor, `defaultParameters()`, suggested mutators, and `defaultOutputParameters()`.
 
+Inventory and drift commands:
+
+```bash
+php artisan data-entities:list
+php artisan data-entities:check
+```
+
+`data-entities:list` prints each entity with its stored procedure and connection.
+`data-entities:check` verifies that each procedure exists and, when the entity can be constructed without arguments, compares input/output parameter names against the database signature.
+
 ### Connection
 
 You can set the connection name by overriding the `resolveDatabaseConnection` method.
