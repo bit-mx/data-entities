@@ -31,6 +31,13 @@ readonly class AddLazyCollection
             );
         }
 
+        if ($pendingQuery->outputParameters()->isNotEmpty()) {
+            throw new InvalidLazyQueryException(
+                'Lazy collection cannot be used with output parameters. '.
+                'Output parameters require multiple result sets, which are not available with cursor-based lazy queries.'
+            );
+        }
+
         $pendingQuery->enableUseLazyCollection();
     }
 

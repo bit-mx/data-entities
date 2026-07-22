@@ -967,6 +967,8 @@ $posts = $response->lazy();
 
 When using the `UseLazyQuery` attribute, the response type only supports a collection. If you try to use `#[SingleItemResponse]`, it will throw an exception.
 
+`#[UseLazyQuery]` is also incompatible with output parameters. Lazy queries use a cursor over a single result set, so output values would be lost; combining both throws `InvalidLazyQueryException`.
+
 ## Data Transfer objects
 
 You can use Data Transfer objects to map the data returned by the stored procedure to a PHP object.

@@ -255,7 +255,7 @@ class GetAllPostsDataEntity extends DataEntity
 $posts = (new GetAllPostsDataEntity())->execute()->lazy();
 ```
 
-Incompatible with `#[SingleItemResponse]`.
+Incompatible with `#[SingleItemResponse]` and output parameters (throws `InvalidLazyQueryException`).
 
 ## DTOs
 
