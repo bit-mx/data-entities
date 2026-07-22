@@ -15,7 +15,7 @@ readonly class MergeQueryStatements
     {
         $dataEntity = $pendingQuery->getDataEntity();
 
-        $storeProcedure = sprintf('EXEC %s ', $dataEntity->resolveStoreProcedure());
+        $storeProcedure = $dataEntity->resolveStoreProcedure();
 
         $statements = [];
 

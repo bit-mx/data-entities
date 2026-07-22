@@ -6,6 +6,22 @@ use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\PendingQuery;
 
+it('merges the raw store procedure name into statements', function () {
+    $dataEntity = new class extends DataEntity
+    {
+        protected ?Method $method = Method::SELECT;
+
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+    };
+
+    $pendingQuery = new PendingQuery($dataEntity);
+
+    expect($pendingQuery->statements()->all())->toBe(['sp_test']);
+});
+
 it('merges entity parameters into the pending query', function () {
     $dataEntity = new class extends DataEntity
     {
