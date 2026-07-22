@@ -44,7 +44,39 @@ it('builds a deterministic cache key from the pending query', function () {
     expect($key)->toBe(CacheKey::create($pendingQuery))
         ->and($key)->toContain('sp_test')
         ->and($key)->toContain('"id":1')
-        ->and($key)->toContain('"total":"INT"');
+        ->and($key)->toContain('"total":"INT"')
+        ->and($key)->toContain('"connection"');
+});
+
+it('changes the cache key when the database connection changes', function () {
+    $sqlsrvEntity = new class extends DataEntity
+    {
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        public function resolveDatabaseConnection(): string
+        {
+            return 'sqlsrv';
+        }
+    };
+
+    $mysqlEntity = new class extends DataEntity
+    {
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        public function resolveDatabaseConnection(): string
+        {
+            return 'mysql';
+        }
+    };
+
+    expect(CacheKey::create(new PendingQuery($sqlsrvEntity)))
+        ->not->toBe(CacheKey::create(new PendingQuery($mysqlEntity)));
 });
 
 it('changes the cache key when parameters change', function () {

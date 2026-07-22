@@ -236,6 +236,7 @@ Call on the **Data Entity** instance (not Response):
 - `clearCache()` — delete current cache entry
 
 Optional hooks: `cacheKey(PendingQuery $pendingQuery): ?string`, `cacheDriver(): string`.
+Default cache keys include the database connection name.
 Check cache hit with `$response->isCached()`.
 
 ## Lazy queries

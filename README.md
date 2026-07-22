@@ -891,8 +891,10 @@ class GetAllPostsDataEntity extends DataEntity implements Cacheable
 
 Optional hooks:
 
-- `cacheKey(PendingQuery $pendingQuery): ?string` — custom cache key (default is a SHA-256 hash)
+- `cacheKey(PendingQuery $pendingQuery): ?string` — custom cache key (default is a SHA-256 hash of the class, stored procedure, connection, parameters, and output parameters)
 - `cacheDriver(): string` — cache store name (default: `config('cache.default')`)
+
+The default cache key includes the database connection name, so the same entity executed against different connections does not share cache entries.
 
 You can invalidate the cache for the next execution using `invalidateCache()` on the Data Entity instance:
 
