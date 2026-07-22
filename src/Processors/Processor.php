@@ -6,6 +6,8 @@ namespace BitMx\DataEntities\Processors;
 
 use BitMx\DataEntities\Contracts\ProcessorContract;
 use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Events\DataEntityExecuted;
+use BitMx\DataEntities\Events\DataEntityFailed;
 use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
@@ -17,6 +19,7 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\LazyCollection;
 use PDOException;
 
@@ -65,6 +68,8 @@ class Processor implements ProcessorContract
         $isSuccess = false;
         $exception = null;
         $lazyCollection = LazyCollection::make();
+        $preparedQuery = '';
+        $startedAt = hrtime(true);
 
         try {
             $preparedQuery = $this->prepareQuery();
@@ -86,7 +91,7 @@ class Processor implements ProcessorContract
             $exception = $ex;
         }
 
-        return new Response(
+        $response = new Response(
             pendingQuery: $this->pendingQuery,
             data: $data,
             output: $output,
@@ -94,6 +99,41 @@ class Processor implements ProcessorContract
             senderException: $exception,
             rawLazyData: $lazyCollection,
         );
+
+        $this->dispatchExecutionEvent($response, $preparedQuery, $startedAt, $exception);
+
+        return $response;
+    }
+
+    protected function dispatchExecutionEvent(
+        Response $response,
+        string $query,
+        int|float $startedAt,
+        ?\Throwable $exception,
+    ): void {
+        $durationMs = (hrtime(true) - $startedAt) / 1_000_000;
+        $dataEntity = $this->pendingQuery->getDataEntity();
+
+        if ($exception !== null) {
+            Event::dispatch(new DataEntityFailed(
+                dataEntity: $dataEntity,
+                pendingQuery: $this->pendingQuery,
+                response: $response,
+                query: $query,
+                durationMs: $durationMs,
+                exception: $exception,
+            ));
+
+            return;
+        }
+
+        Event::dispatch(new DataEntityExecuted(
+            dataEntity: $dataEntity,
+            pendingQuery: $this->pendingQuery,
+            response: $response,
+            query: $query,
+            durationMs: $durationMs,
+        ));
     }
 
     /**

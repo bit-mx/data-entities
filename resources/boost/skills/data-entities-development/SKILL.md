@@ -21,6 +21,7 @@ Use this skill when creating, updating, or testing classes that extend `BitMx\Da
 - Lazy queries via `#[UseLazyQuery]`
 - DTOs via `createDtoFromResponse()`
 - Testing via `DataEntity::fake()`, assertions, and factories
+- Runtime events: `DataEntityExecuted`, `DataEntityFailed` (real DB executions only)
 
 Config connection key: `config('data-entities.database')` (env `DATA_ENTITIES_CONNECTION`, default `sqlsrv`).
 

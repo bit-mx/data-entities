@@ -42,6 +42,7 @@ Table of Contents
         * [getError](#geterror)
         * [isCached](#iscached)
     * [Boot](#boot)
+    * [Events](#events)
     * [Middlewares](#middlewares)
     * [Plugins](#plugins)
         * [AlwaysThrowOnError](#alwaysthrowonerror)
@@ -759,6 +760,38 @@ trait Taggable
 ```
 
 The `bootTaggable` method will be called before the stored procedure is executed.
+
+## Events
+
+Real database executions dispatch Laravel events you can listen to for logging or APM:
+
+- `BitMx\DataEntities\Events\DataEntityExecuted` — successful execution
+- `BitMx\DataEntities\Events\DataEntityFailed` — soft failure (`QueryException` / `PDOException`)
+
+Both events expose the Data Entity, pending query, response, compiled SQL, and duration in milliseconds.
+Failed events also expose the captured exception.
+
+```php
+use BitMx\DataEntities\Events\DataEntityExecuted;
+use BitMx\DataEntities\Events\DataEntityFailed;
+use Illuminate\Support\Facades\Event;
+
+Event::listen(DataEntityExecuted::class, function (DataEntityExecuted $event) {
+    logger()->info('data-entity.executed', [
+        'entity' => $event->dataEntity::class,
+        'duration_ms' => $event->durationMs,
+    ]);
+});
+
+Event::listen(DataEntityFailed::class, function (DataEntityFailed $event) {
+    logger()->warning('data-entity.failed', [
+        'entity' => $event->dataEntity::class,
+        'error' => $event->exception->getMessage(),
+    ]);
+});
+```
+
+Fake / mocked executions do not dispatch these events.
 
 ## Middlewares
 
