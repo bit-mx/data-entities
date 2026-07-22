@@ -163,6 +163,16 @@ class GetAllPostsDataEntity extends DataEntity
 
 You can also use the `parameters` method to set the parameters for the stored procedure.
 
+Override `requiredParameters()` to validate required keys before the query hits the database.
+Missing keys throw `MissingRequiredParameterException` with a clear parameter name:
+
+```php
+public function requiredParameters(): array
+{
+    return ['author_id', 'status'];
+}
+```
+
 ```php
 use App\DataEntities\GetAllPostsDataEntity;
 

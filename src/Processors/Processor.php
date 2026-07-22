@@ -8,6 +8,7 @@ use BitMx\DataEntities\Contracts\ProcessorContract;
 use BitMx\DataEntities\Enums\ResponseType;
 use BitMx\DataEntities\Events\DataEntityExecuted;
 use BitMx\DataEntities\Events\DataEntityFailed;
+use BitMx\DataEntities\Exceptions\MissingRequiredParameterException;
 use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
@@ -72,6 +73,7 @@ class Processor implements ProcessorContract
         $startedAt = hrtime(true);
 
         try {
+            $this->validateRequiredParameters();
             $preparedQuery = $this->prepareQuery();
             $params = $this->createParameters();
             $client = $this->getClient();
@@ -146,6 +148,20 @@ class Processor implements ProcessorContract
         $newParameters = (new ParametersProcessor($this->pendingQuery))->process();
 
         return $newParameters;
+    }
+
+    protected function validateRequiredParameters(): void
+    {
+        $required = $this->pendingQuery->getDataEntity()->requiredParameters();
+        $parameters = $this->pendingQuery->parameters();
+
+        foreach ($required as $name) {
+            if (! $parameters->toCollection()->has($name)) {
+                throw new MissingRequiredParameterException(
+                    sprintf('Missing required parameter [%s].', $name)
+                );
+            }
+        }
     }
 
     protected function getClient(): Connection
