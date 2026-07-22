@@ -103,6 +103,8 @@ This package is compatible with Laravel 11.x, 12.x, and 13.x.
 
 It requires PHP 8.4 or above.
 
+CI runs Pest against PHP 8.4/8.5 and Laravel 11/12/13.
+
 ## Laravel Boost
 
 If your application uses [Laravel Boost](https://laravel.com/docs/boost), this package ships AI guidelines and an agent skill that Boost discovers automatically when you run:
