@@ -105,6 +105,13 @@ It requires PHP 8.4 or above.
 
 CI runs Pest against PHP 8.4/8.5 and Laravel 11/12/13.
 
+MySQL integration tests live in `tests/Integration` and run in CI against a real MySQL service.
+Locally:
+
+```bash
+DATA_ENTITIES_INTEGRATION_MYSQL=1 DB_PASSWORD=password vendor/bin/pest tests/Integration
+```
+
 ## Laravel Boost
 
 If your application uses [Laravel Boost](https://laravel.com/docs/boost), this package ships AI guidelines and an agent skill that Boost discovers automatically when you run:
