@@ -245,6 +245,16 @@ class GetAllPostsDataEntity extends DataEntity
 }
 ```
 
+You can optionally set a per-entity query timeout in seconds via `queryTimeout()`.
+When set, the package applies `PDO::ATTR_TIMEOUT` on the connection before execution:
+
+```php
+public function queryTimeout(): ?int
+{
+    return 30;
+}
+```
+
 ### Database support
 
 The package generates the correct SQL for each database engine through query executors. The executor is resolved

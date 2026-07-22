@@ -22,6 +22,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\LazyCollection;
+use PDO;
 use PDOException;
 
 class Processor implements ProcessorContract
@@ -166,7 +167,14 @@ class Processor implements ProcessorContract
 
     protected function getClient(): Connection
     {
-        return DB::connection($this->pendingQuery->getDataEntity()->resolveDatabaseConnection());
+        $connection = DB::connection($this->pendingQuery->getDataEntity()->resolveDatabaseConnection());
+        $timeout = $this->pendingQuery->getDataEntity()->queryTimeout();
+
+        if ($timeout !== null) {
+            $connection->getPdo()->setAttribute(PDO::ATTR_TIMEOUT, $timeout);
+        }
+
+        return $connection;
     }
 
     /**
