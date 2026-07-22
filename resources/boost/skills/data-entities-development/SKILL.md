@@ -17,7 +17,7 @@ Use this skill when creating, updating, or testing classes that extend `BitMx\Da
 - Mutators (input casts) and accessors (response casts)
 - Column aliases
 - Query/response middleware and boot hooks
-- Plugins: `AlwaysThrowOnError`, `HasCache`
+- Plugins: `AlwaysThrowOnError`, `HasCache`, `HasRetries`
 - Lazy queries via `#[UseLazyQuery]`
 - DTOs via `createDtoFromResponse()`
 - Testing via `DataEntity::fake()`, assertions, and factories
@@ -73,6 +73,35 @@ Rules:
 - Always import `BitMx\DataEntities\DataEntity` (never `DataEntities\DataEntity`).
 - Do not use `$method` or `$responseType` (removed in v4).
 - Collection is the default response shape; add `#[SingleItemResponse]` for one row.
+
+### Base entity per legacy system
+
+When the app talks to multiple stored-procedure backends, fix connection (and optional executor) once on an abstract base:
+
+```php
+namespace App\DataEntities\Erp;
+
+use BitMx\DataEntities\DataEntity;
+
+abstract class ErpDataEntity extends DataEntity
+{
+    #[\Override]
+    public function resolveDatabaseConnection(): string
+    {
+        return 'erp_sqlsrv';
+    }
+}
+
+class GetCustomerDataEntity extends ErpDataEntity
+{
+    public function resolveStoreProcedure(): string
+    {
+        return 'dbo.spGetCustomer';
+    }
+}
+```
+
+Keep CRM/ERP/etc. entities under `app/DataEntities/{System}/`. Scan a system with `php artisan data-entities:check --path=app/DataEntities/Erp`.
 - Override connection with `resolveDatabaseConnection(): string` when needed.
 - Override `resolveQueryExecutor(): ?string` to force a specific query executor (default `null` resolves it from the connection driver).
 - Runtime params: `$entity->parameters()->add('key', $value)`.
@@ -245,6 +274,25 @@ Call on the **Data Entity** instance (not Response):
 Optional hooks: `cacheKey(PendingQuery $pendingQuery): ?string`, `cacheDriver(): string`.
 Default cache keys include the database connection name.
 Check cache hit with `$response->isCached()`.
+
+### HasRetries
+
+Retries transient failures (deadlocks, timeouts). Override `retryBackoff()` with a `CarbonInterval` or milliseconds int:
+
+```php
+use BitMx\DataEntities\Plugins\HasRetries;
+use Carbon\CarbonInterval;
+
+class GetPostDataEntity extends DataEntity
+{
+    use HasRetries;
+
+    protected function retryBackoff(): int|CarbonInterval
+    {
+        return CarbonInterval::milliseconds(50);
+    }
+}
+```
 
 ## Lazy queries
 

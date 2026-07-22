@@ -7,6 +7,7 @@ namespace BitMx\DataEntities\Plugins;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
+use Carbon\CarbonInterval;
 
 /**
  * @mixin DataEntity
@@ -34,7 +35,7 @@ trait HasRetries
 
         try {
             $attempts = $this->maxRetryAttempts();
-            $delayMs = $this->retryBackoffMs();
+            $delayMs = $this->resolveRetryBackoffMs();
             $latest = $response;
 
             for ($attempt = 1; $attempt <= $attempts; $attempt++) {
@@ -77,9 +78,25 @@ trait HasRetries
         return 2;
     }
 
-    protected function retryBackoffMs(): int
+    /**
+     * Delay between retry attempts. Prefer a CarbonInterval for readability
+     * (e.g. `CarbonInterval::milliseconds(50)` or `CarbonInterval::seconds(1)`).
+     * An integer is treated as milliseconds.
+     */
+    protected function retryBackoff(): int|CarbonInterval
     {
         return 0;
+    }
+
+    protected function resolveRetryBackoffMs(): int
+    {
+        $backoff = $this->retryBackoff();
+
+        if ($backoff instanceof CarbonInterval) {
+            return (int) max(0, $backoff->totalMilliseconds);
+        }
+
+        return max(0, $backoff);
     }
 
     /**

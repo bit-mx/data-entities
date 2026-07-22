@@ -264,6 +264,48 @@ class GetAllPostsDataEntity extends DataEntity
 }
 ```
 
+When you integrate several legacy systems, prefer one abstract base entity per system so every procedure shares the same connection (and optional defaults):
+
+```php
+namespace App\DataEntities\Erp;
+
+use BitMx\DataEntities\DataEntity;
+
+abstract class ErpDataEntity extends DataEntity
+{
+    #[\Override]
+    public function resolveDatabaseConnection(): string
+    {
+        return 'erp_sqlsrv';
+    }
+}
+
+class GetCustomerDataEntity extends ErpDataEntity
+{
+    public function resolveStoreProcedure(): string
+    {
+        return 'dbo.spGetCustomer';
+    }
+}
+```
+
+```php
+namespace App\DataEntities\Crm;
+
+use BitMx\DataEntities\DataEntity;
+
+abstract class CrmDataEntity extends DataEntity
+{
+    #[\Override]
+    public function resolveDatabaseConnection(): string
+    {
+        return 'crm_mysql';
+    }
+}
+```
+
+Organize classes under `app/DataEntities/{System}/` and point `data-entities:list` / `data-entities:check` at those paths with `--path=app/DataEntities/Erp`.
+
 You can optionally set a per-entity query timeout in seconds via `queryTimeout()`.
 When set, the package applies `PDO::ATTR_TIMEOUT` on the connection before execution:
 
@@ -1057,15 +1099,22 @@ namespace App\DataEntities;
 
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Plugins\HasRetries;
+use Carbon\CarbonInterval;
 
 class GetAllPostsDataEntity extends DataEntity
 {
     use HasRetries;
 
-    // Optional overrides:
-    // protected function maxRetryAttempts(): int { return 3; }
-    // protected function retryBackoffMs(): int { return 50; }
-    // protected function retryableErrorCodes(): array { return [1205, 1213]; }
+    protected function maxRetryAttempts(): int
+    {
+        return 3;
+    }
+
+    protected function retryBackoff(): int|CarbonInterval
+    {
+        return CarbonInterval::milliseconds(50);
+        // or: return 50; // milliseconds
+    }
 }
 ```
 

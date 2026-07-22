@@ -4,8 +4,9 @@
 
 ### Conventions
 
-- Put Data Entity classes in `app/DataEntities`.
+- Put Data Entity classes in `app/DataEntities` (optionally `app/DataEntities/{System}/` per legacy system).
 - Extend `BitMx\DataEntities\DataEntity` and implement `resolveStoreProcedure(): string`.
+- For multi-system apps, create an abstract base per system (`ErpDataEntity`, `CrmDataEntity`) that fixes `resolveDatabaseConnection()` (and executor if needed); concrete entities extend that base.
 - Override `defaultParameters(): array` (protected) for input parameters.
 - Default response shape is a collection. Use `#[SingleItemResponse]` for a single row.
 - Do NOT use removed v3 APIs: `$method`, `$responseType`, or `BitMx\DataEntities\Enums\Method`.
@@ -77,5 +78,6 @@ DataEntity::assertExecutedOnce(GetPostDataEntity::class);
 - For multi-entity atomic work on one connection, use `DataEntity::transaction(fn () => ..., connection: 'sqlsrv')` or `DB::connection(...)->transaction(...)`.
 - Use `AlwaysThrowOnError` when failures should throw automatically.
 - For caching, implement `Cacheable` and use the `HasCache` trait; call `invalidateCache()` / `disableCaching()` on the Data Entity instance, not on the Response.
+- For transient DB failures (deadlocks/timeouts), use the `HasRetries` plugin; override `retryBackoff()` with a `CarbonInterval` (or ms int).
 - For large result sets, use `#[UseLazyQuery]` with `$response->stream()` (single-pass) or `$response->lazy()` (re-iterable). Incompatible with `#[SingleItemResponse]` and output parameters.
 - Activate the `data-entities-development` skill for detailed patterns.
