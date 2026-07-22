@@ -11,6 +11,7 @@ use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Plugins\HasCache;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Responses\RecordedResponse;
+use ReflectionMethod;
 
 use function Pest\Laravel\freezeTime;
 use function Pest\Laravel\travelTo;
@@ -95,6 +96,29 @@ it('changes the cache key when parameters change', function () {
     $pendingQueryB->parameters()->add('id', 2);
 
     expect(CacheKey::create($pendingQueryA))->not->toBe(CacheKey::create($pendingQueryB));
+});
+
+it('floors expired cache TTL to one second', function () {
+    freezeTime();
+
+    $dataEntity = new #[SingleItemResponse] class extends DataEntity implements Cacheable
+    {
+        use HasCache;
+
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_ttl_past';
+        }
+
+        public function cacheExpiresAt(): int|DateTimeInterface
+        {
+            return now()->subMinute();
+        }
+    };
+
+    $method = new ReflectionMethod($dataEntity, 'getCacheExpiresInSeconds');
+
+    expect($method->invoke($dataEntity, new PendingQuery($dataEntity)))->toBe(1);
 });
 
 it('stores, retrieves and deletes cached responses with CacheDriver', function () {

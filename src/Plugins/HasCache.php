@@ -58,10 +58,12 @@ trait HasCache
         $expires = $dataEntity->cacheExpiresAt();
 
         if ($expires instanceof \DateTimeInterface) {
-            return (int) floor(now()->diffInSeconds($expires));
+            $seconds = (int) floor(now()->diffInSeconds($expires));
+
+            return max(1, $seconds);
         }
 
-        return $expires;
+        return max(1, $expires);
     }
 
     protected function cacheKey(PendingQuery $pendingQuery): ?string

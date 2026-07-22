@@ -934,6 +934,8 @@ The default cache key includes the database connection name, so the same entity 
 
 Cached responses store raw data and re-apply accessors when the response is restored, so non-idempotent accessors are not applied twice.
 
+Cache payloads are unserialized with an allow-list of package classes only. If `cacheExpiresAt()` is in the past, the TTL is floored to 1 second.
+
 You can invalidate the cache for the next execution using `invalidateCache()` on the Data Entity instance:
 
 ```php
