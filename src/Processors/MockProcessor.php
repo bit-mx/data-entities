@@ -54,18 +54,15 @@ class MockProcessor implements ProcessorContract
 
     protected function resolveMockResponse(string $class): MockResponse
     {
+        /** @var MockResponse|MockResponseSequence|Closure(PendingQuery): MockResponse $mock */
         $mock = $this->mockResponses[$class];
 
         if ($mock instanceof Closure) {
-            $mock = $mock($this->pendingQuery);
+            return $mock($this->pendingQuery);
         }
 
         if ($mock instanceof MockResponseSequence) {
-            $mock = $mock->next();
-        }
-
-        if (! $mock instanceof MockResponse) {
-            throw new MockResponseNotFoundException('No mock response found for '.$class);
+            return $mock->next();
         }
 
         return $mock;
