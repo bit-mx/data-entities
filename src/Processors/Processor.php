@@ -18,6 +18,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
+use PDOException;
 
 class Processor implements ProcessorContract
 {
@@ -81,7 +82,7 @@ class Processor implements ProcessorContract
             }
 
             $isSuccess = true;
-        } catch (QueryException $ex) {
+        } catch (QueryException|PDOException $ex) {
             $exception = $ex;
         }
 
@@ -155,8 +156,12 @@ class Processor implements ProcessorContract
         }
 
         return collect($responseData)
-            ->filter(fn (array $value, int $key): bool => $key > 0)
-            ->flatMap(fn (array $value): array => $value[0])
+            ->filter(fn (mixed $value, mixed $key): bool => is_int($key) && $key > 0 && is_array($value))
+            ->flatMap(function (array $value): array {
+                $firstRow = $value[0] ?? null;
+
+                return is_array($firstRow) ? $firstRow : [];
+            })
             ->all();
     }
 }

@@ -694,6 +694,9 @@ if ($response->failed()) {
 }
 ```
 
+Database failures (`QueryException` and `PDOException`) are captured into the Response as a soft failure
+(`success()` is `false`). Programming errors such as invalid mutators or unsupported executors still throw.
+
 ### throw
 
 By default, the Response object won't throw an exception if the stored procedure fails. You can throw an exception
