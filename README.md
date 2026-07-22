@@ -225,6 +225,14 @@ php artisan make:data-entity GetAllPostsDataEntity
 
 This command will create a new Data Entity in the `app/DataEntities` directory.
 
+You can also generate a Data Entity from an existing stored procedure signature:
+
+```bash
+php artisan make:data-entity CreatePostDataEntity --from-procedure=dbo.spCreatePost --connection=sqlsrv
+```
+
+The generator introspects SQL Server (`sys.parameters`) or MySQL (`information_schema.parameters`) and fills the constructor, `defaultParameters()`, suggested mutators, and `defaultOutputParameters()`.
+
 ### Connection
 
 You can set the connection name by overriding the `resolveDatabaseConnection` method.
