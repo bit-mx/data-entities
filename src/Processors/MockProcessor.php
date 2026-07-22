@@ -9,14 +9,16 @@ use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Exceptions\MockResponseNotFoundException;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\MockResponse;
+use BitMx\DataEntities\Responses\MockResponseSequence;
 use BitMx\DataEntities\Responses\Response;
+use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
 
 class MockProcessor implements ProcessorContract
 {
     /**
-     * @param  array<class-string, MockResponse>  $mockResponses
+     * @param  array<class-string, MockResponse|MockResponseSequence|Closure(PendingQuery): MockResponse>  $mockResponses
      */
     public function __construct(
         protected readonly PendingQuery $pendingQuery,
@@ -35,20 +37,41 @@ class MockProcessor implements ProcessorContract
 
     protected function executeMockResponse(): Response
     {
-        if (! Arr::has($this->mockResponses, get_class($this->dataEntity))) {
+        $class = get_class($this->dataEntity);
+
+        if (! Arr::has($this->mockResponses, $class)) {
             throw new MockResponseNotFoundException('No mock response found for '.get_class($this));
         }
 
-        $mockResponse = Arr::get($this->mockResponses, get_class($this->dataEntity));
+        $mockResponse = $this->resolveMockResponse($class);
 
-        Arr::set(DataEntity::$assertions, get_class($this->dataEntity), Arr::get(DataEntity::$assertions, get_class($this->dataEntity), 0) + 1);
+        Arr::set(DataEntity::$assertions, $class, Arr::get(DataEntity::$assertions, $class, 0) + 1);
+        DataEntity::$recordedParameters[$class][] = $this->pendingQuery->parameters()->all();
 
         return $this->createFakeResponse($mockResponse);
     }
 
+    protected function resolveMockResponse(string $class): MockResponse
+    {
+        $mock = Arr::get($this->mockResponses, $class);
+
+        if ($mock instanceof Closure) {
+            $mock = $mock($this->pendingQuery);
+        }
+
+        if ($mock instanceof MockResponseSequence) {
+            $mock = $mock->next();
+        }
+
+        if (! $mock instanceof MockResponse) {
+            throw new MockResponseNotFoundException('No mock response found for '.$class);
+        }
+
+        return $mock;
+    }
+
     protected function createFakeResponse(MockResponse $mockResponse): Response
     {
-
         if ($mockResponse->hasException()) {
             return new Response($this->pendingQuery, [], [], false, $mockResponse->exception());
         }

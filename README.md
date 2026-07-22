@@ -1236,6 +1236,33 @@ Available assertions:
 - **assertNotExecuted:** Assert that the Data Entity was not executed.
 - **assertExecutedCount:** Assert that the Data Entity was executed a specific number of times.
 - **assertExecutedOnce:** Assert that the Data Entity was executed once.
+- **assertExecutedWith:** Assert that the Data Entity was executed with matching parameters (array subset or closure).
+
+```php
+DataEntity::assertExecutedWith(GetPostDataEntity::class, ['post_id' => 1]);
+DataEntity::assertExecutedWith(GetPostDataEntity::class, fn (array $parameters) => $parameters['post_id'] > 0);
+```
+
+You can also fake with a closure or a sequence:
+
+```php
+use BitMx\DataEntities\PendingQuery;
+use BitMx\DataEntities\Responses\MockResponse;
+use BitMx\DataEntities\Responses\MockResponseSequence;
+
+DataEntity::fake([
+    GetPostDataEntity::class => fn (PendingQuery $query) => MockResponse::make([
+        'id' => $query->parameters()->get('post_id'),
+    ]),
+]);
+
+DataEntity::fake([
+    GetPostDataEntity::class => MockResponseSequence::make(
+        MockResponse::make(['id' => 1]),
+        MockResponse::make(['id' => 2]),
+    ),
+]);
+```
 
 ### Using factories
 
