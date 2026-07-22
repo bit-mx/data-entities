@@ -43,6 +43,14 @@ it('converts ArrayStore to collection, array and object', function () {
         ->and($store->toObject())->toEqual((object) ['a' => 1, 'b' => 2]);
 });
 
+it('prepends values to ArrayStore', function () {
+    $store = new ArrayStore(['b' => 2]);
+
+    $store->prepend(1, 'a');
+
+    expect($store->all())->toBe(['a' => 1, 'b' => 2]);
+});
+
 it('supports ArrayAccess on ArrayStore', function () {
     $store = new ArrayStore;
 

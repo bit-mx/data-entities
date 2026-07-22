@@ -88,7 +88,7 @@ class ArrayStore implements \ArrayAccess, \Countable, DataStore
 
     public function prepend(mixed $value, int|string|null $key = null): DataStore
     {
-        Arr::prepend($this->items, $value, $key);
+        $this->items = Arr::prepend($this->items, $value, $key);
 
         return $this;
     }
