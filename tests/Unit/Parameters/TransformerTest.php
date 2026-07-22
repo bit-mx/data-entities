@@ -144,3 +144,39 @@ it('cast a Backed enum', function () {
     expect($result)->toBeInt()
         ->toBe(1);
 });
+
+it('casts a value with the float mutator', function () {
+    $transformer = Transformer::make('1.2345', 'amount', ['amount' => 'float'], []);
+
+    $result = $transformer->transform();
+
+    expect($result)->toBeFloat()
+        ->toBe(1.23);
+});
+
+it('casts a value with the float mutator and custom decimals', function () {
+    $transformer = Transformer::make('1.23456', 'amount', ['amount' => 'float:4'], []);
+
+    $result = $transformer->transform();
+
+    expect($result)->toBeFloat()
+        ->toBe(1.2346);
+});
+
+it('casts a value with the decimal mutator alias', function () {
+    $transformer = Transformer::make(10.999, 'amount', ['amount' => 'decimal:1'], []);
+
+    $result = $transformer->transform();
+
+    expect($result)->toBeFloat()
+        ->toBe(11.0);
+});
+
+it('casts a value with float:0', function () {
+    $transformer = Transformer::make(1.9, 'amount', ['amount' => 'float:0'], []);
+
+    $result = $transformer->transform();
+
+    expect($result)->toBeFloat()
+        ->toBe(2.0);
+});

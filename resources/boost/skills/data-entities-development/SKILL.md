@@ -1,0 +1,327 @@
+---
+name: data-entities-development
+description: Build and work with bit-mx/data-entities — SQL Server stored procedure Data Entities, mutators, accessors, output parameters, caching, lazy queries, fakes, and factories.
+---
+
+# Data Entities Development
+
+## When to use this skill
+
+Use this skill when creating, updating, or testing classes that extend `BitMx\DataEntities\DataEntity`, or when working with stored procedures through this package.
+
+## Package overview
+
+`bit-mx/data-entities` wraps Laravel's DB facade to execute SQL Server stored procedures with:
+
+- Named input parameters and OUTPUT parameters
+- Mutators (input casts) and accessors (response casts)
+- Column aliases
+- Query/response middleware and boot hooks
+- Plugins: `AlwaysThrowOnError`, `HasCache`
+- Lazy queries via `#[UseLazyQuery]`
+- DTOs via `createDtoFromResponse()`
+- Testing via `DataEntity::fake()`, assertions, and factories
+
+Config connection key: `config('data-entities.database')` (env `DATA_ENTITIES_CONNECTION`, default `sqlsrv`).
+
+## Creating a Data Entity
+
+Preferred location: `app/DataEntities`.
+
+```bash
+php artisan make:data-entity GetPostDataEntity
+```
+
+```php
+namespace App\DataEntities;
+
+use BitMx\DataEntities\Attributes\SingleItemResponse;
+use BitMx\DataEntities\DataEntity;
+
+#[SingleItemResponse]
+class GetPostDataEntity extends DataEntity
+{
+    public function __construct(protected int $postId) {}
+
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListPost';
+    }
+
+    protected function defaultParameters(): array
+    {
+        return [
+            'post_id' => $this->postId,
+        ];
+    }
+}
+```
+
+Rules:
+
+- Always import `BitMx\DataEntities\DataEntity` (never `DataEntities\DataEntity`).
+- Do not use `$method` or `$responseType` (removed in v4).
+- Collection is the default response shape; add `#[SingleItemResponse]` for one row.
+- Override connection with `resolveDatabaseConnection(): string` when needed.
+- Runtime params: `$entity->parameters()->add('key', $value)`.
+
+Execute:
+
+```php
+$response = (new GetPostDataEntity(1))->execute();
+$data = $response->data();
+```
+
+## Output parameters
+
+Map OUTPUT parameter names to SQL types:
+
+```php
+protected function defaultOutputParameters(): array
+{
+    return [
+        'new_id' => 'INT',
+    ];
+}
+```
+
+Read with `$response->output('new_id')` or `$response->output()`.
+Use `$response->rawOutput()` for values before accessors/aliases.
+Runtime: `$entity->outputParameters()->add('name', 'INT')`.
+
+## Mutators (input casts)
+
+```php
+protected function mutators(): array
+{
+    return [
+        'date' => 'datetime:Y-m-d H:i',
+        'amount' => 'float:4',
+        'payload' => 'json',
+    ];
+}
+```
+
+Available aliases: `datetime`, `date`, `bool`, `int`, `float`, `decimal`, `string`, `json`.
+
+Automatic transforms when no mutator is set:
+
+- `bool` → `0`/`1`
+- `BackedEnum` → enum value
+- `DateTimeInterface` → `Y-m-d H:i:s`
+
+Custom mutator:
+
+```bash
+php artisan make:data-entity-mutator CustomMutator
+```
+
+Implement `BitMx\DataEntities\Contracts\Mutable::transform(string $key, mixed $value, array $parameters): mixed`.
+
+## Accessors (response casts)
+
+```php
+protected function accessors(): array
+{
+    return [
+        'contact_id' => 'integer',
+        'is_active' => 'boolean',
+        'created_at' => 'datetime',
+        'meta' => 'array',
+    ];
+}
+```
+
+Available aliases: `decimal`/`float`, `integer`/`int`, `string`, `bool`/`boolean`, `datetime`/`date`, `datetime_immutable`/`date_immutable`, `array`, `object`, `collection`.
+
+Backed enums are supported as accessor class-strings (`Enum::tryFrom($value)`).
+
+Custom accessor:
+
+```bash
+php artisan make:data-entity-accessor CustomAccessor
+```
+
+Implement `BitMx\DataEntities\Contracts\Accessable::get(string $key, mixed $value, array $data): mixed`.
+
+## Column aliases
+
+Applied before accessors:
+
+```php
+protected function alias(): array
+{
+    return [
+        'post_title' => 'title',
+    ];
+}
+```
+
+Runtime: `$entity->setAlias([...])`.
+
+## Response API
+
+Common methods:
+
+- `data($key = null, $default = null)`, `rawData(...)`
+- `output($key = null, $default = null)`, `rawOutput(...)`
+- `addData(...)`, `mergeData(...)`
+- `object()`, `collect()`, `lazy()`
+- `isEmpty()`, `isNotEmpty()`
+- `success()`, `failed()`, `throw()`, `getError()`
+- `isCached()`, `dto()`
+
+## Boot, traits, and middleware
+
+```php
+public function boot(PendingQuery $pendingQuery): void
+{
+    $pendingQuery->parameters()->add('tag', 'laravel');
+
+    $pendingQuery->middleware()->onQuery(function (PendingQuery $pendingQuery) {
+        // before execution
+    });
+
+    $pendingQuery->middleware()->onResponse(function (Response $response) {
+        return $response;
+    });
+}
+```
+
+Trait boot hooks: `boot{TraitShortName}(PendingQuery $pendingQuery): void`.
+
+Middleware contracts: `QueryMiddleware`, `ResponseMiddleware` (invokable).
+
+## Plugins
+
+### AlwaysThrowOnError
+
+```php
+use BitMx\DataEntities\Plugins\AlwaysThrowOnError;
+
+class GetPostDataEntity extends DataEntity
+{
+    use AlwaysThrowOnError;
+}
+```
+
+### HasCache
+
+Requires `Cacheable` (`cacheExpiresAt(): int|\DateTimeInterface`).
+
+```php
+use BitMx\DataEntities\Contracts\Cacheable;
+use BitMx\DataEntities\Plugins\HasCache;
+
+class GetPostDataEntity extends DataEntity implements Cacheable
+{
+    use HasCache;
+
+    public function cacheExpiresAt(): \DateTimeInterface
+    {
+        return now()->addMinutes(10);
+    }
+}
+```
+
+Call on the **Data Entity** instance (not Response):
+
+- `invalidateCache()` — refresh on next execute
+- `disableCaching()` — skip cache for this instance
+- `clearCache()` — delete current cache entry
+
+Optional hooks: `cacheKey(PendingQuery $pendingQuery): ?string`, `cacheDriver(): string`.
+Check cache hit with `$response->isCached()`.
+
+## Lazy queries
+
+```php
+use BitMx\DataEntities\Attributes\UseLazyQuery;
+
+#[UseLazyQuery]
+class GetAllPostsDataEntity extends DataEntity
+{
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListAllPost';
+    }
+}
+
+$posts = (new GetAllPostsDataEntity())->execute()->lazy();
+```
+
+Incompatible with `#[SingleItemResponse]`.
+
+## DTOs
+
+```php
+public function createDtoFromResponse(Response $response): PostData
+{
+    $data = $response->data();
+
+    return new PostData(
+        id: $data['id'],
+        title: $data['title'],
+        content: $data['content'],
+    );
+}
+
+$post = $response->dto();
+```
+
+## Debugging
+
+```php
+$dataEntity->dd();
+$dataEntity->ddRaw();
+```
+
+## Testing
+
+### Fake + assertions
+
+```php
+use BitMx\DataEntities\DataEntity;
+use BitMx\DataEntities\Responses\MockResponse;
+
+DataEntity::fake([
+    GetPostDataEntity::class => MockResponse::make([
+        'id' => 1,
+        'title' => 'Post title',
+    ]),
+]);
+
+$response = (new GetPostDataEntity(1))->execute();
+
+DataEntity::assertExecuted(GetPostDataEntity::class);
+DataEntity::assertExecutedOnce(GetPostDataEntity::class);
+DataEntity::assertExecutedCount(GetPostDataEntity::class, 1);
+DataEntity::assertNotExecuted(OtherDataEntity::class);
+```
+
+Exception fake: `MockResponse::makeWithException(new \Exception('Error'))`.
+
+### Factories
+
+```bash
+php artisan make:data-entity-factory PostDataEntityFactory
+```
+
+```php
+DataEntity::fake([
+    GetPostDataEntity::class => MockResponse::make(
+        PostDataEntityFactory::new()
+            ->state(['title' => 'Custom'])
+            ->asCollection()
+            ->count(10)
+    ),
+]);
+```
+
+Never call `execute()` on a `MockResponse`. Always wrap it with `DataEntity::fake([...])` and execute the Data Entity.
+
+## Upgrade notes (v4)
+
+- Replace `$responseType = ResponseType::SINGLE` with `#[SingleItemResponse]`.
+- Remove `$method` / `Method` enum usage.
+- Package ships Rector rules: `ResponseTypePropertyToAttributeRector`, `RemoveMethodFromDataEntityRector`.

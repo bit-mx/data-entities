@@ -6,23 +6,23 @@ namespace BitMx\DataEntities\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 
-class MakaDataEntityMutator extends GeneratorCommand
+class MakeDataEntityAccessor extends GeneratorCommand
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'make:data-entity-mutator {name}';
+    protected $signature = 'make:data-entity-accessor {name}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Creates a new custom mutator class';
+    protected $description = 'Creates a new custom accessor class';
 
-    protected string $namespace = 'App\DataEntityMutators';
+    protected string $namespace = 'App\DataEntityAccessors';
 
     #[\Override]
     protected function getStub(): string
@@ -32,7 +32,7 @@ class MakaDataEntityMutator extends GeneratorCommand
 
     public function getStubPath(): string
     {
-        return __DIR__.'/../../stubs/mutable.stub';
+        return __DIR__.'/../../stubs/accessable.stub';
     }
 
     /**

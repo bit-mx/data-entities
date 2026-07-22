@@ -3,13 +3,9 @@
 namespace {{ namespace }};
 
 use BitMx\DataEntities\DataEntity;
-use BitMx\DataEntities\Enums\Method;
-use BitMx\DataEntities\Enums\ResponseType;
 
 class {{ class }} extends DataEntity
 {
-    protected ?ResponseType $responseType = ResponseType::SINGLE;
-
     #[\Override]
     public function resolveStoreProcedure(): string
     {
@@ -17,7 +13,7 @@ class {{ class }} extends DataEntity
     }
 
     #[\Override]
-    public function defaultParameters(): array
+    protected function defaultParameters(): array
     {
         return [
             //

@@ -7,6 +7,7 @@ namespace BitMx\DataEntities\Parameters;
 use BitMx\DataEntities\Mutators\AsBool;
 use BitMx\DataEntities\Mutators\AsDate;
 use BitMx\DataEntities\Mutators\AsDateTimeFormated;
+use BitMx\DataEntities\Mutators\AsDecimal;
 use BitMx\DataEntities\Mutators\AsInteger;
 use BitMx\DataEntities\Mutators\AsJson;
 use BitMx\DataEntities\Mutators\AsString;
@@ -25,6 +26,8 @@ class MutatorsAlias
             'bool' => AsBool::class,
             'string' => AsString::class,
             'json' => AsJson::class,
+            'float' => AsDecimal::class,
+            'decimal' => AsDecimal::class,
         ];
     }
 }
