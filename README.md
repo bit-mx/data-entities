@@ -1,6 +1,6 @@
 # Data Entities
 
-Execute SQL Server stored procedures in Laravel without all the boilerplate code.
+Execute stored procedures (SQL Server, MySQL) in Laravel without all the boilerplate code.
 
 Table of Contents
 =================
@@ -14,6 +14,7 @@ Table of Contents
     * [Create a Data Entity](#create-a-data-entity)
     * [Creating a DataEntity class](#creating-a-dataentity-class)
     * [Connection](#connection)
+    * [Database support](#database-support)
     * [Execute the Data Entity](#execute-the-data-entity)
     * [Output parameters](#output-parameters)
     * [Mutators](#mutators)
@@ -57,8 +58,9 @@ Table of Contents
 
 ## Introduction
 
-Data Entities is a library that allows you to execute stored procedures in SQL Server easily. It is a wrapper around
-the Laravel's DB Facade.
+Data Entities is a library that allows you to execute stored procedures easily. It is a wrapper around
+the Laravel's DB Facade. SQL Server and MySQL are supported out of the box, and you can register your own
+query executor for other database engines.
 
 ## Installation
 
@@ -79,10 +81,20 @@ php artisan vendor:publish --provider="BitMx\DataEntities\DataEntitiesServicePro
 This command will create a new configuration file in the `config` directory.
 
 ```php
+use BitMx\DataEntities\Executers\MySqlQueryExecutor;
+use BitMx\DataEntities\Executers\SqlServerQueryExecutor;
+
 return [
     'database' => env('DATA_ENTITIES_CONNECTION', 'sqlsrv'),
+
+    'executers' => [
+        'sqlsrv' => SqlServerQueryExecutor::class,
+        'mysql' => MySqlQueryExecutor::class,
+    ],
 ];
 ```
+
+The `executers` map defines which query executor is used for each database driver. See [Database support](#database-support).
 
 ## Compatibility
 
@@ -213,6 +225,55 @@ class GetAllPostsDataEntity extends DataEntity
 }
 ```
 
+### Database support
+
+The package generates the correct SQL for each database engine through query executors. The executor is resolved
+automatically from the driver of the connection used by the Data Entity:
+
+- `sqlsrv` → `SqlServerQueryExecutor` (`EXEC sp @param = :param`)
+- `mysql` → `MySqlQueryExecutor` (`CALL sp(:param)`)
+
+If the connection driver has no executor registered in the `executers` config map, an
+`UnsupportedQueryExecutorException` is thrown.
+
+You can force a specific executor for a single Data Entity by overriding the `resolveQueryExecutor` method:
+
+```php
+namespace App\DataEntities;
+
+use BitMx\DataEntities\DataEntity;
+use BitMx\DataEntities\Executers\MySqlQueryExecutor;
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    // ...
+
+    #[\Override]
+    public function resolveQueryExecutor(): ?string
+    {
+        return MySqlQueryExecutor::class;
+    }
+}
+```
+
+To support another database engine, create a class that implements
+`BitMx\DataEntities\Executers\Contracts\QueryExecutorContract` (or extends
+`BitMx\DataEntities\Executers\AbstractQueryExecutor`) and register it in the config:
+
+```php
+use App\DataEntityExecuters\PostgresQueryExecutor;
+
+return [
+    // ...
+
+    'executers' => [
+        'sqlsrv' => SqlServerQueryExecutor::class,
+        'mysql' => MySqlQueryExecutor::class,
+        'pgsql' => PostgresQueryExecutor::class,
+    ],
+];
+```
+
 ### Execute the Data Entity
 
 To execute the Data Entity, you need to call the `execute` method on the Data Entity instance.
@@ -231,8 +292,10 @@ The `execute` method returns a Response object that contains the data returned b
 
 ### Output parameters
 
-SQL Server OUTPUT parameters are supported via `defaultOutputParameters()`. Map each output parameter name to its SQL type.
-The package will `DECLARE` the variables, pass them as `OUTPUT`, and select them back into `$response->output()`.
+Stored procedure output parameters are supported via `defaultOutputParameters()`. Map each output parameter name to its SQL type.
+
+- On **SQL Server**, the package will `DECLARE` the variables, pass them as `OUTPUT`, and select them back into `$response->output()`.
+- On **MySQL**, the package passes them as session variables (`CALL sp(:param, @out); SELECT @out AS out;`). The declared SQL type is ignored because MySQL does not require a `DECLARE` statement.
 
 ```php
 namespace App\DataEntities;
@@ -545,7 +608,7 @@ $data = $response->rawData('key', 'default value');
 
 ### output
 
-Returns SQL Server OUTPUT parameter values:
+Returns stored procedure output parameter values:
 
 ```php
 $output = $response->output();

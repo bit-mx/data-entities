@@ -1,6 +1,6 @@
 ## Data Entities
 
-`bit-mx/data-entities` executes SQL Server stored procedures through Laravel's DB facade with typed parameters, accessors, middleware, caching, and test fakes.
+`bit-mx/data-entities` executes stored procedures (SQL Server, MySQL) through Laravel's DB facade with typed parameters, accessors, middleware, caching, and test fakes. The SQL dialect is resolved automatically from the connection driver via query executors (`data-entities.executers` config map).
 
 ### Conventions
 
@@ -69,7 +69,8 @@ DataEntity::assertExecutedOnce(GetPostDataEntity::class);
 
 - Prefer mutators (`mutators()`) for input casts and accessors (`accessors()`) for response casts.
 - Use `alias()` to rename SQL columns before accessors run.
-- Use `defaultOutputParameters()` for SQL Server OUTPUT params; read them with `$response->output()`.
+- Use `defaultOutputParameters()` for stored procedure output params; read them with `$response->output()`. On SQL Server they map to `DECLARE`/`OUTPUT`; on MySQL they map to session variables (the declared SQL type is ignored).
+- Override `resolveQueryExecutor(): ?string` on a Data Entity to force a specific query executor; otherwise it is resolved from the connection driver.
 - Use `AlwaysThrowOnError` when failures should throw automatically.
 - For caching, implement `Cacheable` and use the `HasCache` trait; call `invalidateCache()` / `disableCaching()` on the Data Entity instance, not on the Response.
 - For large result sets, use `#[UseLazyQuery]` and `$response->lazy()` (incompatible with `#[SingleItemResponse]`).
