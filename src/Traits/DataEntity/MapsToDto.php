@@ -24,16 +24,14 @@ trait MapsToDto
 
         /** @var class-string $dtoClass */
         $dtoClass = $attributes[0]->newInstance()->class;
+        /** @var array<array-key, mixed> $data */
         $data = $response->data();
-
-        if (! is_array($data)) {
-            return null;
-        }
 
         if ($data !== [] && array_is_list($data)) {
             $data = $data[0] ?? [];
         }
 
+        /** @var array<array-key, mixed> $data */
         return $this->instantiateMappedDto($dtoClass, $data);
     }
 
