@@ -896,6 +896,8 @@ Optional hooks:
 
 The default cache key includes the database connection name, so the same entity executed against different connections does not share cache entries.
 
+Cached responses store raw data and re-apply accessors when the response is restored, so non-idempotent accessors are not applied twice.
+
 You can invalidate the cache for the next execution using `invalidateCache()` on the Data Entity instance:
 
 ```php
