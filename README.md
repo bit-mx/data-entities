@@ -236,6 +236,11 @@ automatically from the driver of the connection used by the Data Entity:
 If the connection driver has no executor registered in the `executers` config map, an
 `UnsupportedQueryExecutorException` is thrown.
 
+Parameter names, stored procedure names, and output SQL types are validated before the query is
+compiled. Names must be identifiers (`post_id`, `dbo.spListPost`); SQL types must look like
+`INT`, `NVARCHAR(100)`, or `DECIMAL(10,2)`. Invalid values throw `InvalidIdentifierException`
+to prevent SQL injection through interpolated identifiers.
+
 You can force a specific executor for a single Data Entity by overriding the `resolveQueryExecutor` method:
 
 ```php

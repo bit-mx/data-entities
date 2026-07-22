@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BitMx\DataEntities\Executers;
 
+use BitMx\DataEntities\Exceptions\InvalidIdentifierException;
 use BitMx\DataEntities\Exceptions\InvalidLazyQueryException;
 use BitMx\DataEntities\Executers\Contracts\QueryExecutorContract;
 use BitMx\DataEntities\PendingQuery;
@@ -23,10 +24,53 @@ abstract class AbstractQueryExecutor implements QueryExecutorContract
 
         $procedure = (string) $statements->first();
 
+        $this->validateIdentifiers($pendingQuery, $procedure);
+
         return $this->build($pendingQuery, $procedure);
     }
 
     abstract protected function build(PendingQuery $pendingQuery, string $procedure): string;
+
+    protected function validateIdentifiers(PendingQuery $pendingQuery, string $procedure): void
+    {
+        $this->assertValidProcedureName($procedure);
+
+        foreach ($pendingQuery->parameters()->keys() as $key) {
+            $this->assertValidParameterName((string) $key);
+        }
+
+        foreach ($pendingQuery->outputParameters()->all() as $key => $type) {
+            $this->assertValidParameterName((string) $key);
+            $this->assertValidSqlType((string) $type);
+        }
+    }
+
+    protected function assertValidProcedureName(string $procedure): void
+    {
+        if ($procedure === '' || ! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/', $procedure)) {
+            throw new InvalidIdentifierException(
+                sprintf('Invalid stored procedure name [%s].', $procedure)
+            );
+        }
+    }
+
+    protected function assertValidParameterName(string $name): void
+    {
+        if ($name === '' || ! preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $name)) {
+            throw new InvalidIdentifierException(
+                sprintf('Invalid parameter name [%s].', $name)
+            );
+        }
+    }
+
+    protected function assertValidSqlType(string $type): void
+    {
+        if ($type === '' || ! preg_match('/^[A-Za-z][A-Za-z0-9_]*(\s*\(\s*\d+(\s*,\s*\d+)?\s*\))?$/i', $type)) {
+            throw new InvalidIdentifierException(
+                sprintf('Invalid SQL type [%s].', $type)
+            );
+        }
+    }
 
     protected function appendOutputParametersStatements(PendingQuery $pendingQuery): string
     {
