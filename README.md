@@ -1063,6 +1063,26 @@ On MySQL, PDO buffers result sets by default. For true streaming, configure the 
 
 You can use Data Transfer objects to map the data returned by the stored procedure to a PHP object.
 
+For a quick mapping into a constructor-based DTO, add the optional `#[MapTo]` attribute.
+If the entity also overrides `createDtoFromResponse()`, the manual override always wins:
+
+```php
+use App\Data\PostData;
+use BitMx\DataEntities\Attributes\MapTo;
+use BitMx\DataEntities\Attributes\SingleItemResponse;
+use BitMx\DataEntities\DataEntity;
+
+#[SingleItemResponse]
+#[MapTo(PostData::class)]
+class GetPostDataEntity extends DataEntity
+{
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListPost';
+    }
+}
+```
+
 ```php
 namespace App\Data;
 
