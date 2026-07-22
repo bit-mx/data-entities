@@ -45,6 +45,9 @@
             "pestphp/pest-plugin": true
         }
     },
+    "suggest": {
+        "laravel/boost": "Install in your application (--dev) so AI agents receive Data Entities guidelines and skills via boost:install."
+    },
     "extra": {
         "laravel": {
             "providers": [
