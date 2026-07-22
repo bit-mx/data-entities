@@ -47,6 +47,7 @@ Table of Contents
     * [Plugins](#plugins)
         * [AlwaysThrowOnError](#alwaysthrowonerror)
         * [HasCache](#hascache)
+        * [HasRetries](#hasretries)
     * [Lazy Collection](#lazy-collection)
     * [Data Transfer objects](#data-transfer-objects)
     * [Debugging](#debugging)
@@ -1002,6 +1003,27 @@ $dataEntity = new GetPostDataEntity(1);
 $response = $dataEntity->execute();
 
 $response->isCached();
+```
+
+### HasRetries
+
+The `HasRetries` plugin retries transient database failures such as deadlocks and timeouts.
+
+```php
+namespace App\DataEntities;
+
+use BitMx\DataEntities\DataEntity;
+use BitMx\DataEntities\Plugins\HasRetries;
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    use HasRetries;
+
+    // Optional overrides:
+    // protected function maxRetryAttempts(): int { return 3; }
+    // protected function retryBackoffMs(): int { return 50; }
+    // protected function retryableErrorCodes(): array { return [1205, 1213]; }
+}
 ```
 
 ### Lazy Collection

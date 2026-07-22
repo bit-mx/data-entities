@@ -39,7 +39,7 @@ trait Assertable
      */
     protected static function classInAssertExists(string $class): bool
     {
-        return Arr::has(static::$assertions, $class);
+        return array_key_exists($class, static::$assertions);
     }
 
     /**
@@ -76,7 +76,7 @@ trait Assertable
     public static function assertExecutedWith(string $class, array|Closure $expected): void
     {
         Assert::assertTrue(
-            Arr::has(static::$recordedParameters, $class) && static::$recordedParameters[$class] !== [],
+            array_key_exists($class, static::$recordedParameters) && static::$recordedParameters[$class] !== [],
             'The query was not executed'
         );
 

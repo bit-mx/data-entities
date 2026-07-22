@@ -12,7 +12,6 @@ use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Responses\MockResponseSequence;
 use BitMx\DataEntities\Responses\Response;
 use Closure;
-use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
 
 class MockProcessor implements ProcessorContract
@@ -28,7 +27,9 @@ class MockProcessor implements ProcessorContract
 
     public function handle(): Response
     {
-        if (! Arr::has($this->mockResponses, get_class($this->dataEntity))) {
+        $class = get_class($this->dataEntity);
+
+        if (! array_key_exists($class, $this->mockResponses)) {
             throw new MockResponseNotFoundException('No mock response found for '.get_class($this));
         }
 
@@ -39,13 +40,13 @@ class MockProcessor implements ProcessorContract
     {
         $class = get_class($this->dataEntity);
 
-        if (! Arr::has($this->mockResponses, $class)) {
+        if (! array_key_exists($class, $this->mockResponses)) {
             throw new MockResponseNotFoundException('No mock response found for '.get_class($this));
         }
 
         $mockResponse = $this->resolveMockResponse($class);
 
-        Arr::set(DataEntity::$assertions, $class, Arr::get(DataEntity::$assertions, $class, 0) + 1);
+        DataEntity::$assertions[$class] = (DataEntity::$assertions[$class] ?? 0) + 1;
         DataEntity::$recordedParameters[$class][] = $this->pendingQuery->parameters()->all();
 
         return $this->createFakeResponse($mockResponse);
@@ -53,7 +54,7 @@ class MockProcessor implements ProcessorContract
 
     protected function resolveMockResponse(string $class): MockResponse
     {
-        $mock = Arr::get($this->mockResponses, $class);
+        $mock = $this->mockResponses[$class];
 
         if ($mock instanceof Closure) {
             $mock = $mock($this->pendingQuery);
