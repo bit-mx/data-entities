@@ -47,6 +47,10 @@ final class Transformer
 
         $class = $pieces->first();
 
+        if (! is_string($class) || $class === '') {
+            throw new InvalidMutatorException("The mutator for parameter {$this->key} is invalid");
+        }
+
         $attributes = $pieces->count() > 1 ? explode(',', $pieces->get(1, '')) : [];
 
         if (array_key_exists($class, MutatorsAlias::get())) {

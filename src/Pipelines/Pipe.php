@@ -29,7 +29,7 @@ readonly class Pipe
         return $this->callable;
     }
 
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->name;
     }
