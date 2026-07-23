@@ -15,7 +15,7 @@ class AsJson implements Mutable
 
     public function __construct(string ...$attributes)
     {
-        $this->attributes = $attributes;
+        $this->attributes = array_values($attributes);
     }
 
     /**
