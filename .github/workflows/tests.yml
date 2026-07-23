@@ -8,12 +8,24 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
-        php: [ 8.4, 8.5 ]
+        os: [ubuntu-latest]
+        php: [8.4, 8.5]
+        laravel: [11, 12, 13]
+        include:
+          - laravel: 11
+            testbench: ^9.0
+          - laravel: 12
+            testbench: ^10.0
+          - laravel: 13
+            testbench: ^11.0
+        exclude:
+          # Laravel 11 only supports PHP through 8.4
+          - php: 8.5
+            laravel: 11
 
-    name: P${{ matrix.php }}
+    name: P${{ matrix.php }} L${{ matrix.laravel }}
 
     env:
       CACHE_ENTITIES_DRIVER: array
@@ -28,6 +40,12 @@ jobs:
           tools: composer:v2
           coverage: none
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: |
+          # Laravel 11 is past security support; Composer blocks it via advisories.
+          # Keep L11 in the matrix for compatibility only.
+          composer config audit.block-insecure false
+          composer require "illuminate/support:^${{ matrix.laravel }}.0" "illuminate/database:^${{ matrix.laravel }}.0" --no-interaction --no-update
+          composer require --dev "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer update --no-interaction --prefer-dist --optimize-autoloader --with-all-dependencies
       - name: Running tests
         run: vendor/bin/pest

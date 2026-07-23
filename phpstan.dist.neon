@@ -1,13 +1,19 @@
 includes:
     - phpstan-baseline.neon
+    - phpstan-tests.neon
+    - phar://phpstan.phar/conf/bleedingEdge.neon
 
 parameters:
-    level: 7
+    level: 9
     paths:
         - src
+        - tests
     checkOctaneCompatibility: true
+    tmpDir: .phpstan-cache
 
     type_coverage:
         return: 100
         param: 100
         property: 100
+        constant: 100
+        declare: 100

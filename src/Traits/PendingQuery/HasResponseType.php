@@ -28,7 +28,7 @@ trait HasResponseType
 
         $attributes = $reflection->getAttributes(SingleItemResponse::class);
 
-        return ! empty($attributes)
+        return $attributes !== []
             ? ResponseType::SINGLE
             : ResponseType::COLLECTION;
     }

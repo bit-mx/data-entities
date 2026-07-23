@@ -75,7 +75,7 @@ trait HasMutatedData
             return $data;
         }
 
-        if (empty($data)) {
+        if ($data === []) {
             return [];
         }
 
@@ -86,7 +86,9 @@ trait HasMutatedData
 
     protected function getParameterAlias(string $parameter): string
     {
-        return $this->pendingQuery->alias()->get($parameter, $parameter);
+        $alias = $this->pendingQuery->alias()->get($parameter, $parameter);
+
+        return is_string($alias) ? $alias : $parameter;
     }
 
     /**
@@ -95,7 +97,9 @@ trait HasMutatedData
     protected function aliasCollectionData(): array
     {
         return collect($this->rawData->all())
-            ->map(fn (array $value): array => $this->aliasResponse($value))
+            ->map(function (mixed $value): array {
+                return is_array($value) ? $this->aliasResponse($value) : [];
+            })
             ->all();
     }
 
@@ -110,7 +114,9 @@ trait HasMutatedData
         }
 
         return collect($data)
-            ->map(fn (mixed $value): array => $this->mutateSingleData($value))
+            ->map(function (mixed $value): array {
+                return is_array($value) ? $this->mutateSingleData($value) : [];
+            })
             ->all();
     }
 

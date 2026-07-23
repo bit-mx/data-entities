@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\Commands\MakeDataEntityAccessor;
 use Illuminate\Support\Facades\File;
 

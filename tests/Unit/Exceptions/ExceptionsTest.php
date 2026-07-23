@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Exceptions\InvalidAccessorException;
 use BitMx\DataEntities\Exceptions\InvalidMutatorException;

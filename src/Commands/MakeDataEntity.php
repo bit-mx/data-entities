@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace BitMx\DataEntities\Commands;
 
+use BitMx\DataEntities\Generators\DataEntityGenerator;
+use BitMx\DataEntities\Introspection\ProcedureIntrospectorResolver;
 use Illuminate\Console\GeneratorCommand;
+use Illuminate\Support\Str;
 
 class MakeDataEntity extends GeneratorCommand
 {
@@ -13,7 +16,7 @@ class MakeDataEntity extends GeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'make:data-entity {name}';
+    protected $signature = 'make:data-entity {name} {--from-procedure=} {--connection=} {--force}';
 
     /**
      * The console command description.
@@ -22,7 +25,63 @@ class MakeDataEntity extends GeneratorCommand
      */
     protected $description = 'Creates a new data entity class';
 
+    /**
+     * @var string
+     */
+    protected $type = 'Data entity';
+
     protected string $namespace = 'App\DataEntities';
+
+    #[\Override]
+    public function handle(): ?bool
+    {
+        $fromProcedure = $this->option('from-procedure');
+
+        if (! is_string($fromProcedure) || $fromProcedure === '') {
+            return parent::handle();
+        }
+
+        $name = $this->qualifyClass($this->getNameInput());
+        $path = $this->getPath($name);
+
+        $force = $this->option('force');
+
+        if ($force !== true && $this->alreadyExists($this->getNameInput())) {
+            $this->components->error($this->type.' already exists.');
+
+            return false;
+        }
+
+        $connectionOption = $this->option('connection');
+        $defaultConnection = config('data-entities.database', 'sqlsrv');
+        $connection = is_string($connectionOption) && $connectionOption !== ''
+            ? $connectionOption
+            : (is_string($defaultConnection) && $defaultConnection !== '' ? $defaultConnection : 'sqlsrv');
+
+        $introspector = (new ProcedureIntrospectorResolver)->resolve($connection);
+
+        if (! $introspector->procedureExists($fromProcedure)) {
+            $this->components->error(sprintf('Stored procedure [%s] was not found on connection [%s].', $fromProcedure, $connection));
+
+            return false;
+        }
+
+        $this->makeDirectory($path);
+
+        $class = class_basename($name);
+        $namespace = Str::beforeLast($name, '\\');
+        $contents = (new DataEntityGenerator)->generate(
+            namespace: $namespace,
+            class: $class,
+            procedure: $fromProcedure,
+            parameters: $introspector->parameters($fromProcedure),
+        );
+
+        $this->files->put($path, $contents);
+        $this->components->info(sprintf('%s [%s] created successfully from [%s].', $this->type, $path, $fromProcedure));
+
+        return true;
+    }
 
     #[\Override]
     protected function getStub(): string
@@ -36,8 +95,6 @@ class MakeDataEntity extends GeneratorCommand
     }
 
     /**
-     * Get the default namespace for the class.
-     *
      * @param  string  $rootNamespace
      */
     #[\Override]

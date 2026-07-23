@@ -73,6 +73,10 @@ class PendingQuery
 
     public function getFakeResponse(): FakeResponse
     {
+        if ($this->fakeResponse === null) {
+            throw new \LogicException('Fake response has not been set on the pending query.');
+        }
+
         return $this->fakeResponse;
     }
 

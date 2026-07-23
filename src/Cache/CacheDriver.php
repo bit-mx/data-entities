@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace BitMx\DataEntities\Cache;
 
 use BitMx\DataEntities\Contracts\CacheStore;
+use BitMx\DataEntities\Responses\RecordedResponse;
+use Carbon\CarbonImmutable;
+use DateTimeImmutable;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\Cache;
 
@@ -33,10 +36,19 @@ readonly class CacheDriver implements CacheStore
     {
         $data = $this->driver()->get($key);
 
-        if (empty($data)) {
+        if (! is_string($data) || $data === '') {
             return null;
         }
 
-        return unserialize($data, ['allowed_classes' => true]);
+        $cachedResponse = unserialize($data, [
+            'allowed_classes' => [
+                CachedResponse::class,
+                RecordedResponse::class,
+                DateTimeImmutable::class,
+                CarbonImmutable::class,
+            ],
+        ]);
+
+        return $cachedResponse instanceof CachedResponse ? $cachedResponse : null;
     }
 }

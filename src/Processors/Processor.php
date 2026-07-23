@@ -6,6 +6,9 @@ namespace BitMx\DataEntities\Processors;
 
 use BitMx\DataEntities\Contracts\ProcessorContract;
 use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Events\DataEntityExecuted;
+use BitMx\DataEntities\Events\DataEntityFailed;
+use BitMx\DataEntities\Exceptions\MissingRequiredParameterException;
 use BitMx\DataEntities\Parameters\ParametersProcessor;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\Response;
@@ -17,7 +20,10 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\LazyCollection;
+use PDO;
+use PDOException;
 
 class Processor implements ProcessorContract
 {
@@ -64,8 +70,11 @@ class Processor implements ProcessorContract
         $isSuccess = false;
         $exception = null;
         $lazyCollection = LazyCollection::make();
+        $preparedQuery = '';
+        $startedAt = hrtime(true);
 
         try {
+            $this->validateRequiredParameters();
             $preparedQuery = $this->prepareQuery();
             $params = $this->createParameters();
             $client = $this->getClient();
@@ -75,17 +84,18 @@ class Processor implements ProcessorContract
             if ($result instanceof LazyCollection) {
                 $lazyCollection = $result;
             } else {
-                $responseData = $this->createDataArray($result);
-                $data = $this->createData($responseData);
-                $output = $this->createOutput($responseData);
+                $resultSets = $this->appendMySqlOutputResultSets($client, $result);
+                $resultSets = $this->normalizeResultSets($resultSets);
+                $data = $this->createData($resultSets);
+                $output = $this->createOutput($resultSets);
             }
 
             $isSuccess = true;
-        } catch (QueryException $ex) {
+        } catch (QueryException|PDOException $ex) {
             $exception = $ex;
         }
 
-        return new Response(
+        $response = new Response(
             pendingQuery: $this->pendingQuery,
             data: $data,
             output: $output,
@@ -93,6 +103,41 @@ class Processor implements ProcessorContract
             senderException: $exception,
             rawLazyData: $lazyCollection,
         );
+
+        $this->dispatchExecutionEvent($response, $preparedQuery, $startedAt, $exception);
+
+        return $response;
+    }
+
+    protected function dispatchExecutionEvent(
+        Response $response,
+        string $query,
+        int|float $startedAt,
+        ?\Throwable $exception,
+    ): void {
+        $durationMs = (hrtime(true) - $startedAt) / 1_000_000;
+        $dataEntity = $this->pendingQuery->getDataEntity();
+
+        if ($exception !== null) {
+            Event::dispatch(new DataEntityFailed(
+                dataEntity: $dataEntity,
+                pendingQuery: $this->pendingQuery,
+                response: $response,
+                query: $query,
+                durationMs: $durationMs,
+                exception: $exception,
+            ));
+
+            return;
+        }
+
+        Event::dispatch(new DataEntityExecuted(
+            dataEntity: $dataEntity,
+            pendingQuery: $this->pendingQuery,
+            response: $response,
+            query: $query,
+            durationMs: $durationMs,
+        ));
     }
 
     /**
@@ -107,28 +152,70 @@ class Processor implements ProcessorContract
         return $newParameters;
     }
 
+    protected function validateRequiredParameters(): void
+    {
+        $required = $this->pendingQuery->getDataEntity()->requiredParameters();
+        $parameters = $this->pendingQuery->parameters();
+
+        foreach ($required as $name) {
+            if (! $parameters->toCollection()->has($name)) {
+                throw new MissingRequiredParameterException(
+                    sprintf('Missing required parameter [%s].', $name)
+                );
+            }
+        }
+    }
+
     protected function getClient(): Connection
     {
-        return DB::connection($this->pendingQuery->getDataEntity()->resolveDatabaseConnection());
+        $connection = DB::connection($this->pendingQuery->getDataEntity()->resolveDatabaseConnection());
+        $timeout = $this->pendingQuery->getDataEntity()->queryTimeout();
+
+        if ($timeout !== null) {
+            $connection->getPdo()->setAttribute(PDO::ATTR_TIMEOUT, $timeout);
+        }
+
+        return $connection;
+    }
+
+    /**
+     * MySQL cannot reliably run CALL + SELECT @out in one multi-statement query.
+     * After the CALL, read session variables in separate SELECTs and append them
+     * as extra result sets so createOutput() keeps working.
+     *
+     * @param  array<array-key, mixed>  $result
+     * @return array<array-key, mixed>
+     */
+    protected function appendMySqlOutputResultSets(Connection $client, array $result): array
+    {
+        if ($client->getDriverName() !== 'mysql' || $this->pendingQuery->outputParameters()->isEmpty()) {
+            return $result;
+        }
+
+        foreach ($this->pendingQuery->outputParameters()->keys() as $key) {
+            if (! is_string($key)) {
+                continue;
+            }
+
+            $result[] = $client->select(sprintf('SELECT @%s AS `%s`', $key, $key));
+        }
+
+        return $result;
     }
 
     /**
      * @param  array<array-key, mixed>  $data
      * @return array<array-key, mixed>
      */
-    protected function createDataArray(array $data): array
+    protected function normalizeResultSets(array $data): array
     {
-        if (empty($data)) {
+        if ($data === []) {
             return [];
         }
 
-        $data = json_decode((string) json_encode($data), true);
+        $decoded = json_decode((string) json_encode($data), true);
 
-        if ($this->pendingQuery->getResponseType() === ResponseType::SINGLE) {
-            return Arr::get($data, '0.0', []);
-        }
-
-        return $data;
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**
@@ -137,11 +224,19 @@ class Processor implements ProcessorContract
      */
     protected function createData(array $responseData): array
     {
-        if ($this->pendingQuery->getResponseType() === ResponseType::SINGLE) {
-            return $responseData;
+        if ($responseData === []) {
+            return [];
         }
 
-        return Arr::get($responseData, '0', []);
+        if ($this->pendingQuery->getResponseType() === ResponseType::SINGLE) {
+            $result = Arr::get($responseData, '0.0', []);
+
+            return is_array($result) ? $result : [];
+        }
+
+        $result = Arr::get($responseData, '0', []);
+
+        return is_array($result) ? $result : [];
     }
 
     /**
@@ -155,8 +250,12 @@ class Processor implements ProcessorContract
         }
 
         return collect($responseData)
-            ->filter(fn (array $value, int $key): bool => $key > 0)
-            ->flatMap(fn (array $value): array => $value[0])
+            ->filter(fn (mixed $value, mixed $key): bool => is_int($key) && $key > 0 && is_array($value))
+            ->flatMap(function (array $value): array {
+                $firstRow = $value[0] ?? null;
+
+                return is_array($firstRow) ? $firstRow : [];
+            })
             ->all();
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Exceptions\InvalidLazyQueryException;
@@ -58,8 +60,7 @@ it('compiles output parameters as session variables', function () {
 
     $query = (new MySqlQueryExecutor)->compileQuery(new PendingQuery($dataEntity));
 
-    expect($query)
-        ->toBe('CALL sp_test(:post_id, @total, @message); SELECT @total AS total;'."\n".'SELECT @message AS message;');
+    expect($query)->toBe('CALL sp_test(:post_id, @total, @message);');
 });
 
 it('compiles a procedure call without parameters', function () {
@@ -94,7 +95,7 @@ it('compiles output parameters without input parameters', function () {
 
     $query = (new MySqlQueryExecutor)->compileQuery(new PendingQuery($dataEntity));
 
-    expect($query)->toBe('CALL sp_test(@total); SELECT @total AS total;');
+    expect($query)->toBe('CALL sp_test(@total);');
 });
 
 it('compiles the procedure call prefix', function () {

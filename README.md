@@ -42,10 +42,12 @@ Table of Contents
         * [getError](#geterror)
         * [isCached](#iscached)
     * [Boot](#boot)
+    * [Events](#events)
     * [Middlewares](#middlewares)
     * [Plugins](#plugins)
         * [AlwaysThrowOnError](#alwaysthrowonerror)
         * [HasCache](#hascache)
+        * [HasRetries](#hasretries)
     * [Lazy Collection](#lazy-collection)
     * [Data Transfer objects](#data-transfer-objects)
     * [Debugging](#debugging)
@@ -102,6 +104,17 @@ This package is compatible with Laravel 11.x, 12.x, and 13.x.
 
 It requires PHP 8.4 or above.
 
+> Laravel 11 is past security support. Prefer Laravel 12 or 13 for new apps; CI still runs Laravel 11 for compatibility.
+
+CI runs Pest against PHP 8.4/8.5 and Laravel 11/12/13 (PHP 8.5 × Laravel 11 excluded).
+
+MySQL integration tests live in `tests/Integration` and run in CI against a real MySQL service.
+Locally:
+
+```bash
+DATA_ENTITIES_INTEGRATION_MYSQL=1 DB_PASSWORD=password vendor/bin/pest tests/Integration
+```
+
 ## Laravel Boost
 
 If your application uses [Laravel Boost](https://laravel.com/docs/boost), this package ships AI guidelines and an agent skill that Boost discovers automatically when you run:
@@ -152,6 +165,16 @@ class GetAllPostsDataEntity extends DataEntity
 ```
 
 You can also use the `parameters` method to set the parameters for the stored procedure.
+
+Override `requiredParameters()` to validate required keys before the query hits the database.
+Missing keys throw `MissingRequiredParameterException` with a clear parameter name:
+
+```php
+public function requiredParameters(): array
+{
+    return ['author_id', 'status'];
+}
+```
 
 ```php
 use App\DataEntities\GetAllPostsDataEntity;
@@ -204,6 +227,24 @@ php artisan make:data-entity GetAllPostsDataEntity
 
 This command will create a new Data Entity in the `app/DataEntities` directory.
 
+You can also generate a Data Entity from an existing stored procedure signature:
+
+```bash
+php artisan make:data-entity CreatePostDataEntity --from-procedure=dbo.spCreatePost --connection=sqlsrv
+```
+
+The generator introspects SQL Server (`sys.parameters`) or MySQL (`information_schema.parameters`) and fills the constructor, `defaultParameters()`, suggested mutators, and `defaultOutputParameters()`.
+
+Inventory and drift commands:
+
+```bash
+php artisan data-entities:list
+php artisan data-entities:check
+```
+
+`data-entities:list` prints each entity with its stored procedure and connection.
+`data-entities:check` verifies that each procedure exists and, when the entity can be constructed without arguments, compares input/output parameter names against the database signature.
+
 ### Connection
 
 You can set the connection name by overriding the `resolveDatabaseConnection` method.
@@ -225,6 +266,83 @@ class GetAllPostsDataEntity extends DataEntity
 }
 ```
 
+When you integrate several legacy systems, prefer one abstract base entity per system so every procedure shares the same connection (and optional defaults):
+
+```php
+namespace App\DataEntities\Erp;
+
+use BitMx\DataEntities\DataEntity;
+
+abstract class ErpDataEntity extends DataEntity
+{
+    #[\Override]
+    public function resolveDatabaseConnection(): string
+    {
+        return 'erp_sqlsrv';
+    }
+}
+
+class GetCustomerDataEntity extends ErpDataEntity
+{
+    public function resolveStoreProcedure(): string
+    {
+        return 'dbo.spGetCustomer';
+    }
+}
+```
+
+```php
+namespace App\DataEntities\Crm;
+
+use BitMx\DataEntities\DataEntity;
+
+abstract class CrmDataEntity extends DataEntity
+{
+    #[\Override]
+    public function resolveDatabaseConnection(): string
+    {
+        return 'crm_mysql';
+    }
+}
+```
+
+Organize classes under `app/DataEntities/{System}/` and point `data-entities:list` / `data-entities:check` at those paths with `--path=app/DataEntities/Erp`.
+
+You can optionally set a per-entity query timeout in seconds via `queryTimeout()`.
+When set, the package applies `PDO::ATTR_TIMEOUT` on the connection before execution:
+
+```php
+public function queryTimeout(): ?int
+{
+    return 30;
+}
+```
+
+### Transactions
+
+When several Data Entities must succeed or fail together, wrap them in a transaction on the **same** connection:
+
+```php
+use BitMx\DataEntities\DataEntity;
+use Illuminate\Support\Facades\DB;
+
+DB::connection('sqlsrv')->transaction(function () {
+    (new CreateOrderDataEntity($payload))->execute();
+    (new ReserveInventoryDataEntity($orderId))->execute();
+});
+```
+
+Or use the helper (defaults to `config('data-entities.database')`):
+
+```php
+DataEntity::transaction(function () {
+    (new CreateOrderDataEntity($payload))->execute();
+    (new ReserveInventoryDataEntity($orderId))->execute();
+}, connection: 'sqlsrv');
+```
+
+Entities that target different connections cannot share one transaction.
+
 ### Database support
 
 The package generates the correct SQL for each database engine through query executors. The executor is resolved
@@ -235,6 +353,11 @@ automatically from the driver of the connection used by the Data Entity:
 
 If the connection driver has no executor registered in the `executers` config map, an
 `UnsupportedQueryExecutorException` is thrown.
+
+Parameter names, stored procedure names, and output SQL types are validated before the query is
+compiled. Names must be identifiers (`post_id`, `dbo.spListPost`); SQL types must look like
+`INT`, `NVARCHAR(100)`, or `DECIMAL(10,2)`. Invalid values throw `InvalidIdentifierException`
+to prevent SQL injection through interpolated identifiers.
 
 You can force a specific executor for a single Data Entity by overriding the `resolveQueryExecutor` method:
 
@@ -295,7 +418,7 @@ The `execute` method returns a Response object that contains the data returned b
 Stored procedure output parameters are supported via `defaultOutputParameters()`. Map each output parameter name to its SQL type.
 
 - On **SQL Server**, the package will `DECLARE` the variables, pass them as `OUTPUT`, and select them back into `$response->output()`.
-- On **MySQL**, the package passes them as session variables (`CALL sp(:param, @out); SELECT @out AS out;`). The declared SQL type is ignored because MySQL does not require a `DECLARE` statement.
+- On **MySQL**, the package passes them as session variables (`CALL sp(:param, @out)`) and then reads them with a separate `SELECT @out AS out` after the call. The declared SQL type is ignored because MySQL does not require a `DECLARE` statement.
 
 ```php
 namespace App\DataEntities;
@@ -689,6 +812,9 @@ if ($response->failed()) {
 }
 ```
 
+Database failures (`QueryException` and `PDOException`) are captured into the Response as a soft failure
+(`success()` is `false`). Programming errors such as invalid mutators or unsupported executors still throw.
+
 ### throw
 
 By default, the Response object won't throw an exception if the stored procedure fails. You can throw an exception
@@ -751,6 +877,38 @@ trait Taggable
 ```
 
 The `bootTaggable` method will be called before the stored procedure is executed.
+
+## Events
+
+Real database executions dispatch Laravel events you can listen to for logging or APM:
+
+- `BitMx\DataEntities\Events\DataEntityExecuted` — successful execution
+- `BitMx\DataEntities\Events\DataEntityFailed` — soft failure (`QueryException` / `PDOException`)
+
+Both events expose the Data Entity, pending query, response, compiled SQL, and duration in milliseconds.
+Failed events also expose the captured exception.
+
+```php
+use BitMx\DataEntities\Events\DataEntityExecuted;
+use BitMx\DataEntities\Events\DataEntityFailed;
+use Illuminate\Support\Facades\Event;
+
+Event::listen(DataEntityExecuted::class, function (DataEntityExecuted $event) {
+    logger()->info('data-entity.executed', [
+        'entity' => $event->dataEntity::class,
+        'duration_ms' => $event->durationMs,
+    ]);
+});
+
+Event::listen(DataEntityFailed::class, function (DataEntityFailed $event) {
+    logger()->warning('data-entity.failed', [
+        'entity' => $event->dataEntity::class,
+        'error' => $event->exception->getMessage(),
+    ]);
+});
+```
+
+Fake / mocked executions do not dispatch these events.
 
 ## Middlewares
 
@@ -886,8 +1044,14 @@ class GetAllPostsDataEntity extends DataEntity implements Cacheable
 
 Optional hooks:
 
-- `cacheKey(PendingQuery $pendingQuery): ?string` — custom cache key (default is a SHA-256 hash)
+- `cacheKey(PendingQuery $pendingQuery): ?string` — custom cache key (default is a SHA-256 hash of the class, stored procedure, connection, parameters, and output parameters)
 - `cacheDriver(): string` — cache store name (default: `config('cache.default')`)
+
+The default cache key includes the database connection name, so the same entity executed against different connections does not share cache entries.
+
+Cached responses store raw data and re-apply accessors when the response is restored, so non-idempotent accessors are not applied twice.
+
+Cache payloads are unserialized with an allow-list of package classes only. If `cacheExpiresAt()` is in the past, the TTL is floored to 1 second.
 
 You can invalidate the cache for the next execution using `invalidateCache()` on the Data Entity instance:
 
@@ -928,9 +1092,37 @@ $response = $dataEntity->execute();
 $response->isCached();
 ```
 
+### HasRetries
+
+The `HasRetries` plugin retries transient database failures such as deadlocks and timeouts.
+
+```php
+namespace App\DataEntities;
+
+use BitMx\DataEntities\DataEntity;
+use BitMx\DataEntities\Plugins\HasRetries;
+use Carbon\CarbonInterval;
+
+class GetAllPostsDataEntity extends DataEntity
+{
+    use HasRetries;
+
+    protected function maxRetryAttempts(): int
+    {
+        return 3;
+    }
+
+    protected function retryBackoff(): int|CarbonInterval
+    {
+        return CarbonInterval::milliseconds(50);
+        // or: return 50; // milliseconds
+    }
+}
+```
+
 ### Lazy Collection
 
-If you want to return a `LazyCollection` instance, you can use the `UseLazyQuery` attribute.
+Use the `#[UseLazyQuery]` attribute when the stored procedure can return a large (or unbounded) result set and you want to consume rows through a Laravel `LazyCollection` instead of loading everything via `data()` / `collect()` up front.
 
 ```php
 namespace App\DataEntities;
@@ -948,23 +1140,113 @@ class GetAllPostsDataEntity extends DataEntity
 }
 ```
 
-This will return a `LazyCollection` instance when the `lazy` method is called on the Response object.
+With `#[UseLazyQuery]`, the executor runs the procedure through a database cursor. Rows are not fully materialised until you iterate `lazy()` or `stream()` on the response.
 
 ```php
 use App\DataEntities\GetAllPostsDataEntity;
 
-$dataEntity = new GetAllPostsDataEntity(1);
+$dataEntity = new GetAllPostsDataEntity();
 $response = $dataEntity->execute();
-$posts = $response->lazy();
 ```
 
-#### Note
+`lazy()` and `stream()` both return a Laravel `LazyCollection` over the same cursor. The difference is **memory** and **re-iteration**: `lazy()` remembers rows after the first pass so you can iterate again — on large datasets that means memory grows to the full result set size. Prefer `stream()` for large sets. If you hit *Lazy stream has already been consumed*, switch to `lazy()` when you need multiple passes on a moderate set, or call `execute()` again for a fresh cursor.
 
-When using the `UseLazyQuery` attribute, the response type only supports a collection. If you try to use `#[SingleItemResponse]`, it will throw an exception.
+#### `lazy()` — re-iterable (remembers rows)
+
+Default: `lazy()` / `lazy(remember: true)`. After the first pass, rows are kept in memory (`LazyCollection::remember()`), so you can iterate or transform the collection more than once without re-running the stored procedure.
+
+```php
+$posts = $response->lazy();
+
+$count = $posts->count(); // first full pass; rows are now remembered
+$titles = $posts->pluck('title'); // second pass; uses remembered rows (no extra DB round-trip)
+```
+
+#### `stream()` — single-pass (low memory)
+
+Use `stream()` (or `lazy(remember: false)`, which is an alias) when you must avoid accumulating the full result set. Process one row at a time; a second iteration throws a `RuntimeException`.
+
+```php
+foreach ($response->stream() as $post) {
+    // process one row at a time without keeping the full result set in memory
+}
+```
+
+#### Risks of `lazy()` on large datasets
+
+The name “lazy” does **not** mean permanently low memory. After the **first** iteration, `lazy()` remembers every row already seen. Memory can grow to the size of the entire result set — similar to calling `collect()` once you have walked the cursor.
+
+Operations that force a full traversal (`count()`, `all()`, `toArray()`, multiple `foreach` loops, or pipelines that reuse the same collection) trigger that accumulation.
+
+| Prefer | When |
+| --- | --- |
+| `stream()` | Massive exports, ETL, millions of rows, or any flow that only needs one pass |
+| `lazy()` | Moderate result sets where you will traverse or transform more than once and want to avoid re-executing the SP |
+
+Even with `stream()`, MySQL may still buffer the whole result set unless the connection is configured for unbuffered queries (see below).
+
+#### If `stream()` was already consumed
+
+A second iteration over the same stream raises:
+
+`RuntimeException`: *Lazy stream has already been consumed and cannot be re-iterated. Use lazy() for a re-iterable collection.*
+
+What to do:
+
+1. **You need multiple passes on the same response** — use `$response->lazy()` from the start (rows are remembered after the first pass; watch memory on large sets).
+2. **You already consumed `stream()` and need the data again** — call `execute()` again and obtain a new `stream()` / `lazy()`. The current response’s stream cannot be reset.
+3. **`lazy(remember: false)`** — same single-pass limitation as `stream()`.
+
+```php
+// Wrong: second foreach fails
+$stream = $response->stream();
+foreach ($stream as $post) { /* ... */ }
+foreach ($stream as $post) { /* RuntimeException */ }
+
+// Right (moderate sets, multiple passes): use lazy() up front
+foreach ($response->lazy() as $post) { /* first pass */ }
+foreach ($response->lazy() as $post) { /* second pass; remembered */ }
+
+// Right (large sets, need another pass): re-execute
+$response = $dataEntity->execute();
+foreach ($response->stream() as $post) { /* ... */ }
+```
+
+#### Restrictions
+
+When using `#[UseLazyQuery]`, the response type only supports a collection. Combining it with `#[SingleItemResponse]` throws an exception.
+
+`#[UseLazyQuery]` is also incompatible with output parameters. Lazy queries use a cursor over a single result set, so output values would be lost; combining both throws `InvalidLazyQueryException`.
+
+#### MySQL and true streaming
+
+On MySQL, PDO buffers result sets by default. For true streaming, configure the connection with unbuffered queries:
+
+```php
+'mysql' => [
+    // ...
+    'options' => [
+        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false,
+    ],
+],
+```
 
 ## Data Transfer objects
 
-You can use Data Transfer objects to map the data returned by the stored procedure to a PHP object.
+Map stored-procedure rows into PHP objects and read them with `$response->dto()`.
+
+### `#[MapTo]` — automatic mapping
+
+`#[MapTo]` is an optional shortcut: the package reflects the DTO constructor and fills each parameter from the matching key in the response row (after aliases and accessors). Calling `$response->dto()` runs that mapping.
+
+**DTO rules:**
+
+- Prefer a constructor-based class; parameter names must match the row keys (`id`, `title`, …).
+- Missing keys use the parameter’s default value when available, otherwise `null`.
+
+#### Single item
+
+Combine `#[SingleItemResponse]` with `#[MapTo(Dto::class)]`:
 
 ```php
 namespace App\Data;
@@ -984,6 +1266,74 @@ class PostData
 namespace App\DataEntities;
 
 use App\Data\PostData;
+use BitMx\DataEntities\Attributes\MapTo;
+use BitMx\DataEntities\Attributes\SingleItemResponse;
+use BitMx\DataEntities\DataEntity;
+
+#[SingleItemResponse]
+#[MapTo(PostData::class)]
+class GetPostDataEntity extends DataEntity
+{
+    public function __construct(protected int $postId) {}
+
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListPost';
+    }
+
+    protected function defaultParameters(): array
+    {
+        return ['post_id' => $this->postId];
+    }
+}
+```
+
+```php
+/** @var PostData $post */
+$post = (new GetPostDataEntity(1))->execute()->dto();
+```
+
+#### Collection of DTOs
+
+Pass Laravel’s `Illuminate\Support\Collection` (or a compatible subclass) as the second argument. Each row becomes a DTO and the result is wrapped in that collection class:
+
+```php
+namespace App\DataEntities;
+
+use App\Data\PostData;
+use BitMx\DataEntities\Attributes\MapTo;
+use BitMx\DataEntities\DataEntity;
+use Illuminate\Support\Collection;
+
+#[MapTo(PostData::class, Collection::class)]
+class GetPostsDataEntity extends DataEntity
+{
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListPosts';
+    }
+}
+```
+
+```php
+/** @var Collection<int, PostData> $posts */
+$posts = (new GetPostsDataEntity())->execute()->dto();
+
+$posts->each(fn (PostData $post) => /* ... */);
+```
+
+Empty result sets yield an empty collection. A single-item response with a collection class yields a collection of one DTO.
+
+Any class constructible as `new $collectionClass($items)` works (for example `Illuminate\Database\Eloquent\Collection`).
+
+### Manual `createDtoFromResponse()`
+
+For nested objects, Spatie Data, custom transforms, or anything beyond constructor key matching, override `createDtoFromResponse()`. **A manual override always wins over `#[MapTo]`.**
+
+```php
+namespace App\DataEntities;
+
+use App\Data\PostData;
 use BitMx\DataEntities\Attributes\SingleItemResponse;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Responses\Response;
@@ -991,23 +1341,16 @@ use BitMx\DataEntities\Responses\Response;
 #[SingleItemResponse]
 class GetPostDataEntity extends DataEntity
 {
-    public function __construct(
-        protected int $postId,
-    ) {
-    }
+    public function __construct(protected int $postId) {}
 
-    #[\Override]
     public function resolveStoreProcedure(): string
     {
         return 'spListPost';
     }
 
-    #[\Override]
     protected function defaultParameters(): array
     {
-        return [
-            'post_id' => $this->postId,
-        ];
+        return ['post_id' => $this->postId];
     }
 
     public function createDtoFromResponse(Response $response): PostData
@@ -1023,17 +1366,9 @@ class GetPostDataEntity extends DataEntity
 }
 ```
 
-You can get the DTO from the response using the `dto` method.
-
 ```php
-use App\DataEntities\GetPostDataEntity;
-
-$dataEntity = new GetPostDataEntity(1);
-
-$response = $dataEntity->execute();
-
 /** @var PostData $post */
-$post = $response->dto();
+$post = (new GetPostDataEntity(1))->execute()->dto();
 ```
 
 ## Debugging
@@ -1119,6 +1454,33 @@ Available assertions:
 - **assertNotExecuted:** Assert that the Data Entity was not executed.
 - **assertExecutedCount:** Assert that the Data Entity was executed a specific number of times.
 - **assertExecutedOnce:** Assert that the Data Entity was executed once.
+- **assertExecutedWith:** Assert that the Data Entity was executed with matching parameters (array subset or closure).
+
+```php
+DataEntity::assertExecutedWith(GetPostDataEntity::class, ['post_id' => 1]);
+DataEntity::assertExecutedWith(GetPostDataEntity::class, fn (array $parameters) => $parameters['post_id'] > 0);
+```
+
+You can also fake with a closure or a sequence:
+
+```php
+use BitMx\DataEntities\PendingQuery;
+use BitMx\DataEntities\Responses\MockResponse;
+use BitMx\DataEntities\Responses\MockResponseSequence;
+
+DataEntity::fake([
+    GetPostDataEntity::class => fn (PendingQuery $query) => MockResponse::make([
+        'id' => $query->parameters()->get('post_id'),
+    ]),
+]);
+
+DataEntity::fake([
+    GetPostDataEntity::class => MockResponseSequence::make(
+        MockResponse::make(['id' => 1]),
+        MockResponse::make(['id' => 2]),
+    ),
+]);
+```
 
 ### Using factories
 

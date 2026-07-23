@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\Factories\FactoryData;
 
 test('creates a new instance of FactoryData', function () {

@@ -7,14 +7,18 @@ namespace BitMx\DataEntities\Factories;
 use BitMx\DataEntities\Enums\ResponseType;
 use Faker\Generator;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 abstract class DataEntityFactory
 {
     protected Generator $faker;
 
     /**
      * @param  array<array-key, mixed>  $attributes
-     * @param  array<array-key, mixed>  $without
+     * @param  array<int, array-key>  $without
      */
     public function __construct(
         protected readonly array $attributes = [],
@@ -36,7 +40,7 @@ abstract class DataEntityFactory
 
     /**
      * @param  array<array-key, mixed>  $attributes
-     * @param  array<array-key, mixed>  $without
+     * @param  array<int, array-key>  $without
      */
     protected function newInstance(
         array $attributes = [],
@@ -141,7 +145,7 @@ abstract class DataEntityFactory
     }
 
     /**
-     * @param  array<array-key, mixed>|string  $attributes
+     * @param  array<int, array-key>|string  $attributes
      */
     public function without(array|string $attributes): static
     {
@@ -162,10 +166,8 @@ abstract class DataEntityFactory
             return $this->getResponseType() === ResponseType::SINGLE ? $data : [$data];
         }
 
-        return collect()
-            ->times($this->times, function () use ($attributes) {
-                return (new CreateFactoryData)($this->state($attributes));
-            })
-            ->all();
+        return Collection::times($this->times, function () use ($attributes) {
+            return (new CreateFactoryData)($this->state($attributes));
+        })->all();
     }
 }

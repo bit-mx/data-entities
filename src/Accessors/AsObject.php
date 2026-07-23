@@ -17,6 +17,16 @@ class AsObject implements Accessable
             return null;
         }
 
-        return json_decode($value);
+        if (is_object($value)) {
+            return $value;
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $decoded = json_decode($value);
+
+        return is_object($decoded) ? $decoded : null;
     }
 }

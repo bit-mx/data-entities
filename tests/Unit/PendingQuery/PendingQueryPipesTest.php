@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\Attributes\UseLazyQuery;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Enums\Method;
 use BitMx\DataEntities\Enums\ResponseType;
+use BitMx\DataEntities\Exceptions\InvalidLazyQueryException;
 use BitMx\DataEntities\PendingQuery;
 
 it('merges the raw store procedure name into statements', function () {
@@ -172,3 +175,27 @@ it('enables lazy collection when UseLazyQuery is present', function () {
 
     expect($pendingQuery->usesLazyCollection())->toBeTrue();
 });
+
+it('throws when UseLazyQuery is combined with output parameters', function () {
+    $dataEntity = new #[UseLazyQuery] class extends DataEntity
+    {
+        protected ?ResponseType $responseType = ResponseType::COLLECTION;
+
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_test';
+        }
+
+        protected function defaultOutputParameters(): array
+        {
+            return [
+                'total' => 'INT',
+            ];
+        }
+    };
+
+    new PendingQuery($dataEntity);
+})->throws(
+    InvalidLazyQueryException::class,
+    'Lazy collection cannot be used with output parameters'
+);

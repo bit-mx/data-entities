@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\Accessors\AsDecimal as AccessorAsDecimal;
 use BitMx\DataEntities\Accessors\AsInteger;
 use BitMx\DataEntities\Attributes\SingleItemResponse;

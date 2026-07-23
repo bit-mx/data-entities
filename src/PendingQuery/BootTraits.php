@@ -55,6 +55,7 @@ readonly class BootTraits
             return;
         }
 
-        $dataEntity->{$bootMethodName}($pendingQuery);
+        $method = new \ReflectionMethod($dataEntity, $bootMethodName);
+        $method->invoke($dataEntity, $pendingQuery);
     }
 }

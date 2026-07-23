@@ -1,11 +1,22 @@
 parameters:
-    ignoreErrors:
-        -
-            message: "#^Unsafe usage of new static\\(\\)\\.$#"
-            path: src/Factories/DataEntityFactory.php
-        -
-            identifier:  trait.unused
-            path: src\Plugins\HasCache.php
-        -
-            identifier:  trait.unused
-            path: src\Plugins\AlwaysThrowOnError.php
+	ignoreErrors:
+		# Factory API mirrors Laravel: concrete subclasses call static::new().
+		# The abstract base cannot be instantiated; consumers never call it directly.
+		-
+			identifier: new.staticInAbstractClassStaticMethod
+			path: src/Factories/DataEntityFactory.php
+		# Opt-in plugins are used by consuming apps (and package tests) via `use`.
+		# When tests are analysed the trait.unused rule may not fire — keep the
+		# ignore anyway so src-only runs stay green.
+		-
+			identifier: trait.unused
+			path: src/Plugins/HasCache.php
+			reportUnmatched: false
+		-
+			identifier: trait.unused
+			path: src/Plugins/AlwaysThrowOnError.php
+			reportUnmatched: false
+		-
+			identifier: trait.unused
+			path: src/Plugins/HasRetries.php
+			reportUnmatched: false

@@ -33,6 +33,8 @@ class DataEntitiesServiceProvider extends ServiceProvider
             Commands\MakeDataEntityFactory::class,
             Commands\MakeDataEntityMutator::class,
             Commands\MakeDataEntityAccessor::class,
+            Commands\ListDataEntities::class,
+            Commands\CheckDataEntities::class,
         ]);
     }
 }

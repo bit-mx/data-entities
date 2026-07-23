@@ -22,9 +22,23 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          tools: composer:v2, phpstan
+          tools: composer:v2
+          coverage: none
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-php-${{ matrix.php }}-
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Cache PHPStan result cache
+        uses: actions/cache@v4
+        with:
+          path: .phpstan-cache
+          key: phpstan-${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('composer.lock', 'composer.json', 'phpstan.dist.neon', 'phpstan-baseline.neon', 'phpstan-tests.neon', 'src/**/*.php', 'tests/**/*.php') }}
+          restore-keys: |
+            phpstan-${{ runner.os }}-php-${{ matrix.php }}-
       - name: Run phpstan
-        run: vendor/bin/phpstan analyse  -c phpstan.dist.neon src --error-format=github
-
+        run: vendor/bin/phpstan analyse -c phpstan.dist.neon --memory-limit=1G --error-format=github

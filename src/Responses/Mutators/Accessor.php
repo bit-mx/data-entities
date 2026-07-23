@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BitMx\DataEntities\Responses\Mutators;
 
+use BackedEnum;
 use BitMx\DataEntities\Contracts\Accessable;
 use BitMx\DataEntities\Exceptions\InvalidAccessorException;
 
@@ -29,9 +30,6 @@ final readonly class Accessor
         return new self($value, $key, $accessors, $data);
     }
 
-    /**
-     * @return string|int|bool|float|\DateTime|\DateTimeImmutable|\BackedEnum|null
-     */
     public function transform(): mixed
     {
         if (! array_key_exists($this->key, $this->accessors)) {
@@ -39,6 +37,10 @@ final readonly class Accessor
         }
 
         $class = $this->accessors[$this->key];
+
+        if (! is_string($class) || $class === '') {
+            throw new InvalidAccessorException("The accessor for parameter {$this->key} is invalid");
+        }
 
         if (array_key_exists($class, AccessorsAlias::get())) {
             $class = AccessorsAlias::get()[$class];
@@ -51,6 +53,14 @@ final readonly class Accessor
         $reflectionClass = new \ReflectionClass($class);
 
         if ($reflectionClass->isEnum()) {
+            if (! is_a($class, BackedEnum::class, true)) {
+                throw new InvalidAccessorException("The class {$class} must be a BackedEnum");
+            }
+
+            if (! is_string($this->value) && ! is_int($this->value)) {
+                return null;
+            }
+
             return $class::tryFrom($this->value);
         }
 
@@ -58,10 +68,11 @@ final readonly class Accessor
             throw new InvalidAccessorException("The class {$class} must implement the Accessable interface");
         }
 
-        /**
-         * @var Accessable $accessor
-         */
         $accessor = new $class;
+
+        if (! $accessor instanceof Accessable) {
+            throw new InvalidAccessorException("The class {$class} must implement the Accessable interface");
+        }
 
         return $accessor->get(
             key: $this->key,

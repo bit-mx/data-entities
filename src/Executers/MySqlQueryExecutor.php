@@ -23,12 +23,6 @@ class MySqlQueryExecutor extends AbstractQueryExecutor
 
         $params = $inputParams->merge($outputParams)->implode(', ');
 
-        $call = sprintf('%s(%s);', $this->compileProcedureCall($procedure), $params);
-
-        return (string) str(sprintf(
-            '%s %s',
-            $call,
-            $this->appendOutputParametersStatements($pendingQuery),
-        ))->trim();
+        return sprintf('%s(%s);', $this->compileProcedureCall($procedure), $params);
     }
 }

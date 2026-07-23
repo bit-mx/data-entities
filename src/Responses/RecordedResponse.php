@@ -20,8 +20,8 @@ class RecordedResponse implements JsonSerializable
     public static function fromResponse(Response $response): self
     {
         return new self(
-            $response->data(),
-            $response->output(),
+            $response->rawData(),
+            $response->rawOutput(null, null),
         );
     }
 

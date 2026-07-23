@@ -17,6 +17,10 @@ class AsString implements Accessable
             return null;
         }
 
+        if (! is_scalar($value)) {
+            return null;
+        }
+
         return strval($value);
     }
 }

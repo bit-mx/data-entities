@@ -32,6 +32,10 @@ class AsDateTimeFormated implements Mutable
 
         $format = $this->attributes[0] ?? 'Y-m-d H:i:s';
 
+        if (! is_string($format)) {
+            $format = 'Y-m-d H:i:s';
+        }
+
         return $value->format($format);
     }
 }

@@ -16,8 +16,10 @@ class LazyQueryStrategy implements QueryStrategyContract
      */
     public function execute(Connection $client, string $query, array $params = []): LazyCollection
     {
-        $responseData = $client->cursor($query, $params);
-
-        return LazyCollection::make(fn () => $responseData);
+        return LazyCollection::make(function () use ($client, $query, $params) {
+            foreach ($client->cursor($query, $params) as $row) {
+                yield $row;
+            }
+        });
     }
 }

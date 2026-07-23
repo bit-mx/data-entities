@@ -28,10 +28,22 @@ class SqlServerQueryExecutor extends AbstractQueryExecutor
 
         $exec = $storeProcedure.' ';
 
-        $params = $keys->map(fn (string $key) => sprintf('@%s = :%s', $key, $key));
+        $params = $keys->map(function (mixed $key): string {
+            if (! is_string($key)) {
+                return '';
+            }
+
+            return sprintf('@%s = :%s', $key, $key);
+        });
 
         $outputParams = $pendingQuery->outputParameters()->keys()
-            ->map(fn (string $key) => sprintf('@%s = @%s OUTPUT', $key, $key));
+            ->map(function (mixed $key): string {
+                if (! is_string($key)) {
+                    return '';
+                }
+
+                return sprintf('@%s = @%s OUTPUT', $key, $key);
+            });
 
         $exec .= $params->merge($outputParams)->implode(', ');
 
@@ -52,7 +64,11 @@ class SqlServerQueryExecutor extends AbstractQueryExecutor
 
         $outputParameters = $pendingQuery->outputParameters()->toCollection();
 
-        return $outputParameters->map(function (string $value, string $key) {
+        return $outputParameters->map(function (mixed $value, mixed $key): string {
+            if (! is_string($key) || ! is_string($value)) {
+                return '';
+            }
+
             return sprintf('DECLARE @%s %s;', $key, $value);
         })->implode("\n");
     }

@@ -4,8 +4,9 @@
 
 ### Conventions
 
-- Put Data Entity classes in `app/DataEntities`.
+- Put Data Entity classes in `app/DataEntities` (optionally `app/DataEntities/{System}/` per legacy system).
 - Extend `BitMx\DataEntities\DataEntity` and implement `resolveStoreProcedure(): string`.
+- For multi-system apps, create an abstract base per system (`ErpDataEntity`, `CrmDataEntity`) that fixes `resolveDatabaseConnection()` (and executor if needed); concrete entities extend that base.
 - Override `defaultParameters(): array` (protected) for input parameters.
 - Default response shape is a collection. Use `#[SingleItemResponse]` for a single row.
 - Do NOT use removed v3 APIs: `$method`, `$responseType`, or `BitMx\DataEntities\Enums\Method`.
@@ -14,9 +15,12 @@
 ### Artisan commands
 
 - `php artisan make:data-entity {name}`
+- `php artisan make:data-entity {name} --from-procedure=spName --connection=sqlsrv`
 - `php artisan make:data-entity-factory {name}`
 - `php artisan make:data-entity-mutator {name}`
 - `php artisan make:data-entity-accessor {name}`
+- `php artisan data-entities:list` — inventory entities → procedure/connection
+- `php artisan data-entities:check` — detect drift vs DB procedure signatures
 
 ### Core usage
 
@@ -69,9 +73,12 @@ DataEntity::assertExecutedOnce(GetPostDataEntity::class);
 
 - Prefer mutators (`mutators()`) for input casts and accessors (`accessors()`) for response casts.
 - Use `alias()` to rename SQL columns before accessors run.
+- Map rows to DTOs with `#[MapTo(PostData::class)]` (single) or `#[MapTo(PostData::class, Collection::class)]` (Laravel collection); read via `$response->dto()`. Manual `createDtoFromResponse()` always wins over `#[MapTo]`.
 - Use `defaultOutputParameters()` for stored procedure output params; read them with `$response->output()`. On SQL Server they map to `DECLARE`/`OUTPUT`; on MySQL they map to session variables (the declared SQL type is ignored).
 - Override `resolveQueryExecutor(): ?string` on a Data Entity to force a specific query executor; otherwise it is resolved from the connection driver.
+- For multi-entity atomic work on one connection, use `DataEntity::transaction(fn () => ..., connection: 'sqlsrv')` or `DB::connection(...)->transaction(...)`.
 - Use `AlwaysThrowOnError` when failures should throw automatically.
 - For caching, implement `Cacheable` and use the `HasCache` trait; call `invalidateCache()` / `disableCaching()` on the Data Entity instance, not on the Response.
-- For large result sets, use `#[UseLazyQuery]` and `$response->lazy()` (incompatible with `#[SingleItemResponse]`).
+- For transient DB failures (deadlocks/timeouts), use the `HasRetries` plugin; override `retryBackoff()` with a `CarbonInterval` (or ms int).
+- For large result sets, use `#[UseLazyQuery]` with `$response->stream()` (single-pass, prefer for large sets — `lazy()` remembers rows after the first pass and can grow to full result-set memory). `$response->lazy()` is re-iterable for moderate sets. Incompatible with `#[SingleItemResponse]` and output parameters. If a stream was already consumed, use `lazy()` up front or `execute()` again.
 - Activate the `data-entities-development` skill for detailed patterns.

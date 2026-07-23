@@ -9,7 +9,7 @@ readonly class FactoryData
     /**
      * @param  array<array-key, mixed>  $definition
      * @param  array<array-key, mixed>  $attributes
-     * @param  array<array-key, mixed>  $without
+     * @param  array<int, array-key>  $without
      * @param  array<array-key, mixed>  $output
      */
     public function __construct(

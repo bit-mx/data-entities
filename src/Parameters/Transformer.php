@@ -43,9 +43,17 @@ final class Transformer
 
         $mutator = $this->getRule();
 
+        if ($mutator === null || $mutator === '') {
+            throw new InvalidMutatorException("The mutator for parameter {$this->key} is invalid");
+        }
+
         $pieces = str($mutator)->explode(':', 2);
 
         $class = $pieces->first();
+
+        if (! is_string($class) || $class === '') {
+            throw new InvalidMutatorException("The mutator for parameter {$this->key} is invalid");
+        }
 
         $attributes = $pieces->count() > 1 ? explode(',', $pieces->get(1, '')) : [];
 
@@ -60,6 +68,10 @@ final class Transformer
         $reflectionClass = new \ReflectionClass($class);
 
         if ($reflectionClass->isEnum()) {
+            if (! $this->value instanceof \BackedEnum) {
+                throw new InvalidParameterValueException("The value of the parameter {$this->key} must be a BackedEnum instance");
+            }
+
             return $this->value->value;
         }
 
@@ -67,12 +79,19 @@ final class Transformer
             throw new InvalidMutatorException("The class {$mutator} must implement the Mutable interface");
         }
 
-        /**
-         * @var Mutable $transformer
-         */
         $transformer = new $class(...$attributes);
 
-        return $transformer->transform($this->key, $this->value, Arr::except($this->parameters, $this->key));
+        if (! $transformer instanceof Mutable) {
+            throw new InvalidMutatorException("The class {$mutator} must implement the Mutable interface");
+        }
+
+        $transformed = $transformer->transform($this->key, $this->value, Arr::except($this->parameters, $this->key));
+
+        if (! is_string($transformed) && ! is_int($transformed) && ! is_bool($transformed) && ! is_float($transformed) && ! is_null($transformed)) {
+            throw new InvalidParameterValueException("The value of the parameter {$this->key} must be a scalar value");
+        }
+
+        return $transformed;
     }
 
     protected function getRule(): ?string
@@ -94,6 +113,8 @@ final class Transformer
             throw new InvalidParameterValueException("The value of the parameter {$this->key} must be a scalar value");
         }
 
-        return $this->transformers[$this->key];
+        $rule = $this->transformers[$this->key];
+
+        return is_string($rule) ? $rule : null;
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\Stores\ArrayStore;
 use BitMx\DataEntities\Stores\ParameterStore;
 use BitMx\DataEntities\Stores\StatementStore;
@@ -41,6 +43,14 @@ it('converts ArrayStore to collection, array and object', function () {
         ->and($store->toArray())->toBe(['a' => 1, 'b' => 2])
         ->and($store->toCollection())->toBeInstanceOf(Collection::class)
         ->and($store->toObject())->toEqual((object) ['a' => 1, 'b' => 2]);
+});
+
+it('prepends values to ArrayStore', function () {
+    $store = new ArrayStore(['b' => 2]);
+
+    $store->prepend(1, 'a');
+
+    expect($store->all())->toBe(['a' => 1, 'b' => 2]);
 });
 
 it('supports ArrayAccess on ArrayStore', function () {

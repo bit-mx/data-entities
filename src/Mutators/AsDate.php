@@ -32,6 +32,10 @@ class AsDate implements Mutable
 
         $format = $this->attributes[0] ?? 'Y-m-d';
 
+        if (! is_string($format)) {
+            $format = 'Y-m-d';
+        }
+
         return $value->format($format);
     }
 }
