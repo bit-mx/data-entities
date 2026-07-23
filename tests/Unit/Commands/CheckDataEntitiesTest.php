@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\Introspection\Contracts\ProcedureIntrospectorContract;
 use BitMx\DataEntities\Introspection\ProcedureIntrospectorResolver;
 use BitMx\DataEntities\Introspection\ProcedureParameter;

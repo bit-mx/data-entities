@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\Generators\DataEntityGenerator;
 use BitMx\DataEntities\Introspection\ProcedureParameter;
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use BitMx\DataEntities\Stores\ArrayStore;
 use BitMx\DataEntities\Stores\ParameterStore;
 use BitMx\DataEntities\Stores\StatementStore;

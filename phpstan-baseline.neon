@@ -5,14 +5,18 @@ parameters:
 		-
 			identifier: new.staticInAbstractClassStaticMethod
 			path: src/Factories/DataEntityFactory.php
-		# Opt-in plugins are used by consuming apps via `use HasCache` / etc.
-		# PHPStan only analyses this package, so the traits appear unused here.
+		# Opt-in plugins are used by consuming apps (and package tests) via `use`.
+		# When tests are analysed the trait.unused rule may not fire — keep the
+		# ignore anyway so src-only runs stay green.
 		-
 			identifier: trait.unused
 			path: src/Plugins/HasCache.php
+			reportUnmatched: false
 		-
 			identifier: trait.unused
 			path: src/Plugins/AlwaysThrowOnError.php
+			reportUnmatched: false
 		-
 			identifier: trait.unused
 			path: src/Plugins/HasRetries.php
+			reportUnmatched: false

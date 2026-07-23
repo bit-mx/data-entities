@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .phpstan-cache
-          key: phpstan-${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('composer.lock', 'phpstan.dist.neon', 'phpstan-baseline.neon', 'src/**/*.php') }}
+          key: phpstan-${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('composer.lock', 'composer.json', 'phpstan.dist.neon', 'phpstan-baseline.neon', 'phpstan-tests.neon', 'src/**/*.php', 'tests/**/*.php') }}
           restore-keys: |
             phpstan-${{ runner.os }}-php-${{ matrix.php }}-
       - name: Run phpstan

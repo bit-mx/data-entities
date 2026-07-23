@@ -1,0 +1,228 @@
+# Noise from Pest/Mockery/anonymous classes when analysing tests/.
+# Keep src/ free of these ignores.
+parameters:
+	ignoreErrors:
+		-
+			identifier: method.internalClass
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: property.notFound
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: method.notFound
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: offsetAccess.nonOffsetAccessible
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: method.nonObject
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: property.nonObject
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: return.unusedType
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: typeCoverage.paramTypeCoverage
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: typeCoverage.returnTypeCoverage
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: typeCoverage.propertyTypeCoverage
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: typeCoverage.constantTypeCoverage
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: missingType.return
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: missingType.parameter
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: staticMethod.dynamicCall
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: argument.templateType
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: argument.type
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: return.type
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: empty.notAllowed
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: booleanNot.exprNotBoolean
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: ternary.shortNotAllowed
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: cast.useless
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: cast.string
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: cast.int
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: function.alreadyNarrowedType
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: function.impossibleType
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: method.dynamicName
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: encapsedStringPart.nonString
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: varTag.type
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: method.childParameterType
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: assign.propertyType
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
+		-
+			identifier: new.staticInAbstractClassStaticMethod
+			paths:
+				- tests/*
+				- tests/*/*
+				- tests/*/*/*
+			reportUnmatched: false
