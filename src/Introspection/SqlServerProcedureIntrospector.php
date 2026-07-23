@@ -86,7 +86,7 @@ class SqlServerProcedureIntrospector implements ProcedureIntrospectorContract
     }
 
     /**
-     * @param  array{data_type: string, max_length: int, precision: int, scale: int}  $row
+     * @param  array{parameter_name?: string, data_type: string, max_length: int, precision: int, scale: int, is_output?: int|bool}  $row
      */
     protected function formatSqlType(array $row): string
     {
