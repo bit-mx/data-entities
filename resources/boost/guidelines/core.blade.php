@@ -73,6 +73,7 @@ DataEntity::assertExecutedOnce(GetPostDataEntity::class);
 
 - Prefer mutators (`mutators()`) for input casts and accessors (`accessors()`) for response casts.
 - Use `alias()` to rename SQL columns before accessors run.
+- Map rows to DTOs with `#[MapTo(PostData::class)]` (single) or `#[MapTo(PostData::class, Collection::class)]` (Laravel collection); read via `$response->dto()`. Manual `createDtoFromResponse()` always wins over `#[MapTo]`.
 - Use `defaultOutputParameters()` for stored procedure output params; read them with `$response->output()`. On SQL Server they map to `DECLARE`/`OUTPUT`; on MySQL they map to session variables (the declared SQL type is ignored).
 - Override `resolveQueryExecutor(): ?string` on a Data Entity to force a specific query executor; otherwise it is resolved from the connection driver.
 - For multi-entity atomic work on one connection, use `DataEntity::transaction(fn () => ..., connection: 'sqlsrv')` or `DB::connection(...)->transaction(...)`.

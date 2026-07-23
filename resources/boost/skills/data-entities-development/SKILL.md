@@ -19,7 +19,7 @@ Use this skill when creating, updating, or testing classes that extend `BitMx\Da
 - Query/response middleware and boot hooks
 - Plugins: `AlwaysThrowOnError`, `HasCache`, `HasRetries`
 - Lazy queries via `#[UseLazyQuery]`
-- DTOs via `createDtoFromResponse()`
+- DTOs via `#[MapTo]` or `createDtoFromResponse()`
 - Testing via `DataEntity::fake()`, assertions, and factories
 - Runtime events: `DataEntityExecuted`, `DataEntityFailed` (real DB executions only)
 
@@ -321,6 +321,35 @@ $posts = $response->stream(); // single-pass; does not accumulate the full set
 - For true MySQL streaming, set `PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false` on the connection (PDO buffers by default even with `stream()`).
 
 ## DTOs
+
+### `#[MapTo]` (automatic)
+
+Constructor parameter names must match response row keys (after aliases/accessors). Missing keys → parameter default or `null`.
+
+```php
+use BitMx\DataEntities\Attributes\MapTo;
+use BitMx\DataEntities\Attributes\SingleItemResponse;
+use Illuminate\Support\Collection;
+
+// Single DTO
+#[SingleItemResponse]
+#[MapTo(PostData::class)]
+class GetPostDataEntity extends DataEntity { /* ... */ }
+
+/** @var PostData $post */
+$post = (new GetPostDataEntity(1))->execute()->dto();
+
+// Collection of DTOs (Laravel Collection or compatible subclass)
+#[MapTo(PostData::class, Collection::class)]
+class GetPostsDataEntity extends DataEntity { /* ... */ }
+
+/** @var Collection<int, PostData> $posts */
+$posts = (new GetPostsDataEntity())->execute()->dto();
+```
+
+### Manual override
+
+If you define `createDtoFromResponse()`, it **always wins** over `#[MapTo]` (nested objects, Spatie Data, custom logic):
 
 ```php
 public function createDtoFromResponse(Response $response): PostData

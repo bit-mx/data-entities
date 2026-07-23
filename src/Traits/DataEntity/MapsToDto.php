@@ -22,10 +22,16 @@ trait MapsToDto
             return null;
         }
 
+        $mapTo = $attributes[0]->newInstance();
+
         /** @var class-string $dtoClass */
-        $dtoClass = $attributes[0]->newInstance()->class;
+        $dtoClass = $mapTo->class;
         /** @var array<array-key, mixed> $data */
         $data = $response->data();
+
+        if ($mapTo->collection !== null) {
+            return $this->instantiateMappedCollection($dtoClass, $mapTo->collection, $data);
+        }
 
         if ($data !== [] && array_is_list($data)) {
             $data = $data[0] ?? [];
@@ -33,6 +39,43 @@ trait MapsToDto
 
         /** @var array<array-key, mixed> $data */
         return $this->instantiateMappedDto($dtoClass, $data);
+    }
+
+    /**
+     * @param  class-string  $dtoClass
+     * @param  class-string  $collectionClass
+     * @param  array<array-key, mixed>  $data
+     */
+    protected function instantiateMappedCollection(string $dtoClass, string $collectionClass, array $data): mixed
+    {
+        $rows = $this->rowsForMappedCollection($data);
+
+        $dtos = [];
+
+        foreach ($rows as $row) {
+            $dtos[] = $this->instantiateMappedDto($dtoClass, $row);
+        }
+
+        return new $collectionClass($dtos);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $data
+     * @return list<array<array-key, mixed>>
+     */
+    protected function rowsForMappedCollection(array $data): array
+    {
+        if ($data === []) {
+            return [];
+        }
+
+        if (array_is_list($data)) {
+            /** @var list<array<array-key, mixed>> $data */
+            return $data;
+        }
+
+        /** @var array<array-key, mixed> $data */
+        return [$data];
     }
 
     /**

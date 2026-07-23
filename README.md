@@ -1231,27 +1231,20 @@ On MySQL, PDO buffers result sets by default. For true streaming, configure the 
 
 ## Data Transfer objects
 
-You can use Data Transfer objects to map the data returned by the stored procedure to a PHP object.
+Map stored-procedure rows into PHP objects and read them with `$response->dto()`.
 
-For a quick mapping into a constructor-based DTO, add the optional `#[MapTo]` attribute.
-If the entity also overrides `createDtoFromResponse()`, the manual override always wins:
+### `#[MapTo]` — automatic mapping
 
-```php
-use App\Data\PostData;
-use BitMx\DataEntities\Attributes\MapTo;
-use BitMx\DataEntities\Attributes\SingleItemResponse;
-use BitMx\DataEntities\DataEntity;
+`#[MapTo]` is an optional shortcut: the package reflects the DTO constructor and fills each parameter from the matching key in the response row (after aliases and accessors). Calling `$response->dto()` runs that mapping.
 
-#[SingleItemResponse]
-#[MapTo(PostData::class)]
-class GetPostDataEntity extends DataEntity
-{
-    public function resolveStoreProcedure(): string
-    {
-        return 'spListPost';
-    }
-}
-```
+**DTO rules:**
+
+- Prefer a constructor-based class; parameter names must match the row keys (`id`, `title`, …).
+- Missing keys use the parameter’s default value when available, otherwise `null`.
+
+#### Single item
+
+Combine `#[SingleItemResponse]` with `#[MapTo(Dto::class)]`:
 
 ```php
 namespace App\Data;
@@ -1271,6 +1264,74 @@ class PostData
 namespace App\DataEntities;
 
 use App\Data\PostData;
+use BitMx\DataEntities\Attributes\MapTo;
+use BitMx\DataEntities\Attributes\SingleItemResponse;
+use BitMx\DataEntities\DataEntity;
+
+#[SingleItemResponse]
+#[MapTo(PostData::class)]
+class GetPostDataEntity extends DataEntity
+{
+    public function __construct(protected int $postId) {}
+
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListPost';
+    }
+
+    protected function defaultParameters(): array
+    {
+        return ['post_id' => $this->postId];
+    }
+}
+```
+
+```php
+/** @var PostData $post */
+$post = (new GetPostDataEntity(1))->execute()->dto();
+```
+
+#### Collection of DTOs
+
+Pass Laravel’s `Illuminate\Support\Collection` (or a compatible subclass) as the second argument. Each row becomes a DTO and the result is wrapped in that collection class:
+
+```php
+namespace App\DataEntities;
+
+use App\Data\PostData;
+use BitMx\DataEntities\Attributes\MapTo;
+use BitMx\DataEntities\DataEntity;
+use Illuminate\Support\Collection;
+
+#[MapTo(PostData::class, Collection::class)]
+class GetPostsDataEntity extends DataEntity
+{
+    public function resolveStoreProcedure(): string
+    {
+        return 'spListPosts';
+    }
+}
+```
+
+```php
+/** @var Collection<int, PostData> $posts */
+$posts = (new GetPostsDataEntity())->execute()->dto();
+
+$posts->each(fn (PostData $post) => /* ... */);
+```
+
+Empty result sets yield an empty collection. A single-item response with a collection class yields a collection of one DTO.
+
+Any class constructible as `new $collectionClass($items)` works (for example `Illuminate\Database\Eloquent\Collection`).
+
+### Manual `createDtoFromResponse()`
+
+For nested objects, Spatie Data, custom transforms, or anything beyond constructor key matching, override `createDtoFromResponse()`. **A manual override always wins over `#[MapTo]`.**
+
+```php
+namespace App\DataEntities;
+
+use App\Data\PostData;
 use BitMx\DataEntities\Attributes\SingleItemResponse;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Responses\Response;
@@ -1278,23 +1339,16 @@ use BitMx\DataEntities\Responses\Response;
 #[SingleItemResponse]
 class GetPostDataEntity extends DataEntity
 {
-    public function __construct(
-        protected int $postId,
-    ) {
-    }
+    public function __construct(protected int $postId) {}
 
-    #[\Override]
     public function resolveStoreProcedure(): string
     {
         return 'spListPost';
     }
 
-    #[\Override]
     protected function defaultParameters(): array
     {
-        return [
-            'post_id' => $this->postId,
-        ];
+        return ['post_id' => $this->postId];
     }
 
     public function createDtoFromResponse(Response $response): PostData
@@ -1310,17 +1364,9 @@ class GetPostDataEntity extends DataEntity
 }
 ```
 
-You can get the DTO from the response using the `dto` method.
-
 ```php
-use App\DataEntities\GetPostDataEntity;
-
-$dataEntity = new GetPostDataEntity(1);
-
-$response = $dataEntity->execute();
-
 /** @var PostData $post */
-$post = $response->dto();
+$post = (new GetPostDataEntity(1))->execute()->dto();
 ```
 
 ## Debugging
