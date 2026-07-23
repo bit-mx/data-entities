@@ -183,7 +183,7 @@ class Processor implements ProcessorContract
      */
     protected function createDataArray(array $data): array
     {
-        if (empty($data)) {
+        if ($data === []) {
             return [];
         }
 

@@ -44,7 +44,9 @@ class MakeDataEntity extends GeneratorCommand
         $name = $this->qualifyClass($this->getNameInput());
         $path = $this->getPath($name);
 
-        if ((! $this->hasOption('force') || ! $this->option('force')) && $this->alreadyExists($this->getNameInput())) {
+        $force = $this->option('force');
+
+        if ($force !== true && $this->alreadyExists($this->getNameInput())) {
             $this->components->error($this->type.' already exists.');
 
             return false;

@@ -55,7 +55,7 @@ class ArrayStore implements \ArrayAccess, \Countable, DataStore
     #[\Override]
     public function isEmpty(): bool
     {
-        return empty($this->items);
+        return $this->items === [];
     }
 
     /**

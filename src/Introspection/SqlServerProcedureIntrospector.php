@@ -93,17 +93,17 @@ class SqlServerProcedureIntrospector implements ProcedureIntrospectorContract
         $type = strtoupper($row['data_type']);
 
         if (in_array($type, ['NVARCHAR', 'VARCHAR', 'CHAR', 'NCHAR', 'VARBINARY'], true)) {
-            $length = (int) $row['max_length'];
+            $length = $row['max_length'];
 
             if (in_array($type, ['NVARCHAR', 'NCHAR'], true) && $length > 0) {
-                $length = (int) ($length / 2);
+                $length = intdiv($length, 2);
             }
 
             return $length > 0 ? sprintf('%s(%d)', $type, $length) : $type;
         }
 
         if (in_array($type, ['DECIMAL', 'NUMERIC'], true)) {
-            return sprintf('%s(%d,%d)', $type, (int) $row['precision'], (int) $row['scale']);
+            return sprintf('%s(%d,%d)', $type, $row['precision'], $row['scale']);
         }
 
         return $type;

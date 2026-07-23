@@ -75,7 +75,7 @@ trait HasMutatedData
             return $data;
         }
 
-        if (empty($data)) {
+        if ($data === []) {
             return [];
         }
 

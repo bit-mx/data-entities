@@ -36,7 +36,7 @@ readonly class CacheDriver implements CacheStore
     {
         $data = $this->driver()->get($key);
 
-        if (empty($data)) {
+        if ($data === null || $data === '') {
             return null;
         }
 

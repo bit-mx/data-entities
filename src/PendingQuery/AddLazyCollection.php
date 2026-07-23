@@ -49,6 +49,6 @@ readonly class AddLazyCollection
 
         $attributes = $reflection->getAttributes(UseLazyQuery::class);
 
-        return ! empty($attributes);
+        return $attributes !== [];
     }
 }

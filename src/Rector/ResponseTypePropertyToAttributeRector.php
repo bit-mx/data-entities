@@ -81,11 +81,13 @@ final class ResponseTypePropertyToAttributeRector extends AbstractRector
     /**
      * Este es el método principal donde ocurre la magia.
      * Se ejecuta para cada nodo del tipo que especificamos arriba (cada Class_).
-     *
-     * @param  Class_  $node  El nodo de la clase actual que se está analizando.
      */
     public function refactor(Node $node): ?Node
     {
+        if (! $node instanceof Class_) {
+            return null;
+        }
+
         // 1. Validar si la clase hereda de DataEntity.
         if ($node->extends === null) {
             return null;

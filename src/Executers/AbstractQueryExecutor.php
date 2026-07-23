@@ -47,7 +47,7 @@ abstract class AbstractQueryExecutor implements QueryExecutorContract
 
     protected function assertValidProcedureName(string $procedure): void
     {
-        if ($procedure === '' || ! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/', $procedure)) {
+        if ($procedure === '' || preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/', $procedure) !== 1) {
             throw new InvalidIdentifierException(
                 sprintf('Invalid stored procedure name [%s].', $procedure)
             );
@@ -56,7 +56,7 @@ abstract class AbstractQueryExecutor implements QueryExecutorContract
 
     protected function assertValidParameterName(string $name): void
     {
-        if ($name === '' || ! preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $name)) {
+        if ($name === '' || preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $name) !== 1) {
             throw new InvalidIdentifierException(
                 sprintf('Invalid parameter name [%s].', $name)
             );
@@ -65,7 +65,7 @@ abstract class AbstractQueryExecutor implements QueryExecutorContract
 
     protected function assertValidSqlType(string $type): void
     {
-        if ($type === '' || ! preg_match('/^[A-Za-z][A-Za-z0-9_]*(\s*\(\s*\d+(\s*,\s*\d+)?\s*\))?$/i', $type)) {
+        if ($type === '' || preg_match('/^[A-Za-z][A-Za-z0-9_]*(\s*\(\s*\d+(\s*,\s*\d+)?\s*\))?$/i', $type) !== 1) {
             throw new InvalidIdentifierException(
                 sprintf('Invalid SQL type [%s].', $type)
             );

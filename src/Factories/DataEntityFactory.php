@@ -7,6 +7,7 @@ namespace BitMx\DataEntities\Factories;
 use BitMx\DataEntities\Enums\ResponseType;
 use Faker\Generator;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
 abstract class DataEntityFactory
 {
@@ -162,10 +163,8 @@ abstract class DataEntityFactory
             return $this->getResponseType() === ResponseType::SINGLE ? $data : [$data];
         }
 
-        return collect()
-            ->times($this->times, function () use ($attributes) {
-                return (new CreateFactoryData)($this->state($attributes));
-            })
-            ->all();
+        return Collection::times($this->times, function () use ($attributes) {
+            return (new CreateFactoryData)($this->state($attributes));
+        })->all();
     }
 }

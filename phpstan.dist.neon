@@ -6,8 +6,11 @@ parameters:
     paths:
         - src
     checkOctaneCompatibility: true
+    tmpDir: .phpstan-cache
 
     type_coverage:
         return: 100
         param: 100
         property: 100
+        constant: 100
+        declare: 100

@@ -52,11 +52,12 @@ final class RemoveMethodFromDataEntityRector extends AbstractRector
         return [Class_::class];
     }
 
-    /**
-     * @param  Class_  $node
-     */
     public function refactor(Node $node): ?Node
     {
+        if (! $node instanceof Class_) {
+            return null;
+        }
+
         // Verificar si la clase extiende de DataEntity
         if (! $this->isObjectType($node, new ObjectType(DataEntity::class))) {
             return null;

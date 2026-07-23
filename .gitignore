@@ -4,6 +4,7 @@
 vendor
 
 composer.lock
+.phpstan-cache
 
 /.fleet
 /.idea

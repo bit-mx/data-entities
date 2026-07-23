@@ -56,9 +56,11 @@ class MySqlProcedureIntrospector implements ProcedureIntrospectorContract
             $data = (array) $row;
             $mode = strtoupper($data['PARAMETER_MODE']);
 
+            $dtdIdentifier = $data['DTD_IDENTIFIER'];
+
             $parameters[] = new ProcedureParameter(
                 name: $data['PARAMETER_NAME'],
-                sqlType: strtoupper((string) ($data['DTD_IDENTIFIER'] ?: $data['DATA_TYPE'])),
+                sqlType: strtoupper($dtdIdentifier !== null && $dtdIdentifier !== '' ? $dtdIdentifier : $data['DATA_TYPE']),
                 isOutput: in_array($mode, ['OUT', 'INOUT'], true),
                 isInput: in_array($mode, ['IN', 'INOUT'], true),
             );
@@ -70,7 +72,8 @@ class MySqlProcedureIntrospector implements ProcedureIntrospectorContract
     protected function unqualifiedName(string $procedure): string
     {
         $parts = explode('.', $procedure);
+        $last = end($parts);
 
-        return end($parts) ?: $procedure;
+        return $last !== '' ? $last : $procedure;
     }
 }
