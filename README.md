@@ -104,7 +104,9 @@ This package is compatible with Laravel 11.x, 12.x, and 13.x.
 
 It requires PHP 8.4 or above.
 
-CI runs Pest against PHP 8.4/8.5 and Laravel 11/12/13.
+> Laravel 11 is past security support. Prefer Laravel 12 or 13 for new apps; CI still runs Laravel 11 for compatibility.
+
+CI runs Pest against PHP 8.4/8.5 and Laravel 11/12/13 (PHP 8.5 × Laravel 11 excluded).
 
 MySQL integration tests live in `tests/Integration` and run in CI against a real MySQL service.
 Locally:
