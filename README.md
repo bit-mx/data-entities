@@ -418,7 +418,7 @@ The `execute` method returns a Response object that contains the data returned b
 Stored procedure output parameters are supported via `defaultOutputParameters()`. Map each output parameter name to its SQL type.
 
 - On **SQL Server**, the package will `DECLARE` the variables, pass them as `OUTPUT`, and select them back into `$response->output()`.
-- On **MySQL**, the package passes them as session variables (`CALL sp(:param, @out); SELECT @out AS out;`). The declared SQL type is ignored because MySQL does not require a `DECLARE` statement.
+- On **MySQL**, the package passes them as session variables (`CALL sp(:param, @out)`) and then reads them with a separate `SELECT @out AS out` after the call. The declared SQL type is ignored because MySQL does not require a `DECLARE` statement.
 
 ```php
 namespace App\DataEntities;

@@ -84,9 +84,10 @@ class Processor implements ProcessorContract
             if ($result instanceof LazyCollection) {
                 $lazyCollection = $result;
             } else {
-                $responseData = $this->createDataArray($result);
-                $data = $this->createData($responseData);
-                $output = $this->createOutput($responseData);
+                $resultSets = $this->appendMySqlOutputResultSets($client, $result);
+                $resultSets = $this->normalizeResultSets($resultSets);
+                $data = $this->createData($resultSets);
+                $output = $this->createOutput($resultSets);
             }
 
             $isSuccess = true;
@@ -178,10 +179,35 @@ class Processor implements ProcessorContract
     }
 
     /**
+     * MySQL cannot reliably run CALL + SELECT @out in one multi-statement query.
+     * After the CALL, read session variables in separate SELECTs and append them
+     * as extra result sets so createOutput() keeps working.
+     *
+     * @param  array<array-key, mixed>  $result
+     * @return array<array-key, mixed>
+     */
+    protected function appendMySqlOutputResultSets(Connection $client, array $result): array
+    {
+        if ($client->getDriverName() !== 'mysql' || $this->pendingQuery->outputParameters()->isEmpty()) {
+            return $result;
+        }
+
+        foreach ($this->pendingQuery->outputParameters()->keys() as $key) {
+            if (! is_string($key)) {
+                continue;
+            }
+
+            $result[] = $client->select(sprintf('SELECT @%s AS `%s`', $key, $key));
+        }
+
+        return $result;
+    }
+
+    /**
      * @param  array<array-key, mixed>  $data
      * @return array<array-key, mixed>
      */
-    protected function createDataArray(array $data): array
+    protected function normalizeResultSets(array $data): array
     {
         if ($data === []) {
             return [];
@@ -189,17 +215,7 @@ class Processor implements ProcessorContract
 
         $decoded = json_decode((string) json_encode($data), true);
 
-        if (! is_array($decoded)) {
-            return [];
-        }
-
-        if ($this->pendingQuery->getResponseType() === ResponseType::SINGLE) {
-            $result = Arr::get($decoded, '0.0', []);
-
-            return is_array($result) ? $result : [];
-        }
-
-        return $decoded;
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**
@@ -208,8 +224,14 @@ class Processor implements ProcessorContract
      */
     protected function createData(array $responseData): array
     {
+        if ($responseData === []) {
+            return [];
+        }
+
         if ($this->pendingQuery->getResponseType() === ResponseType::SINGLE) {
-            return $responseData;
+            $result = Arr::get($responseData, '0.0', []);
+
+            return is_array($result) ? $result : [];
         }
 
         $result = Arr::get($responseData, '0', []);

@@ -47,7 +47,8 @@ abstract class MySqlTestCase extends TestCase
         DB::unprepared(<<<'SQL'
             CREATE PROCEDURE sp_list_posts(IN p_author_id INT)
             BEGIN
-                SELECT p_author_id AS author_id, 'Hello' AS title;
+                SELECT p_author_id AS author_id, 'Hello' AS title
+                UNION ALL
                 SELECT p_author_id AS author_id, 'World' AS title;
             END
         SQL);
