@@ -37,7 +37,8 @@ jobs:
           coverage: none
       - name: Install dependencies
         run: |
-          composer require "illuminate/support:^${{ matrix.laravel }}.0" "illuminate/database:^${{ matrix.laravel }}.0" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer require "illuminate/support:^${{ matrix.laravel }}.0" "illuminate/database:^${{ matrix.laravel }}.0" --no-interaction --no-update
+          composer require --dev "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           composer update --no-interaction --prefer-dist --optimize-autoloader --with-all-dependencies
       - name: Running tests
         run: vendor/bin/pest
