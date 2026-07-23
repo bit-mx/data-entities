@@ -79,5 +79,5 @@ DataEntity::assertExecutedOnce(GetPostDataEntity::class);
 - Use `AlwaysThrowOnError` when failures should throw automatically.
 - For caching, implement `Cacheable` and use the `HasCache` trait; call `invalidateCache()` / `disableCaching()` on the Data Entity instance, not on the Response.
 - For transient DB failures (deadlocks/timeouts), use the `HasRetries` plugin; override `retryBackoff()` with a `CarbonInterval` (or ms int).
-- For large result sets, use `#[UseLazyQuery]` with `$response->stream()` (single-pass) or `$response->lazy()` (re-iterable). Incompatible with `#[SingleItemResponse]` and output parameters.
+- For large result sets, use `#[UseLazyQuery]` with `$response->stream()` (single-pass, prefer for large sets — `lazy()` remembers rows after the first pass and can grow to full result-set memory). `$response->lazy()` is re-iterable for moderate sets. Incompatible with `#[SingleItemResponse]` and output parameters. If a stream was already consumed, use `lazy()` up front or `execute()` again.
 - Activate the `data-entities-development` skill for detailed patterns.

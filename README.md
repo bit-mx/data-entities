@@ -1120,7 +1120,7 @@ class GetAllPostsDataEntity extends DataEntity
 
 ### Lazy Collection
 
-If you want to return a `LazyCollection` instance, you can use the `UseLazyQuery` attribute.
+Use the `#[UseLazyQuery]` attribute when the stored procedure can return a large (or unbounded) result set and you want to consume rows through a Laravel `LazyCollection` instead of loading everything via `data()` / `collect()` up front.
 
 ```php
 namespace App\DataEntities;
@@ -1138,17 +1138,31 @@ class GetAllPostsDataEntity extends DataEntity
 }
 ```
 
-This will return a `LazyCollection` instance when the `lazy` method is called on the Response object.
+With `#[UseLazyQuery]`, the executor runs the procedure through a database cursor. Rows are not fully materialised until you iterate `lazy()` or `stream()` on the response.
 
 ```php
 use App\DataEntities\GetAllPostsDataEntity;
 
-$dataEntity = new GetAllPostsDataEntity(1);
+$dataEntity = new GetAllPostsDataEntity();
 $response = $dataEntity->execute();
-$posts = $response->lazy();
 ```
 
-`lazy()` is re-iterable: rows are remembered in memory after the first pass. For large result sets where you must avoid accumulating rows, use `stream()` (or `lazy(remember: false)`). Streaming is single-pass; iterating twice throws a `RuntimeException`.
+`lazy()` and `stream()` both return a Laravel `LazyCollection` over the same cursor. The difference is **memory** and **re-iteration**: `lazy()` remembers rows after the first pass so you can iterate again — on large datasets that means memory grows to the full result set size. Prefer `stream()` for large sets. If you hit *Lazy stream has already been consumed*, switch to `lazy()` when you need multiple passes on a moderate set, or call `execute()` again for a fresh cursor.
+
+#### `lazy()` — re-iterable (remembers rows)
+
+Default: `lazy()` / `lazy(remember: true)`. After the first pass, rows are kept in memory (`LazyCollection::remember()`), so you can iterate or transform the collection more than once without re-running the stored procedure.
+
+```php
+$posts = $response->lazy();
+
+$count = $posts->count(); // first full pass; rows are now remembered
+$titles = $posts->pluck('title'); // second pass; uses remembered rows (no extra DB round-trip)
+```
+
+#### `stream()` — single-pass (low memory)
+
+Use `stream()` (or `lazy(remember: false)`, which is an alias) when you must avoid accumulating the full result set. Process one row at a time; a second iteration throws a `RuntimeException`.
 
 ```php
 foreach ($response->stream() as $post) {
@@ -1156,11 +1170,53 @@ foreach ($response->stream() as $post) {
 }
 ```
 
-#### Note
+#### Risks of `lazy()` on large datasets
 
-When using the `UseLazyQuery` attribute, the response type only supports a collection. If you try to use `#[SingleItemResponse]`, it will throw an exception.
+The name “lazy” does **not** mean permanently low memory. After the **first** iteration, `lazy()` remembers every row already seen. Memory can grow to the size of the entire result set — similar to calling `collect()` once you have walked the cursor.
+
+Operations that force a full traversal (`count()`, `all()`, `toArray()`, multiple `foreach` loops, or pipelines that reuse the same collection) trigger that accumulation.
+
+| Prefer | When |
+| --- | --- |
+| `stream()` | Massive exports, ETL, millions of rows, or any flow that only needs one pass |
+| `lazy()` | Moderate result sets where you will traverse or transform more than once and want to avoid re-executing the SP |
+
+Even with `stream()`, MySQL may still buffer the whole result set unless the connection is configured for unbuffered queries (see below).
+
+#### If `stream()` was already consumed
+
+A second iteration over the same stream raises:
+
+`RuntimeException`: *Lazy stream has already been consumed and cannot be re-iterated. Use lazy() for a re-iterable collection.*
+
+What to do:
+
+1. **You need multiple passes on the same response** — use `$response->lazy()` from the start (rows are remembered after the first pass; watch memory on large sets).
+2. **You already consumed `stream()` and need the data again** — call `execute()` again and obtain a new `stream()` / `lazy()`. The current response’s stream cannot be reset.
+3. **`lazy(remember: false)`** — same single-pass limitation as `stream()`.
+
+```php
+// Wrong: second foreach fails
+$stream = $response->stream();
+foreach ($stream as $post) { /* ... */ }
+foreach ($stream as $post) { /* RuntimeException */ }
+
+// Right (moderate sets, multiple passes): use lazy() up front
+foreach ($response->lazy() as $post) { /* first pass */ }
+foreach ($response->lazy() as $post) { /* second pass; remembered */ }
+
+// Right (large sets, need another pass): re-execute
+$response = $dataEntity->execute();
+foreach ($response->stream() as $post) { /* ... */ }
+```
+
+#### Restrictions
+
+When using `#[UseLazyQuery]`, the response type only supports a collection. Combining it with `#[SingleItemResponse]` throws an exception.
 
 `#[UseLazyQuery]` is also incompatible with output parameters. Lazy queries use a cursor over a single result set, so output values would be lost; combining both throws `InvalidLazyQueryException`.
+
+#### MySQL and true streaming
 
 On MySQL, PDO buffers result sets by default. For true streaming, configure the connection with unbuffered queries:
 

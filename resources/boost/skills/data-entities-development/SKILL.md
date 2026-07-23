@@ -296,6 +296,8 @@ class GetPostDataEntity extends DataEntity
 
 ## Lazy queries
 
+`#[UseLazyQuery]` runs the SP through a cursor. Consume with `lazy()` or `stream()` (not `data()` / `collect()` as the primary path).
+
 ```php
 use BitMx\DataEntities\Attributes\UseLazyQuery;
 
@@ -308,12 +310,15 @@ class GetAllPostsDataEntity extends DataEntity
     }
 }
 
-$posts = (new GetAllPostsDataEntity())->execute()->lazy(); // re-iterable, remembers rows
-$posts = (new GetAllPostsDataEntity())->execute()->stream(); // single-pass, low memory
+$response = (new GetAllPostsDataEntity())->execute();
+$posts = $response->lazy();   // re-iterable; after first pass rows are remembered in RAM
+$posts = $response->stream(); // single-pass; does not accumulate the full set
 ```
 
-Incompatible with `#[SingleItemResponse]` and output parameters (throws `InvalidLazyQueryException`).
-For true MySQL streaming, set `PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false` on the connection.
+- Prefer **`stream()`** for large exports / ETL / millions of rows. **`lazy()`** is for moderate sets when you need multiple passes without re-running the SP — after the first pass memory can grow to the full result set (`remember()`).
+- If you get *Lazy stream has already been consumed*: use `lazy()` from the start for re-iteration, or call `execute()` again for a fresh cursor. `lazy(remember: false)` is an alias of `stream()` (same single-pass limit).
+- Incompatible with `#[SingleItemResponse]` and output parameters (throws `InvalidLazyQueryException`).
+- For true MySQL streaming, set `PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false` on the connection (PDO buffers by default even with `stream()`).
 
 ## DTOs
 
