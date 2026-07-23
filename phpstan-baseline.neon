@@ -1,5 +1,10 @@
 parameters:
 	ignoreErrors:
+		# Factory API mirrors Laravel: concrete subclasses call static::new().
+		# The abstract base cannot be instantiated; consumers never call it directly.
+		-
+			identifier: new.staticInAbstractClassStaticMethod
+			path: src/Factories/DataEntityFactory.php
 		# Opt-in plugins are used by consuming apps via `use HasCache` / etc.
 		# PHPStan only analyses this package, so the traits appear unused here.
 		-
