@@ -9,6 +9,9 @@ use Faker\Generator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 abstract class DataEntityFactory
 {
     protected Generator $faker;
