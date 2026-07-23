@@ -8,6 +8,8 @@ trait HasConnection
 {
     public function resolveDatabaseConnection(): string
     {
-        return config('data-entities.database', 'sqlsrv');
+        $connection = config('data-entities.database', 'sqlsrv');
+
+        return is_string($connection) && $connection !== '' ? $connection : 'sqlsrv';
     }
 }

@@ -22,7 +22,12 @@ trait HasTransactions
      */
     public static function transaction(Closure $callback, ?string $connection = null): mixed
     {
-        $connectionName = $connection ?? (string) config('data-entities.database', 'sqlsrv');
+        if ($connection !== null) {
+            $connectionName = $connection;
+        } else {
+            $configured = config('data-entities.database', 'sqlsrv');
+            $connectionName = is_string($configured) && $configured !== '' ? $configured : 'sqlsrv';
+        }
 
         return DB::connection($connectionName)->transaction($callback);
     }

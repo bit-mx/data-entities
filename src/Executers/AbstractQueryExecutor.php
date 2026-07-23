@@ -22,7 +22,11 @@ abstract class AbstractQueryExecutor implements QueryExecutorContract
             );
         }
 
-        $procedure = (string) $statements->first();
+        $procedure = $statements->first();
+
+        if (! is_string($procedure) || $procedure === '') {
+            throw new InvalidIdentifierException('Stored procedure name must be a non-empty string.');
+        }
 
         $this->validateIdentifiers($pendingQuery, $procedure);
 
@@ -36,12 +40,30 @@ abstract class AbstractQueryExecutor implements QueryExecutorContract
         $this->assertValidProcedureName($procedure);
 
         foreach ($pendingQuery->parameters()->keys() as $key) {
-            $this->assertValidParameterName((string) $key);
+            if (! is_string($key)) {
+                throw new InvalidIdentifierException(
+                    sprintf('Invalid parameter name [%s].', get_debug_type($key))
+                );
+            }
+
+            $this->assertValidParameterName($key);
         }
 
         foreach ($pendingQuery->outputParameters()->all() as $key => $type) {
-            $this->assertValidParameterName((string) $key);
-            $this->assertValidSqlType((string) $type);
+            if (! is_string($key)) {
+                throw new InvalidIdentifierException(
+                    sprintf('Invalid parameter name [%s].', get_debug_type($key))
+                );
+            }
+
+            if (! is_string($type)) {
+                throw new InvalidIdentifierException(
+                    sprintf('Invalid SQL type [%s].', get_debug_type($type))
+                );
+            }
+
+            $this->assertValidParameterName($key);
+            $this->assertValidSqlType($type);
         }
     }
 
@@ -80,7 +102,11 @@ abstract class AbstractQueryExecutor implements QueryExecutorContract
 
         $outputParameters = $pendingQuery->outputParameters()->toCollection();
 
-        return $outputParameters->map(function (string $value, string $key) {
+        return $outputParameters->map(function (mixed $value, mixed $key): string {
+            if (! is_string($key)) {
+                return '';
+            }
+
             return sprintf('SELECT @%s AS %s;', $key, $key);
         })->implode("\n");
     }

@@ -17,7 +17,7 @@ use BitMx\DataEntities\Accessors\AsString;
 class AccessorsAlias
 {
     /**
-     * @return array<array-key, mixed>
+     * @return array<string, class-string>
      */
     public static function get(): array
     {

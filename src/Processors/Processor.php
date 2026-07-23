@@ -187,13 +187,19 @@ class Processor implements ProcessorContract
             return [];
         }
 
-        $data = json_decode((string) json_encode($data), true);
+        $decoded = json_decode((string) json_encode($data), true);
 
-        if ($this->pendingQuery->getResponseType() === ResponseType::SINGLE) {
-            return Arr::get($data, '0.0', []);
+        if (! is_array($decoded)) {
+            return [];
         }
 
-        return $data;
+        if ($this->pendingQuery->getResponseType() === ResponseType::SINGLE) {
+            $result = Arr::get($decoded, '0.0', []);
+
+            return is_array($result) ? $result : [];
+        }
+
+        return $decoded;
     }
 
     /**
@@ -206,7 +212,9 @@ class Processor implements ProcessorContract
             return $responseData;
         }
 
-        return Arr::get($responseData, '0', []);
+        $result = Arr::get($responseData, '0', []);
+
+        return is_array($result) ? $result : [];
     }
 
     /**

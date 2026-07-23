@@ -6,6 +6,7 @@ namespace BitMx\DataEntities\Accessors;
 
 use BitMx\DataEntities\Contracts\Accessable;
 use Carbon\CarbonImmutable;
+use DateTimeInterface;
 
 class AsDateImmutable implements Accessable
 {
@@ -15,6 +16,10 @@ class AsDateImmutable implements Accessable
     public function get(string $key, mixed $value, array $data): ?\DateTimeImmutable
     {
         if (is_null($value)) {
+            return null;
+        }
+
+        if (! is_string($value) && ! is_int($value) && ! is_float($value) && ! $value instanceof DateTimeInterface) {
             return null;
         }
 

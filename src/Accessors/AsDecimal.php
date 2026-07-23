@@ -17,6 +17,10 @@ class AsDecimal implements Accessable
             return null;
         }
 
+        if (! is_numeric($value)) {
+            return null;
+        }
+
         return floatval($value);
     }
 }

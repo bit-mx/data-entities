@@ -15,7 +15,7 @@ use BitMx\DataEntities\Mutators\AsString;
 class MutatorsAlias
 {
     /**
-     * @return array<string, mixed>
+     * @return array<string, class-string>
      */
     public static function get(): array
     {

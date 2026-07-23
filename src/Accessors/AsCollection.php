@@ -11,7 +11,7 @@ class AsCollection implements Accessable
 {
     /**
      * @param  array<string, mixed>  $data
-     * @return Collection<string, mixed>|null
+     * @return Collection<array-key, mixed>|null
      */
     public function get(string $key, mixed $value, array $data): ?Collection
     {
@@ -19,9 +19,16 @@ class AsCollection implements Accessable
             return null;
         }
 
-        /** @var array<array-key, mixed> $json */
+        if (is_array($value)) {
+            return collect($value);
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
         $json = json_decode($value, true);
 
-        return collect($json);
+        return collect(is_array($json) ? $json : []);
     }
 }

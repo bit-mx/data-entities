@@ -30,7 +30,8 @@ class AsDecimal implements Mutable
             throw new \InvalidArgumentException("The value of the parameter {$key} must be a number value");
         }
 
-        $decimals = (int) ($this->attributes[0] ?? 2);
+        $decimalsAttribute = $this->attributes[0] ?? 2;
+        $decimals = is_numeric($decimalsAttribute) ? intval($decimalsAttribute) : 2;
 
         return round(floatval($value), $decimals);
     }

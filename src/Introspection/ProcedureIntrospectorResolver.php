@@ -12,8 +12,7 @@ class ProcedureIntrospectorResolver
 {
     public function resolve(string $connectionName): ProcedureIntrospectorContract
     {
-        $driver = config("database.connections.{$connectionName}.driver")
-            ?? DB::connection($connectionName)->getDriverName();
+        $driver = $this->resolveDriverName($connectionName);
 
         return match ($driver) {
             'sqlsrv' => new SqlServerProcedureIntrospector($connectionName),
@@ -22,5 +21,16 @@ class ProcedureIntrospectorResolver
                 sprintf('No procedure introspector registered for driver [%s].', $driver)
             ),
         };
+    }
+
+    protected function resolveDriverName(string $connectionName): string
+    {
+        $driver = config("database.connections.{$connectionName}.driver");
+
+        if (is_string($driver) && $driver !== '') {
+            return $driver;
+        }
+
+        return DB::connection($connectionName)->getDriverName();
     }
 }

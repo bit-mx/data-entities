@@ -15,7 +15,7 @@ abstract class DataEntityFactory
 
     /**
      * @param  array<array-key, mixed>  $attributes
-     * @param  array<array-key, mixed>  $without
+     * @param  array<int, array-key>  $without
      */
     public function __construct(
         protected readonly array $attributes = [],
@@ -37,7 +37,7 @@ abstract class DataEntityFactory
 
     /**
      * @param  array<array-key, mixed>  $attributes
-     * @param  array<array-key, mixed>  $without
+     * @param  array<int, array-key>  $without
      */
     protected function newInstance(
         array $attributes = [],
@@ -142,7 +142,7 @@ abstract class DataEntityFactory
     }
 
     /**
-     * @param  array<array-key, mixed>|string  $attributes
+     * @param  array<int, array-key>|string  $attributes
      */
     public function without(array|string $attributes): static
     {

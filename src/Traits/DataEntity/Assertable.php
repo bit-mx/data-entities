@@ -92,7 +92,7 @@ trait Assertable
                 continue;
             }
 
-            if (collect($expected)->every(fn (mixed $value, mixed $key): bool => Arr::get($parameters, $key) === $value)) {
+            if (collect($expected)->every(fn (mixed $value, mixed $key): bool => (is_string($key) || is_int($key)) && Arr::get($parameters, $key) === $value)) {
                 $matched = true;
                 break;
             }

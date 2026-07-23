@@ -53,9 +53,10 @@ class MakeDataEntity extends GeneratorCommand
         }
 
         $connectionOption = $this->option('connection');
+        $defaultConnection = config('data-entities.database', 'sqlsrv');
         $connection = is_string($connectionOption) && $connectionOption !== ''
             ? $connectionOption
-            : (string) config('data-entities.database', 'sqlsrv');
+            : (is_string($defaultConnection) && $defaultConnection !== '' ? $defaultConnection : 'sqlsrv');
 
         $introspector = (new ProcedureIntrospectorResolver)->resolve($connection);
 

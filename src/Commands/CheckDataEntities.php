@@ -19,8 +19,8 @@ class CheckDataEntities extends Command
 
     public function handle(DataEntityFinder $finder, ProcedureIntrospectorResolver $resolver): int
     {
-        $path = $this->option('path');
-        assert(is_string($path));
+        $pathOption = $this->option('path');
+        $path = is_string($pathOption) ? $pathOption : 'app/DataEntities';
 
         $entities = $finder->find($path);
 
@@ -56,11 +56,19 @@ class CheckDataEntities extends Command
             /** @var DataEntity $instantiated */
             $instantiated = $reflection->newInstance();
             $dbParameters = collect($introspector->parameters($procedure));
-            $entityParameters = array_keys($instantiated->parameters()->all());
-            $entityOutputs = array_keys($instantiated->outputParameters()->all());
+            $entityParameters = $this->stringKeys($instantiated->parameters()->all());
+            $entityOutputs = $this->stringKeys($instantiated->outputParameters()->all());
 
-            $dbInputs = $dbParameters->filter(fn (ProcedureParameter $parameter): bool => $parameter->isInput)->pluck('name')->all();
-            $dbOutputs = $dbParameters->filter(fn (ProcedureParameter $parameter): bool => $parameter->isOutput)->pluck('name')->all();
+            $dbInputs = $dbParameters
+                ->filter(fn (ProcedureParameter $parameter): bool => $parameter->isInput)
+                ->map(fn (ProcedureParameter $parameter): string => $parameter->name)
+                ->values()
+                ->all();
+            $dbOutputs = $dbParameters
+                ->filter(fn (ProcedureParameter $parameter): bool => $parameter->isOutput)
+                ->map(fn (ProcedureParameter $parameter): string => $parameter->name)
+                ->values()
+                ->all();
 
             $missingInputs = array_values(array_diff($dbInputs, $entityParameters));
             $extraInputs = array_values(array_diff($entityParameters, $dbInputs));
@@ -94,5 +102,22 @@ class CheckDataEntities extends Command
         }
 
         return $failures > 0 ? self::FAILURE : self::SUCCESS;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $items
+     * @return list<string>
+     */
+    protected function stringKeys(array $items): array
+    {
+        $keys = [];
+
+        foreach (array_keys($items) as $key) {
+            if (is_string($key)) {
+                $keys[] = $key;
+            }
+        }
+
+        return $keys;
     }
 }
