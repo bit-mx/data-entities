@@ -397,7 +397,7 @@ use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Testing\RecordedExecution;
 
-$client = DataEntity::fake([
+DataEntity::fake([
     GetPostDataEntity::class => MockResponse::make([
         'id' => 1,
         'title' => 'Post title',
@@ -409,20 +409,23 @@ $response = (new GetPostDataEntity(1))->execute();
 DataEntity::assertExecuted(GetPostDataEntity::class);
 DataEntity::assertExecutedOnce(GetPostDataEntity::class);
 DataEntity::assertExecutedCount(GetPostDataEntity::class, 1);
+DataEntity::assertTotalExecutedCount(1);
 DataEntity::assertNotExecuted(OtherDataEntity::class);
 DataEntity::assertExecutedWith(
     GetPostDataEntity::class,
     fn (RecordedExecution $execution) => $execution->parameters['post_id'] === 1,
 );
 
-$client->recorded(GetPostDataEntity::class); // list of RecordedExecution
+DataEntity::recorded(GetPostDataEntity::class); // list of RecordedExecution
 ```
 
 Reset between tests: `afterEach(fn () => DataEntity::resetMock())`.
 
 Exception fake: `MockResponse::makeWithException(new \Exception('Error'))` or `MockResponse::make()->withException(...)`.
+Empty payload: `MockResponse::empty()`.
 Sequence fallback: `MockResponseSequence::make(...)->whenEmpty(MockResponse::make([...]))`.
-Default mock: `DataEntity::fake([])->fallback(MockResponse::make([...]))`.
+Default mock: `DataEntity::fallback(MockResponse::make([...]))`.
+Merge mocks: `DataEntity::mock([OtherDataEntity::class => MockResponse::empty()])`.
 
 ### Factories
 

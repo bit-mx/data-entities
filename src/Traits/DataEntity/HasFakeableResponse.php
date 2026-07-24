@@ -9,8 +9,8 @@ use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Responses\MockResponseSequence;
 use BitMx\DataEntities\Testing\MockClient;
+use BitMx\DataEntities\Testing\RecordedExecution;
 use Closure;
-use LogicException;
 
 /**
  * @mixin DataEntity
@@ -29,15 +29,13 @@ trait HasFakeableResponse
     /**
      * @param  array<class-string, MockResponse|MockResponseSequence|Closure(PendingQuery): MockResponse>  $mockResponses
      */
-    public static function fake(array $mockResponses = []): MockClient
+    public static function fake(array $mockResponses = []): void
     {
         static::$fake = true;
         static::$mockClient = new MockClient($mockResponses);
         static::$mockResponses = $mockResponses;
         static::$assertions = [];
         static::$recordedParameters = [];
-
-        return static::$mockClient;
     }
 
     public static function isFake(): bool
@@ -48,10 +46,37 @@ trait HasFakeableResponse
     public static function getMockClient(): MockClient
     {
         if (static::$mockClient === null) {
-            throw new LogicException('No mock client is active. Call DataEntity::fake() first.');
+            static::$mockClient = new MockClient;
         }
 
         return static::$mockClient;
+    }
+
+    /**
+     * @param  array<class-string, MockResponse|MockResponseSequence|Closure(PendingQuery): MockResponse>  $responses
+     */
+    public static function mock(array $responses): void
+    {
+        static::$fake = true;
+        static::getMockClient()->mock($responses);
+        static::$mockResponses = array_replace(static::$mockResponses, $responses);
+    }
+
+    /**
+     * @param  MockResponse|Closure(PendingQuery): MockResponse  $response
+     */
+    public static function fallback(MockResponse|Closure $response): void
+    {
+        static::$fake = true;
+        static::getMockClient()->fallback($response);
+    }
+
+    /**
+     * @return list<RecordedExecution>
+     */
+    public static function recorded(?string $class = null): array
+    {
+        return static::getMockClient()->recorded($class);
     }
 
     public static function resetMock(): void

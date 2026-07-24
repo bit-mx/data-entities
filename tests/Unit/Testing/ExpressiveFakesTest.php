@@ -8,17 +8,9 @@ use BitMx\DataEntities\Exceptions\MockResponseNotFoundException;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Responses\MockResponseSequence;
-use BitMx\DataEntities\Testing\MockClient;
 use BitMx\DataEntities\Testing\RecordedExecution;
 use Exception;
 use RuntimeException;
-
-it('returns a mock client from fake', function () {
-    $client = DataEntity::fake([]);
-
-    expect($client)->toBeInstanceOf(MockClient::class)
-        ->and(DataEntity::getMockClient())->toBe($client);
-});
 
 it('supports conditional fakes based on pending query parameters', function () {
     $dataEntity = new #[SingleItemResponse] class(1) extends DataEntity
@@ -89,7 +81,7 @@ it('reuses whenEmpty response after a sequence is exhausted', function () {
         ->and($dataEntity->execute()->data('id'))->toBe(99);
 });
 
-it('merges additional mocks through the mock client', function () {
+it('merges additional mocks through the static facade', function () {
     $primary = new #[SingleItemResponse] class extends DataEntity
     {
         public function resolveStoreProcedure(): string
@@ -106,11 +98,11 @@ it('merges additional mocks through the mock client', function () {
         }
     };
 
-    $client = DataEntity::fake([
+    DataEntity::fake([
         $primary::class => MockResponse::make(['from' => 'primary']),
     ]);
 
-    $client->mock([
+    DataEntity::mock([
         $secondary::class => MockResponse::make(['from' => 'secondary']),
     ]);
 
@@ -127,12 +119,13 @@ it('uses fallback when a class is not mocked', function () {
         }
     };
 
-    DataEntity::fake([])->fallback(MockResponse::make(['fallback' => true]));
+    DataEntity::fake([]);
+    DataEntity::fallback(MockResponse::make(['fallback' => true]));
 
     expect($dataEntity->execute()->data('fallback'))->toBeTrue();
 });
 
-it('records executions for inspection', function () {
+it('records executions for inspection via the static facade', function () {
     $dataEntity = new #[SingleItemResponse] class(10) extends DataEntity
     {
         public function __construct(private int $postId) {}
@@ -157,18 +150,18 @@ it('records executions for inspection', function () {
         }
     };
 
-    $client = DataEntity::fake([
+    DataEntity::fake([
         $dataEntity::class => MockResponse::make(['ok' => true])->withOutput(['total' => 5]),
     ]);
 
     $response = $dataEntity->execute();
 
     expect($response->output('total'))->toBe(5)
-        ->and($client->recorded())->toHaveCount(1)
-        ->and($client->recorded($dataEntity::class)[0])->toBeInstanceOf(RecordedExecution::class)
-        ->and($client->recorded($dataEntity::class)[0]->procedure)->toBe('sp_get_post')
-        ->and($client->recorded($dataEntity::class)[0]->parameters)->toBe(['post_id' => 10])
-        ->and($client->recorded($dataEntity::class)[0]->outputParameters)->toBe(['total' => 'INT']);
+        ->and(DataEntity::recorded())->toHaveCount(1)
+        ->and(DataEntity::recorded($dataEntity::class)[0])->toBeInstanceOf(RecordedExecution::class)
+        ->and(DataEntity::recorded($dataEntity::class)[0]->procedure)->toBe('sp_get_post')
+        ->and(DataEntity::recorded($dataEntity::class)[0]->parameters)->toBe(['post_id' => 10])
+        ->and(DataEntity::recorded($dataEntity::class)[0]->outputParameters)->toBe(['total' => 'INT']);
 });
 
 it('asserts executions with expected parameters', function () {
@@ -204,10 +197,38 @@ it('asserts executions with expected parameters', function () {
     );
 });
 
-it('asserts nothing was executed', function () {
-    DataEntity::fake([]);
-
+it('asserts nothing was executed without calling fake first', function () {
     DataEntity::assertNothingExecuted();
+    DataEntity::assertNotExecuted(DataEntity::class);
+});
+
+it('asserts total executed count and order', function () {
+    $primary = new #[SingleItemResponse] class extends DataEntity
+    {
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_primary';
+        }
+    };
+
+    $secondary = new #[SingleItemResponse] class extends DataEntity
+    {
+        public function resolveStoreProcedure(): string
+        {
+            return 'sp_secondary';
+        }
+    };
+
+    DataEntity::fake([
+        $primary::class => MockResponse::empty(),
+        $secondary::class => MockResponse::empty(),
+    ]);
+
+    $primary->execute();
+    $secondary->execute();
+
+    DataEntity::assertTotalExecutedCount(2);
+    DataEntity::assertExecutedInOrder([$primary::class, $secondary::class]);
 });
 
 it('provides fluent output and exception helpers on MockResponse', function () {
@@ -215,7 +236,8 @@ it('provides fluent output and exception helpers on MockResponse', function () {
     $fluent = MockResponse::make(['title' => 'New post'])->withOutput(['p_new_id' => 42]);
     $exception = MockResponse::make(['id' => 1])->withException(new RuntimeException('boom'));
 
-    expect($withOutput->output())->toBe(['p_new_id' => 42])
+    expect(MockResponse::empty()->data())->toBe([])
+        ->and($withOutput->output())->toBe(['p_new_id' => 42])
         ->and($fluent->output())->toBe(['p_new_id' => 42])
         ->and($exception->hasException())->toBeTrue()
         ->and($exception->exception())->toBeInstanceOf(RuntimeException::class);

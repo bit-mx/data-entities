@@ -33,6 +33,11 @@ final readonly class MockResponse
         return new self([], [], $exception);
     }
 
+    public static function empty(): self
+    {
+        return new self;
+    }
+
     /**
      * @param  array<array-key, mixed>  $output
      */

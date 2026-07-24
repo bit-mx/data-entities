@@ -49,6 +49,19 @@ trait Assertable
         static::getMockClient()->assertExecutedCount($class, $count);
     }
 
+    public static function assertTotalExecutedCount(int $count): void
+    {
+        static::getMockClient()->assertTotalExecutedCount($count);
+    }
+
+    /**
+     * @param  list<class-string>  $classes
+     */
+    public static function assertExecutedInOrder(array $classes): void
+    {
+        static::getMockClient()->assertExecutedInOrder($classes);
+    }
+
     /**
      * @param  class-string  $class
      */

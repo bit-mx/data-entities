@@ -1391,7 +1391,7 @@ You can create integration tests for your Data Entities easily.
 
 ### Mocking the Data Entity
 
-You can mock the Data Entity using the `DataEntity::fake` method. It returns a `MockClient` you can use to merge mocks, set a fallback, and inspect recorded executions.
+You can mock the Data Entity using the `DataEntity::fake` method. Assertions and helpers live on `DataEntity` itself (facade-style), so you do not need to capture a mock client.
 
 ```php
 use App\DataEntities\GetPostDataEntity;
@@ -1399,7 +1399,7 @@ use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Responses\MockResponse;
 
 it('should get the post', function () {
-    $client = DataEntity::fake([
+    DataEntity::fake([
         GetPostDataEntity::class => MockResponse::make([
             'id' => 1,
             'title' => 'Post title',
@@ -1417,7 +1417,8 @@ it('should get the post', function () {
     expect($post->title)->toBe('Post title');
     expect($post->content)->toBe('Post content');
 
-    expect($client->recorded(GetPostDataEntity::class))->toHaveCount(1);
+    DataEntity::assertExecutedOnce(GetPostDataEntity::class);
+    expect(DataEntity::recorded(GetPostDataEntity::class))->toHaveCount(1);
 });
 ```
 
@@ -1437,6 +1438,7 @@ use BitMx\DataEntities\Responses\MockResponse;
 
 MockResponse::make(['title' => 'New post'])->withOutput(['p_new_id' => 42]);
 MockResponse::make(['title' => 'New post'], ['p_new_id' => 42]);
+MockResponse::empty();
 MockResponse::make()->withException(new RuntimeException('boom'));
 // or
 MockResponse::makeWithException(new RuntimeException('boom'));
@@ -1476,6 +1478,8 @@ Available assertions:
 - **assertNothingExecuted:** Assert that no Data Entity was executed.
 - **assertExecutedCount:** Assert that the Data Entity was executed a specific number of times.
 - **assertExecutedOnce:** Assert that the Data Entity was executed once.
+- **assertTotalExecutedCount:** Assert the total number of Data Entity executions.
+- **assertExecutedInOrder:** Assert Data Entities were executed in a specific order.
 - **assertExecutedWith:** Assert that the Data Entity was executed with matching parameters (array subset, parameter closure, or `RecordedExecution` closure).
 
 ```php
@@ -1486,6 +1490,8 @@ DataEntity::assertExecutedWith(
     fn (RecordedExecution $execution) => $execution->procedure === 'sp_get_post',
 );
 DataEntity::assertNothingExecuted();
+DataEntity::assertTotalExecutedCount(1);
+DataEntity::assertExecutedInOrder([GetPostDataEntity::class, OtherDataEntity::class]);
 ```
 
 You can also fake with a closure, a sequence, merge more mocks, or set a fallback:
@@ -1508,13 +1514,15 @@ DataEntity::fake([
     )->whenEmpty(MockResponse::make(['id' => 0])),
 ]);
 
-$client = DataEntity::fake([
+DataEntity::fake([
     GetPostDataEntity::class => MockResponse::make(['id' => 1]),
 ]);
 
-$client->mock([
-    OtherDataEntity::class => MockResponse::make(['ok' => true]),
-])->fallback(MockResponse::make(['fallback' => true]));
+DataEntity::mock([
+    OtherDataEntity::class => MockResponse::empty(),
+]);
+
+DataEntity::fallback(MockResponse::make(['fallback' => true]));
 ```
 
 ### Using factories

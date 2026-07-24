@@ -58,7 +58,7 @@ use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Responses\MockResponse;
 use BitMx\DataEntities\Testing\RecordedExecution;
 
-$client = DataEntity::fake([
+DataEntity::fake([
     GetPostDataEntity::class => MockResponse::make([
         'id' => 1,
         'title' => 'Post title',
@@ -71,7 +71,7 @@ DataEntity::assertExecutedWith(
     GetPostDataEntity::class,
     fn (RecordedExecution $execution) => $execution->parameters['post_id'] === 1,
 );
-$client->recorded(GetPostDataEntity::class);
+DataEntity::recorded(GetPostDataEntity::class);
 </code-snippet>
 @endverbatim
 

@@ -167,6 +167,38 @@ class MockClient
         );
     }
 
+    public function assertTotalExecutedCount(int $count): void
+    {
+        $actual = count($this->recorded);
+
+        Assert::assertSame(
+            $count,
+            $actual,
+            sprintf('Expected %d total Data Entity execution(s), but %d were recorded.', $count, $actual),
+        );
+    }
+
+    /**
+     * @param  list<class-string>  $classes
+     */
+    public function assertExecutedInOrder(array $classes): void
+    {
+        $actual = array_map(
+            fn (RecordedExecution $execution): string => $execution->class,
+            $this->recorded,
+        );
+
+        Assert::assertSame(
+            $classes,
+            $actual,
+            sprintf(
+                'Expected Data Entities to be executed in order [%s], but got [%s].',
+                implode(', ', $classes),
+                implode(', ', $actual),
+            ),
+        );
+    }
+
     /**
      * @param  class-string  $class
      * @param  array<array-key, mixed>|Closure(array<array-key, mixed>): bool|Closure(RecordedExecution): bool  $expected
