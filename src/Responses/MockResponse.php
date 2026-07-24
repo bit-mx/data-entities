@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BitMx\DataEntities\Responses;
 
 use BitMx\DataEntities\Factories\DataEntityFactory;
+use Throwable;
 
 final readonly class MockResponse
 {
@@ -15,20 +16,39 @@ final readonly class MockResponse
     public function __construct(
         protected array|DataEntityFactory $data = [],
         protected array $output = [],
-        protected ?\Throwable $exception = null
+        protected ?Throwable $exception = null
     ) {}
 
     /**
      * @param  array<array-key, mixed>  $data
+     * @param  array<array-key, mixed>  $output
      */
-    public static function make(array|DataEntityFactory $data): self
+    public static function make(array|DataEntityFactory $data = [], array $output = []): self
     {
-        return new self($data);
+        return new self($data, $output);
     }
 
-    public static function makeWithException(\Throwable $exception): self
+    public static function makeWithException(Throwable $exception): self
     {
         return new self([], [], $exception);
+    }
+
+    public static function empty(): self
+    {
+        return new self;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $output
+     */
+    public function withOutput(array $output): self
+    {
+        return new self($this->data, $output, $this->exception);
+    }
+
+    public function withException(Throwable $exception): self
+    {
+        return new self($this->data, $this->output, $exception);
     }
 
     /**
@@ -64,13 +84,11 @@ final readonly class MockResponse
      */
     protected function getOutput(): array
     {
-
         $output = $this->data instanceof DataEntityFactory
             ? array_replace_recursive($this->data->getData()->getOutput(), $this->output)
             : $this->output;
 
         return $output;
-
     }
 
     public function hasException(): bool
@@ -78,7 +96,7 @@ final readonly class MockResponse
         return $this->exception !== null;
     }
 
-    public function exception(): ?\Throwable
+    public function exception(): ?Throwable
     {
         return $this->exception;
     }

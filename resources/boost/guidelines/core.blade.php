@@ -56,16 +56,22 @@ $data = $response->data();
 <code-snippet name="Fake a Data Entity in tests" lang="php">
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Responses\MockResponse;
+use BitMx\DataEntities\Testing\RecordedExecution;
 
 DataEntity::fake([
     GetPostDataEntity::class => MockResponse::make([
         'id' => 1,
         'title' => 'Post title',
-    ]),
+    ])->withOutput(['total' => 1]),
 ]);
 
 $response = (new GetPostDataEntity(1))->execute();
 DataEntity::assertExecutedOnce(GetPostDataEntity::class);
+DataEntity::assertExecutedWith(
+    GetPostDataEntity::class,
+    fn (RecordedExecution $execution) => $execution->parameters['post_id'] === 1,
+);
+DataEntity::recorded(GetPostDataEntity::class);
 </code-snippet>
 @endverbatim
 

@@ -49,7 +49,7 @@ trait ExecutesQuery
     protected function resolveClient(PendingQuery $pendingQuery): ProcessorContract
     {
         if (static::isFake()) {
-            return new MockProcessor($pendingQuery, $this, static::$mockResponses);
+            return new MockProcessor($pendingQuery, $this, static::getMockClient());
         }
 
         return new Processor($pendingQuery);
