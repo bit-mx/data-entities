@@ -6,66 +6,35 @@ namespace BitMx\DataEntities\Processors;
 
 use BitMx\DataEntities\Contracts\ProcessorContract;
 use BitMx\DataEntities\DataEntity;
-use BitMx\DataEntities\Exceptions\MockResponseNotFoundException;
 use BitMx\DataEntities\PendingQuery;
 use BitMx\DataEntities\Responses\MockResponse;
-use BitMx\DataEntities\Responses\MockResponseSequence;
 use BitMx\DataEntities\Responses\Response;
-use Closure;
+use BitMx\DataEntities\Testing\MockClient;
+use BitMx\DataEntities\Testing\RecordedExecution;
 use Illuminate\Support\LazyCollection;
 
 class MockProcessor implements ProcessorContract
 {
-    /**
-     * @param  array<class-string, MockResponse|MockResponseSequence|Closure(PendingQuery): MockResponse>  $mockResponses
-     */
     public function __construct(
         protected readonly PendingQuery $pendingQuery,
         protected DataEntity $dataEntity,
-        protected readonly array $mockResponses,
+        protected readonly MockClient $mockClient,
     ) {}
 
     public function handle(): Response
     {
-        $class = get_class($this->dataEntity);
+        $class = $this->dataEntity::class;
+        $mockResponse = $this->mockClient->resolve($class, $this->pendingQuery);
 
-        if (! array_key_exists($class, $this->mockResponses)) {
-            throw new MockResponseNotFoundException('No mock response found for '.get_class($this));
-        }
-
-        return $this->executeMockResponse();
-    }
-
-    protected function executeMockResponse(): Response
-    {
-        $class = get_class($this->dataEntity);
-
-        if (! array_key_exists($class, $this->mockResponses)) {
-            throw new MockResponseNotFoundException('No mock response found for '.get_class($this));
-        }
-
-        $mockResponse = $this->resolveMockResponse($class);
-
-        DataEntity::$assertions[$class] = (DataEntity::$assertions[$class] ?? 0) + 1;
-        DataEntity::$recordedParameters[$class][] = $this->pendingQuery->parameters()->all();
+        $this->mockClient->record(new RecordedExecution(
+            class: $class,
+            procedure: $this->dataEntity->resolveStoreProcedure(),
+            parameters: $this->pendingQuery->parameters()->all(),
+            outputParameters: $this->pendingQuery->outputParameters()->all(),
+            pendingQuery: $this->pendingQuery,
+        ));
 
         return $this->createFakeResponse($mockResponse);
-    }
-
-    protected function resolveMockResponse(string $class): MockResponse
-    {
-        /** @var MockResponse|MockResponseSequence|Closure(PendingQuery): MockResponse $mock */
-        $mock = $this->mockResponses[$class];
-
-        if ($mock instanceof Closure) {
-            return $mock($this->pendingQuery);
-        }
-
-        if ($mock instanceof MockResponseSequence) {
-            return $mock->next();
-        }
-
-        return $mock;
     }
 
     protected function createFakeResponse(MockResponse $mockResponse): Response

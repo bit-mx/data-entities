@@ -13,10 +13,15 @@ declare(strict_types=1);
 |
 */
 
+use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Tests\TestCase;
 
 uses(TestCase::class)->in('Feature', 'Unit');
 // Integration tests bind their own TestCase (e.g. MySqlTestCase).
+
+afterEach(function () {
+    DataEntity::resetMock();
+});
 
 /*
 |--------------------------------------------------------------------------

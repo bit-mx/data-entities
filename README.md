@@ -1391,7 +1391,7 @@ You can create integration tests for your Data Entities easily.
 
 ### Mocking the Data Entity
 
-You can mock the Data Entity using the `DataEntity::fake` method.
+You can mock the Data Entity using the `DataEntity::fake` method. It returns a `MockClient` you can use to merge mocks, set a fallback, and inspect recorded executions.
 
 ```php
 use App\DataEntities\GetPostDataEntity;
@@ -1399,7 +1399,7 @@ use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Responses\MockResponse;
 
 it('should get the post', function () {
-    DataEntity::fake([
+    $client = DataEntity::fake([
         GetPostDataEntity::class => MockResponse::make([
             'id' => 1,
             'title' => 'Post title',
@@ -1416,11 +1416,31 @@ it('should get the post', function () {
     expect($post->id)->toBe(1);
     expect($post->title)->toBe('Post title');
     expect($post->content)->toBe('Post content');
+
+    expect($client->recorded(GetPostDataEntity::class))->toHaveCount(1);
 });
+```
+
+Reset mocks between tests (recommended in `tests/Pest.php`):
+
+```php
+afterEach(fn () => DataEntity::resetMock());
 ```
 
 When using the `fake` method, the `execute` method will return the data specified in the `MockResponse::make` method and
 won't execute the stored procedure.
+
+### Fluent mock responses
+
+```php
+use BitMx\DataEntities\Responses\MockResponse;
+
+MockResponse::make(['title' => 'New post'])->withOutput(['p_new_id' => 42]);
+MockResponse::make(['title' => 'New post'], ['p_new_id' => 42]);
+MockResponse::make()->withException(new RuntimeException('boom'));
+// or
+MockResponse::makeWithException(new RuntimeException('boom'));
+```
 
 ### Assertions
 
@@ -1430,6 +1450,7 @@ You can use assertions to verify that the Data Entity was executed.
 use App\DataEntities\GetPostDataEntity;
 use BitMx\DataEntities\DataEntity;
 use BitMx\DataEntities\Responses\MockResponse;
+use BitMx\DataEntities\Testing\RecordedExecution;
 
 it('should get the post', function () {
     DataEntity::fake([
@@ -1452,16 +1473,22 @@ Available assertions:
 
 - **assertExecuted:** Assert that the Data Entity was executed.
 - **assertNotExecuted:** Assert that the Data Entity was not executed.
+- **assertNothingExecuted:** Assert that no Data Entity was executed.
 - **assertExecutedCount:** Assert that the Data Entity was executed a specific number of times.
 - **assertExecutedOnce:** Assert that the Data Entity was executed once.
-- **assertExecutedWith:** Assert that the Data Entity was executed with matching parameters (array subset or closure).
+- **assertExecutedWith:** Assert that the Data Entity was executed with matching parameters (array subset, parameter closure, or `RecordedExecution` closure).
 
 ```php
 DataEntity::assertExecutedWith(GetPostDataEntity::class, ['post_id' => 1]);
 DataEntity::assertExecutedWith(GetPostDataEntity::class, fn (array $parameters) => $parameters['post_id'] > 0);
+DataEntity::assertExecutedWith(
+    GetPostDataEntity::class,
+    fn (RecordedExecution $execution) => $execution->procedure === 'sp_get_post',
+);
+DataEntity::assertNothingExecuted();
 ```
 
-You can also fake with a closure or a sequence:
+You can also fake with a closure, a sequence, merge more mocks, or set a fallback:
 
 ```php
 use BitMx\DataEntities\PendingQuery;
@@ -1478,8 +1505,16 @@ DataEntity::fake([
     GetPostDataEntity::class => MockResponseSequence::make(
         MockResponse::make(['id' => 1]),
         MockResponse::make(['id' => 2]),
-    ),
+    )->whenEmpty(MockResponse::make(['id' => 0])),
 ]);
+
+$client = DataEntity::fake([
+    GetPostDataEntity::class => MockResponse::make(['id' => 1]),
+]);
+
+$client->mock([
+    OtherDataEntity::class => MockResponse::make(['ok' => true]),
+])->fallback(MockResponse::make(['fallback' => true]));
 ```
 
 ### Using factories

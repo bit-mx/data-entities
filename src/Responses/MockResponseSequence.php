@@ -10,6 +10,8 @@ class MockResponseSequence
 {
     private int $index = 0;
 
+    private ?MockResponse $whenEmpty = null;
+
     /**
      * @param  list<MockResponse>  $responses
      */
@@ -29,9 +31,20 @@ class MockResponseSequence
         return $this;
     }
 
+    public function whenEmpty(MockResponse $response): self
+    {
+        $this->whenEmpty = $response;
+
+        return $this;
+    }
+
     public function next(): MockResponse
     {
         if (! array_key_exists($this->index, $this->responses)) {
+            if ($this->whenEmpty !== null) {
+                return $this->whenEmpty;
+            }
+
             throw new MockResponseNotFoundException('No more mock responses left in the sequence.');
         }
 
