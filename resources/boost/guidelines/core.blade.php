@@ -7,6 +7,9 @@
 - Put Data Entity classes in `app/DataEntities` (optionally `app/DataEntities/{System}/` per legacy system).
 - Extend `BitMx\DataEntities\DataEntity` and implement `resolveStoreProcedure(): string`.
 - For multi-system apps, create an abstract base per system (`ErpDataEntity`, `CrmDataEntity`) that fixes `resolveDatabaseConnection()` (and executor if needed); concrete entities extend that base.
+- `resolveDatabaseConnection()` may return a connection name (`string`) or a live `Illuminate\Database\Connection`. Precedence: `onConnection(...)` > `resolveDatabaseConnection()` > `config('data-entities.database')`.
+- Override at runtime with `->onConnection($nameOrConnection)->execute()`.
+- For ad-hoc credentials (host/user/password without `config/database.php`), use `DB::build([...])` and return or `onConnection()` that `Connection`.
 - Override `defaultParameters(): array` (protected) for input parameters.
 - Default response shape is a collection. Use `#[SingleItemResponse]` for a single row.
 - Do NOT use removed v3 APIs: `$method`, `$responseType`, or `BitMx\DataEntities\Enums\Method`.
@@ -82,7 +85,7 @@ DataEntity::recorded(GetPostDataEntity::class);
 - Map rows to DTOs with `#[MapTo(PostData::class)]` (single) or `#[MapTo(PostData::class, Collection::class)]` (Laravel collection); read via `$response->dto()`. Manual `createDtoFromResponse()` always wins over `#[MapTo]`.
 - Use `defaultOutputParameters()` for stored procedure output params; read them with `$response->output()`. On SQL Server they map to `DECLARE`/`OUTPUT`; on MySQL they map to session variables (the declared SQL type is ignored).
 - Override `resolveQueryExecutor(): ?string` on a Data Entity to force a specific query executor; otherwise it is resolved from the connection driver.
-- For multi-entity atomic work on one connection, use `DataEntity::transaction(fn () => ..., connection: 'sqlsrv')` or `DB::connection(...)->transaction(...)`.
+- For multi-entity atomic work on one connection, use `DataEntity::transaction(fn () => ..., connection: 'sqlsrv')`, pass a `Connection` instance, or `DB::connection(...)->transaction(...)`.
 - Use `AlwaysThrowOnError` when failures should throw automatically.
 - For caching, implement `Cacheable` and use the `HasCache` trait; call `invalidateCache()` / `disableCaching()` on the Data Entity instance, not on the Response.
 - For transient DB failures (deadlocks/timeouts), use the `HasRetries` plugin; override `retryBackoff()` with a `CarbonInterval` (or ms int).

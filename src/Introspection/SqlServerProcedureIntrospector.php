@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace BitMx\DataEntities\Introspection;
 
 use BitMx\DataEntities\Introspection\Contracts\ProcedureIntrospectorContract;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 
 class SqlServerProcedureIntrospector implements ProcedureIntrospectorContract
 {
     public function __construct(
-        protected readonly string $connection,
+        protected readonly string|Connection $connection,
     ) {}
 
     public function procedureExists(string $procedure): bool
     {
         [$schema, $name] = $this->splitName($procedure);
 
-        $result = DB::connection($this->connection)->selectOne(
+        $result = $this->client()->selectOne(
             'SELECT COUNT(*) AS aggregate
              FROM sys.procedures p
              INNER JOIN sys.schemas s ON s.schema_id = p.schema_id
@@ -38,7 +39,7 @@ class SqlServerProcedureIntrospector implements ProcedureIntrospectorContract
     {
         [$schema, $name] = $this->splitName($procedure);
 
-        $rows = DB::connection($this->connection)->select(
+        $rows = $this->client()->select(
             'SELECT
                 REPLACE(par.name, \'@\', \'\') AS parameter_name,
                 TYPE_NAME(par.user_type_id) AS data_type,
@@ -69,6 +70,15 @@ class SqlServerProcedureIntrospector implements ProcedureIntrospectorContract
         }
 
         return $parameters;
+    }
+
+    protected function client(): Connection
+    {
+        if ($this->connection instanceof Connection) {
+            return $this->connection;
+        }
+
+        return DB::connection($this->connection);
     }
 
     /**

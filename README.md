@@ -247,7 +247,12 @@ php artisan data-entities:check
 
 ### Connection
 
-You can set the connection name by overriding the `resolveDatabaseConnection` method.
+You can set the connection by overriding `resolveDatabaseConnection()`. It may return a Laravel
+connection **name** (`string`) or a live `Illuminate\Database\Connection` instance.
+
+Precedence when executing:
+
+`onConnection(...)` → `resolveDatabaseConnection()` → `config('data-entities.database')`
 
 ```php
 namespace App\DataEntities;
@@ -259,7 +264,7 @@ class GetAllPostsDataEntity extends DataEntity
     // ...
 
     #[\Override]
-    public function resolveDatabaseConnection(): string
+    public function resolveDatabaseConnection(): string|\Illuminate\Database\Connection
     {
         return 'sqlsrv';
     }
@@ -276,7 +281,7 @@ use BitMx\DataEntities\DataEntity;
 abstract class ErpDataEntity extends DataEntity
 {
     #[\Override]
-    public function resolveDatabaseConnection(): string
+    public function resolveDatabaseConnection(): string|\Illuminate\Database\Connection
     {
         return 'erp_sqlsrv';
     }
@@ -299,12 +304,57 @@ use BitMx\DataEntities\DataEntity;
 abstract class CrmDataEntity extends DataEntity
 {
     #[\Override]
-    public function resolveDatabaseConnection(): string
+    public function resolveDatabaseConnection(): string|\Illuminate\Database\Connection
     {
         return 'crm_mysql';
     }
 }
 ```
+
+For a connection that is **not** defined in `config/database.php`, build one at runtime with
+Laravel's `DB::build()` (Laravel 11.31+) and return or pass the `Connection` instance.
+Credentials come from your own values (host, user, password, etc.), not from a named config entry:
+
+```php
+use Illuminate\Database\Connection;
+use Illuminate\Support\Facades\DB;
+
+#[\Override]
+public function resolveDatabaseConnection(): string|Connection
+{
+    return DB::build([
+        'driver' => 'sqlsrv',
+        'host' => $this->host,
+        'port' => $this->port,
+        'database' => $this->database,
+        'username' => $this->username,
+        'password' => $this->password,
+    ]);
+}
+```
+
+Or override the connection at runtime without changing the entity class:
+
+```php
+use Illuminate\Support\Facades\DB;
+
+(new GetCustomerDataEntity($id))
+    ->onConnection(DB::build([
+        'driver' => 'mysql',
+        'host' => $host,
+        'database' => $database,
+        'username' => $user,
+        'password' => $password,
+    ]))
+    ->execute();
+
+(new GetCustomerDataEntity($id))
+    ->onConnection('tenant_mysql') // connection name from config/database.php
+    ->execute();
+```
+
+If the connection is already registered under a name (for example `tenant_123`), you can still use
+`DB::connection('tenant_123')` or `onConnection('tenant_123')` as before.
 
 Organize classes under `app/DataEntities/{System}/` and point `data-entities:list` / `data-entities:check` at those paths with `--path=app/DataEntities/Erp`.
 
@@ -332,13 +382,17 @@ DB::connection('sqlsrv')->transaction(function () {
 });
 ```
 
-Or use the helper (defaults to `config('data-entities.database')`):
+Or use the helper (defaults to `config('data-entities.database')`). The second argument accepts a connection name or a `Connection` instance:
 
 ```php
 DataEntity::transaction(function () {
     (new CreateOrderDataEntity($payload))->execute();
     (new ReserveInventoryDataEntity($orderId))->execute();
 }, connection: 'sqlsrv');
+
+DataEntity::transaction(function () {
+    (new CreateOrderDataEntity($payload))->execute();
+}, connection: $dynamicConnection);
 ```
 
 Entities that target different connections cannot share one transaction.

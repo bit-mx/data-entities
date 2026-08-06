@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace BitMx\DataEntities\Introspection;
 
 use BitMx\DataEntities\Introspection\Contracts\ProcedureIntrospectorContract;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 
 class MySqlProcedureIntrospector implements ProcedureIntrospectorContract
 {
     public function __construct(
-        protected readonly string $connection,
+        protected readonly string|Connection $connection,
     ) {}
 
     public function procedureExists(string $procedure): bool
     {
         $name = $this->unqualifiedName($procedure);
 
-        $result = DB::connection($this->connection)->selectOne(
+        $result = $this->client()->selectOne(
             'SELECT COUNT(*) AS aggregate
              FROM information_schema.routines
              WHERE routine_schema = DATABASE()
@@ -39,7 +40,7 @@ class MySqlProcedureIntrospector implements ProcedureIntrospectorContract
     {
         $name = $this->unqualifiedName($procedure);
 
-        $rows = DB::connection($this->connection)->select(
+        $rows = $this->client()->select(
             'SELECT PARAMETER_NAME, DATA_TYPE, DTD_IDENTIFIER, PARAMETER_MODE
              FROM information_schema.parameters
              WHERE SPECIFIC_SCHEMA = DATABASE()
@@ -67,6 +68,15 @@ class MySqlProcedureIntrospector implements ProcedureIntrospectorContract
         }
 
         return $parameters;
+    }
+
+    protected function client(): Connection
+    {
+        if ($this->connection instanceof Connection) {
+            return $this->connection;
+        }
+
+        return DB::connection($this->connection);
     }
 
     protected function unqualifiedName(string $procedure): string

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BitMx\DataEntities\Traits\DataEntity;
 
 use Closure;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 
 trait HasTransactions
@@ -20,8 +21,12 @@ trait HasTransactions
      * @param  Closure(): TReturn  $callback
      * @return TReturn
      */
-    public static function transaction(Closure $callback, ?string $connection = null): mixed
+    public static function transaction(Closure $callback, string|Connection|null $connection = null): mixed
     {
+        if ($connection instanceof Connection) {
+            return $connection->transaction($callback);
+        }
+
         if ($connection !== null) {
             $connectionName = $connection;
         } else {

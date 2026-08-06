@@ -7,6 +7,7 @@ namespace BitMx\DataEntities\Executers;
 use BitMx\DataEntities\Exceptions\UnsupportedQueryExecutorException;
 use BitMx\DataEntities\Executers\Contracts\QueryExecutorContract;
 use BitMx\DataEntities\PendingQuery;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 
 class QueryExecutorResolver
@@ -16,7 +17,7 @@ class QueryExecutorResolver
         $dataEntity = $pendingQuery->getDataEntity();
 
         $executorClass = $dataEntity->resolveQueryExecutor()
-            ?? $this->resolveFromDriver($dataEntity->resolveDatabaseConnection());
+            ?? $this->resolveFromDriver($dataEntity->resolveEffectiveDatabaseConnection());
 
         return $this->make($executorClass);
     }
@@ -35,9 +36,9 @@ class QueryExecutorResolver
     /**
      * @return class-string<QueryExecutorContract>
      */
-    protected function resolveFromDriver(string $connectionName): string
+    protected function resolveFromDriver(string|Connection $connection): string
     {
-        $driver = $this->resolveDriverName($connectionName);
+        $driver = $this->resolveDriverName($connection);
 
         /** @var array<string, class-string<QueryExecutorContract>> $executers */
         $executers = config('data-entities.executers', []);
@@ -51,14 +52,18 @@ class QueryExecutorResolver
         return $executers[$driver];
     }
 
-    protected function resolveDriverName(string $connectionName): string
+    protected function resolveDriverName(string|Connection $connection): string
     {
-        $driver = config("database.connections.{$connectionName}.driver");
+        if ($connection instanceof Connection) {
+            return $connection->getDriverName();
+        }
+
+        $driver = config("database.connections.{$connection}.driver");
 
         if (is_string($driver) && $driver !== '') {
             return $driver;
         }
 
-        return DB::connection($connectionName)->getDriverName();
+        return DB::connection($connection)->getDriverName();
     }
 }

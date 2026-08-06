@@ -82,11 +82,12 @@ When the app talks to multiple stored-procedure backends, fix connection (and op
 namespace App\DataEntities\Erp;
 
 use BitMx\DataEntities\DataEntity;
+use Illuminate\Database\Connection;
 
 abstract class ErpDataEntity extends DataEntity
 {
     #[\Override]
-    public function resolveDatabaseConnection(): string
+    public function resolveDatabaseConnection(): string|Connection
     {
         return 'erp_sqlsrv';
     }
@@ -102,9 +103,45 @@ class GetCustomerDataEntity extends ErpDataEntity
 ```
 
 Keep CRM/ERP/etc. entities under `app/DataEntities/{System}/`. Scan a system with `php artisan data-entities:check --path=app/DataEntities/Erp`.
-- Override connection with `resolveDatabaseConnection(): string` when needed.
+
+### Connection resolution
+
+Precedence: `onConnection(...)` > `resolveDatabaseConnection()` > `config('data-entities.database')`.
+
+- Override with `resolveDatabaseConnection(): string|Connection` — return a Laravel connection name or a live `Connection`.
+- Override at runtime: `->onConnection($nameOrConnection)->execute()`.
+- For credentials that are **not** in `config/database.php`, build a connection with `DB::build()` (Laravel 11.31+) and return/`onConnection` it.
 - Override `resolveQueryExecutor(): ?string` to force a specific query executor (default `null` resolves it from the connection driver).
 - Runtime params: `$entity->parameters()->add('key', $value)`.
+
+```php
+use Illuminate\Database\Connection;
+use Illuminate\Support\Facades\DB;
+
+// Ad-hoc Connection from resolve (no named config entry required)
+public function resolveDatabaseConnection(): string|Connection
+{
+    return DB::build([
+        'driver' => 'sqlsrv',
+        'host' => $this->host,
+        'port' => $this->port,
+        'database' => $this->database,
+        'username' => $this->username,
+        'password' => $this->password,
+    ]);
+}
+
+// Runtime override with DB::build
+(new GetCustomerDataEntity($id))
+    ->onConnection(DB::build([
+        'driver' => 'mysql',
+        'host' => $host,
+        'database' => $database,
+        'username' => $user,
+        'password' => $password,
+    ]))
+    ->execute();
+```
 
 Execute:
 
@@ -368,7 +405,7 @@ $post = $response->dto();
 
 ## Transactions
 
-Run multiple entities atomically on the same connection:
+Run multiple entities atomically on the same connection. The second argument accepts a connection name or a `Connection` instance:
 
 ```php
 use BitMx\DataEntities\DataEntity;
@@ -377,9 +414,13 @@ DataEntity::transaction(function () {
     (new CreateOrderDataEntity($payload))->execute();
     (new ReserveInventoryDataEntity($orderId))->execute();
 }, connection: 'sqlsrv');
+
+DataEntity::transaction(function () {
+    (new CreateOrderDataEntity($payload))->execute();
+}, connection: $dynamicConnection);
 ```
 
-Equivalent to `DB::connection('sqlsrv')->transaction(...)`. Different connections cannot share one transaction.
+Equivalent to `DB::connection('sqlsrv')->transaction(...)` when passing a name. Different connections cannot share one transaction.
 
 ## Debugging
 
