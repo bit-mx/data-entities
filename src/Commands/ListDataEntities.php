@@ -36,7 +36,7 @@ class ListDataEntities extends Command
             $rows[] = [
                 $class,
                 $entity->resolveStoreProcedure(),
-                $entity->resolveDatabaseConnection(),
+                $entity->resolveDatabaseConnectionIdentity(),
             ];
         }
 

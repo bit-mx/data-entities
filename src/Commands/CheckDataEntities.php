@@ -37,18 +37,19 @@ class CheckDataEntities extends Command
             /** @var DataEntity $entity */
             $entity = $reflection->newInstanceWithoutConstructor();
             $procedure = $entity->resolveStoreProcedure();
-            $connection = $entity->resolveDatabaseConnection();
+            $connection = $entity->resolveEffectiveDatabaseConnection();
+            $connectionLabel = $entity->resolveDatabaseConnectionIdentity();
             $introspector = $resolver->resolve($connection);
 
             if (! $introspector->procedureExists($procedure)) {
-                $this->components->error(sprintf('%s → procedure [%s] not found on [%s]', $class, $procedure, $connection));
+                $this->components->error(sprintf('%s → procedure [%s] not found on [%s]', $class, $procedure, $connectionLabel));
                 $failures++;
 
                 continue;
             }
 
             if (($reflection->getConstructor()?->getNumberOfRequiredParameters() ?? 0) > 0) {
-                $this->components->info(sprintf('%s → procedure exists (%s on %s); skipped parameter drift (constructor required)', $class, $procedure, $connection));
+                $this->components->info(sprintf('%s → procedure exists (%s on %s); skipped parameter drift (constructor required)', $class, $procedure, $connectionLabel));
 
                 continue;
             }
@@ -76,13 +77,13 @@ class CheckDataEntities extends Command
             $extraOutputs = array_values(array_diff($entityOutputs, $dbOutputs));
 
             if ($missingInputs === [] && $extraInputs === [] && $missingOutputs === [] && $extraOutputs === []) {
-                $this->components->info(sprintf('%s → OK (%s on %s)', $class, $procedure, $connection));
+                $this->components->info(sprintf('%s → OK (%s on %s)', $class, $procedure, $connectionLabel));
 
                 continue;
             }
 
             $failures++;
-            $this->components->error(sprintf('%s → drift detected for [%s] on [%s]', $class, $procedure, $connection));
+            $this->components->error(sprintf('%s → drift detected for [%s] on [%s]', $class, $procedure, $connectionLabel));
 
             if ($missingInputs !== []) {
                 $this->line('  missing inputs: '.implode(', ', $missingInputs));

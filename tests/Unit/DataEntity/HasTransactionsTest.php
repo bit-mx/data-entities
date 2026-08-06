@@ -41,3 +41,18 @@ it('defaults to the configured data-entities database connection', function () {
 
     expect(DataEntity::transaction(fn () => 42))->toBe(42);
 });
+
+it('accepts a Connection instance for the transaction', function () {
+    $connection = Mockery::mock(\Illuminate\Database\Connection::class);
+    $connection->shouldReceive('transaction')
+        ->once()
+        ->with(Mockery::type('callable'))
+        ->andReturnUsing(fn (callable $callback) => $callback());
+
+    $result = DataEntity::transaction(
+        fn () => 'from-connection',
+        $connection,
+    );
+
+    expect($result)->toBe('from-connection');
+});

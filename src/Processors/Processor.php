@@ -19,7 +19,6 @@ use BitMx\DataEntities\Traits\Executer\HasQuery;
 use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\LazyCollection;
 use PDO;
@@ -168,7 +167,7 @@ class Processor implements ProcessorContract
 
     protected function getClient(): Connection
     {
-        $connection = DB::connection($this->pendingQuery->getDataEntity()->resolveDatabaseConnection());
+        $connection = $this->pendingQuery->getDataEntity()->resolveConnection();
         $timeout = $this->pendingQuery->getDataEntity()->queryTimeout();
 
         if ($timeout !== null) {

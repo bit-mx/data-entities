@@ -13,7 +13,7 @@ class CacheKey
         $dataEntity = $pendingQuery->getDataEntity();
         $className = $dataEntity::class;
         $storeProcedure = $dataEntity->resolveStoreProcedure();
-        $connection = $dataEntity->resolveDatabaseConnection();
+        $connection = $dataEntity->resolveDatabaseConnectionIdentity();
         $parameters = $pendingQuery->parameters()->all();
         $outputParameters = $pendingQuery->outputParameters()->all();
 
