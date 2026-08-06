@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use BitMx\DataEntities\DataEntity;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 
 it('runs the callback inside a database transaction on the given connection', function () {
@@ -43,7 +44,7 @@ it('defaults to the configured data-entities database connection', function () {
 });
 
 it('accepts a Connection instance for the transaction', function () {
-    $connection = Mockery::mock(\Illuminate\Database\Connection::class);
+    $connection = Mockery::mock(Connection::class);
     $connection->shouldReceive('transaction')
         ->once()
         ->with(Mockery::type('callable'))
